@@ -2522,6 +2522,13 @@ serial_hds_add(const char* devname)
     return -1;  /* shouldn't happen */
 }
 
+/** START DECAF ADDITIONS **/
+#ifdef TARGET_ARM
+extern void DECAF_init(void);
+extern void DECAF_do_load_plugin_internal(Monitor* mon, const char* plugin);
+#endif
+/** END DECAF ADDITIONS **/
+
 int main(int argc, char **argv, char **envp)
 {
     const char *gdbstub_dev = NULL;
@@ -2552,6 +2559,12 @@ int main(int argc, char **argv, char **envp)
     const char *virtio_consoles[MAX_VIRTIO_CONSOLES];
     int virtio_console_index;
     const char *loadvm = NULL;
+		/** START DECAF ADDITIONS **/
+#ifdef TARGET_ARM
+		const char* after_loadvm = NULL;
+		const char* load_plugin = NULL;
+#endif
+		/** END DECAF ADDITIONS **/
     QEMUMachine *machine;
     const char *cpu_model;
     const char *usb_devices[MAX_USB_CMDLINE];
@@ -3054,6 +3067,16 @@ int main(int argc, char **argv, char **envp)
             case QEMU_OPTION_loadvm:
                 loadvm = optarg;
                 break;
+/** START DECAF ADDITION **/
+#ifdef TARGET_ARM
+						case QEMU_OPTION_after_loadvm:
+								after_loadvm = optarg;
+								break;
+						case QEMU_OPTION_load_plugin:
+								load_plugin = optarg;
+								break;
+#endif
+/** END DECAF ADDITION **/
             case QEMU_OPTION_savevm_on_exit:
                 savevm_on_exit = optarg;
                 break;
@@ -4436,6 +4459,15 @@ int main(int argc, char **argv, char **envp)
 
     if (loadvm)
         do_loadvm(cur_mon, loadvm);
+
+/** START DECAF ADDITIONS **/
+#ifdef TARGET_ARM
+		DECAF_init();
+		if ((loadvm == NULL) && (load_plugin != NULL)){
+			DECAF_do_load_plugin_internal(cur_mon, load_plugin);
+		}
+#endif
+/** END DECAF ADDITIONS **/
 
     if (incoming) {
         autostart = 0; /* fixme how to deal with -daemonize */

@@ -46,6 +46,13 @@
 #include "acl.h"
 #include "exec-all.h"
 
+/** START DECAF ADDITIONS **/
+#ifdef TARGET_ARM
+#include "DECAF_shared/DECAF_main.h"
+#include "DECAF_shared/DECAF_main_internal.h"
+#endif
+/** END DECAF ADDITIONS **/
+
 //#define DEBUG
 //#define DEBUG_COMPLETION
 
@@ -63,6 +70,9 @@
  *
  */
 
+/** START DECAF ADDITIONS **/
+//Moved to monitor.h by LOK
+/**
 typedef struct mon_cmd_t {
     const char *name;
     const char *args_type;
@@ -70,6 +80,8 @@ typedef struct mon_cmd_t {
     const char *params;
     const char *help;
 } mon_cmd_t;
+**/
+/** END DECAF ADDITIONS **/
 
 #define MON_CMD_T_INITIALIZER { NULL, NULL, NULL, NULL, NULL }
 
@@ -127,6 +139,12 @@ static const mon_cmd_t mon_cmds[];
 static const mon_cmd_t info_cmds[];
 
 Monitor *cur_mon = NULL;
+/** START DECAF ADDITIONS **/
+//Defined by LOK
+#ifdef TARGET_ARM
+Monitor *default_mon = NULL;
+#endif
+/** END DECAF ADDITIONS **/
 
 static void monitor_command_cb(Monitor *mon, const char *cmdline,
                                void *opaque);
@@ -293,8 +311,29 @@ static void help_cmd(Monitor *mon, const char *name)
 {
     if (name && !strcmp(name, "info")) {
         help_cmd_dump(mon, info_cmds, "info ", NULL);
+
+				/** START DECAF ADDITIONS **/
+#ifdef TARGET_ARM
+				if (NULL != DECAF_info_cmds){
+					help_cmd_dump(mon, DECAF_info_cmds, "info ", NULL);
+				}
+				if ((NULL != decaf_plugin) && (NULL != decaf_plugin->info_cmds)){
+					help_cmd_dump(mon, decaf_plugin->info_cmds, "info ", NULL);
+				}
+#endif
+				/** END DECAF ADDITIONS **/
     } else {
         help_cmd_dump(mon, mon_cmds, "", name);
+				/** START DECAF ADDITIONS **/
+#ifdef TARGET_ARM
+				if (NULL != DECAF_mon_cmds){
+					help_cmd_dump(mon, DECAF_mon_cmds, "", name);
+				}
+				if ((NULL != decaf_plugin) && (NULL != decaf_plugin->mon_cmds)){
+					help_cmd_dump(mon, decaf_plugin->mon_cmds, "", name);
+				}
+#endif
+				/** END DECAF ADDITIONS **/
         if (name && !strcmp(name, "log")) {
             const CPULogItem *item;
             monitor_printf(mon, "Log items (comma separated):\n");
@@ -2460,6 +2499,52 @@ static void monitor_handle_command(Monitor *mon, const char *cmdline)
             break;
     }
 
+		/** START DECAF ADDITIONS **/
+#ifdef TARGET_ARM
+		if (cmd->name == NULL){
+			if (DECAF_mon_cmds != NULL){
+				for (cmd = DECAF_mon_cmds; cmd->name != NULL; cmd++){
+					if (compare_cmd(cmdname, cmd->name)){
+						break;
+					}
+				}
+			}
+		}
+
+		if (cmd->name == NULL){
+			if (DECAF_info_cmds != NULL){
+				for (cmd = DECAF_info_cmds; cmd->name != NULL; cmd++){
+					if (compare_cmd(cmdname, cmd->name)){
+						break;
+					}
+				}
+			}
+		}
+
+		//plugin commands
+		if (cmd->name == NULL){
+			if (decaf_plugin != NULL){
+
+				if (decaf_plugin->mon_cmds != NULL){
+					for (cmd = decaf_plugin->mon_cmds; cmd->name != NULL; cmd++){
+						if (compare_cmd(cmdname, cmd->name)){
+							break;
+						}
+					}
+				}
+
+				if ((cmd->name == NULL) && (decaf_plugin->info_cmds != NULL)){
+					for (cmd = decaf_plugin->info_cmds; cmd->name != NULL; cmd++){
+						if(compare_cmd(cmdname, cmd->name)){
+							break;
+						}
+					}
+				}
+			}
+		}
+#endif
+		/** END DECAF ADDITIONS **/
+
     if (cmd->name == NULL) {
         monitor_printf(mon, "unknown command: '%s'\n", cmdname);
         return;
@@ -2920,12 +3005,48 @@ static void monitor_find_completion(const char *cmdline)
         for(cmd = mon_cmds; cmd->name != NULL; cmd++) {
             cmd_completion(cmdname, cmd->name);
         }
+
+				/** START DECAF ADDITIONS **/
+#ifdef TARGET_ARM
+				if (DECAF_mon_cmds != NULL){
+					for (cmd = DECAF_mon_cmds; cmd->name != NULL; cmd++){
+						cmd_completion(cmdname, cmd->name);
+					}
+				}
+				if (decaf_plugin && decaf_plugin->mon_cmds){
+					for (cmd = decaf_plugin->mon_cmds; cmd->name != NULL; cmd++){
+						cmd_completion(cmdname, cmd->name);
+					}
+				}
+#endif
+				/** END DECAF ADDITIONS **/
     } else {
         /* find the command */
         for(cmd = mon_cmds; cmd->name != NULL; cmd++) {
             if (compare_cmd(args[0], cmd->name))
                 goto found;
         }
+
+				/** START DECAF ADDITIONS **/
+#ifdef TARGET_ARM
+				if (DECAF_mon_cmds != NULL){
+					for (cmd = DECAF_mon_cmds; cmd->name != NULL; cmd++){
+						if (compare_cmd(args[0], cmd->name)){
+							goto found;
+						}
+					}
+				}
+
+				if (decaf_plugin && decaf_plugin->mon_cmds){
+					for (cmd = decaf_plugin->mon_cmds; cmd->name != NULL; cmd++){
+						if (compare_cmd(args[0], cmd->name)){
+							goto found;
+						}
+					}
+				}
+#endif
+				/** END DECAF ADDITIONS **/
+
         return;
     found:
         ptype = cmd->args_type;
@@ -2955,6 +3076,23 @@ static void monitor_find_completion(const char *cmdline)
                 for(cmd = info_cmds; cmd->name != NULL; cmd++) {
                     cmd_completion(str, cmd->name);
                 }
+
+								
+								/** START DECAF ADDITIONS **/
+#ifdef TARGET_ARM
+								if (DECAF_info_cmds != NULL){
+									for (cmd = DECAF_info_cmds; cmd->name != NULL; cmd++){
+										cmd_completion(str, cmd->name);
+									}
+								}
+
+								if (decaf_plugin && decaf_plugin->info_cmds){
+									for (cmd = decaf_plugin->info_cmds; cmd->name != NULL; cmd++){
+										cmd_completion(str, cmd->name);
+									}
+								}
+#endif
+								/** END DECAF ADDITIONS **/
             } else if (!strcmp(cmd->name, "sendkey")) {
                 char *sep = strrchr(str, '-');
                 if (sep)
@@ -3102,6 +3240,15 @@ void monitor_init(CharDriverState *chr, int flags)
     QLIST_INSERT_HEAD(&mon_list, mon, entry);
     if (!cur_mon || (flags & MONITOR_IS_DEFAULT))
         cur_mon = mon;
+
+
+		/** START DECAF ADDITIONS **/
+#ifdef TARGET_ARM
+		if (!default_mon || (flags & MONITOR_IS_DEFAULT)){
+			default_mon = mon;
+		}
+#endif
+		/** START DECAF ADDITIONS **/
 }
 
 static void monitor_done(Monitor *mon)

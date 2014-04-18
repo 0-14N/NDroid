@@ -34,6 +34,14 @@
 #define GEN_HELPER 1
 #include "helper.h"
 
+/** START DECAF ADDITIONS **/
+#include "DECAF_shared/DECAF_main_internal.h"
+#include "DECAF_shared/DECAF_callback_to_QEMU.h"
+
+static target_ulong next_pc;
+static target_ulong cur_pc;
+/** END DECAF ADDITIONS **/
+
 #define ENABLE_ARCH_4T    arm_feature(env, ARM_FEATURE_V4T)
 #define ENABLE_ARCH_5     arm_feature(env, ARM_FEATURE_V5)
 /* currently all emulated v5 cores are also v5TE, so don't bother */
@@ -735,6 +743,33 @@ static inline void gen_bx_im(DisasContext *s, uint32_t addr)
         tcg_gen_st_i32(tmp, cpu_env, offsetof(CPUState, thumb));
         tcg_temp_free_i32(tmp);
     }
+
+		/** START DECAF ADDITIONS **/
+		if (DECAF_is_callback_needed(DECAF_INSN_END_CB, cur_pc, next_pc)){
+			TCGv tmpPC = tcg_temp_new();
+			tcg_gen_movi_tl(tmpPC, cur_pc);
+			gen_helper_DECAF_invoke_insn_end_callback(cpu_env, tmpPC);
+			tcg_temp_free(tmpPC);
+		}
+
+		next_pc = addr;
+
+		if (DECAF_is_BlockEndCallback_needed(cur_pc, next_pc)){
+			TCGv_ptr tmpTb = tcg_const_ptr((tcg_target_ulong)s->tb);
+
+			TCGv tmpFrom = tcg_temp_new();
+			TCGv tmpTo = tcg_temp_new();
+
+			tcg_gen_movi_tl(tmpFrom, cur_pc);
+			tcg_gen_movi_tl(tmpTo, next_pc);
+			gen_helper_DECAF_invoke_block_end_callback(cpu_env, tmpTb, tmpFrom, tmpTo);
+
+			tcg_temp_free(tmpTo);
+			tcg_temp_free(tmpFrom);
+			tcg_temp_free_ptr(tmpTb);
+		}
+		/** END DECAF ADDITIONS **/
+
     tcg_gen_movi_i32(cpu_R[15], addr & ~1);
 }
 
@@ -742,6 +777,11 @@ static inline void gen_bx_im(DisasContext *s, uint32_t addr)
 static inline void gen_bx(DisasContext *s, TCGv var)
 {
     s->is_jmp = DISAS_UPDATE;
+
+		/** START DECAF ADDITIONS **/
+
+		/** END DECAF ADDITIONS **/
+
     tcg_gen_andi_i32(cpu_R[15], var, ~1);
     tcg_gen_andi_i32(var, var, 1);
     store_cpu_field(var, thumb);

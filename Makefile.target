@@ -145,6 +145,20 @@ common_LOCAL_SRC_FILES += \
     varint.c \
     softmmu_outside_jit.c \
 
+
+##############################################################################
+# START DECAF SRC FILES 
+DECAF_SRC_FILES += \
+		DECAF_cmds.c \
+		DECAF_main.c \
+		DECAF_vm_compress.c \
+
+DECAF_CFLAGS := -I$(LOCAL_PATH)/DECAF_shared
+DECAF_LDLIBS := -lstdc++
+
+# END DECAF SRC FILES
+##############################################################################
+
 ##############################################################################
 # CPU-specific emulation.
 #
@@ -168,6 +182,14 @@ common_LOCAL_SRC_FILES += \
     arm-semi.c \
 
 common_LOCAL_SRC_FILES += fpu/softfloat.c
+############################################################################
+#START DECAF
+common_LOCAL_SRC_FILES += target-arm/DECAF_main_arm.c
+common_LOCAL_SRC_FILES += $(DECAF_SRC_FILES:%=DECAF_shared/%)
+common_LOCAL_CFLAGS += $(DECAF_CFLAGS)
+common_LOCAL_LDLIBS += $(DECAF_LDLIBS)
+#END DECAF
+############################################################################
 endif
 
 ifeq ($(EMULATOR_TARGET_ARCH), x86)

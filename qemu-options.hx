@@ -1405,6 +1405,27 @@ STEXI
 Start right away with a saved state (@code{loadvm} in monitor)
 ETEXI
 
+
+/** START DECAF ADDITIONS **/
+DEF("after_loadvm", HAS_ARG, QEMU_OPTION_after_loadvm, \
+		"-after_loadvm [???]\n" \
+		"								 NO DESCRIPTION\n")
+STEXI
+@item -after_loadvm @var{file}
+@findex -after_loadvm
+NO DESCRIPTION
+ETEXI
+
+DEF("load_plugin", HAS_ARG, QEMU_OPTION_load_plugin, \
+		"-load_plugin [path to plugin]\n" \
+		"									load the specified plugin at startup\n")
+STEXI
+@item -load_plugin @var{file}
+@findex -load_plugin
+Load the specified plugin immediately upon startup of QEMU.
+ETEXI
+/** END DECAF ADDITIONS **/
+
 #ifndef _WIN32
 DEF("daemonize", 0, QEMU_OPTION_daemonize, \
     "-daemonize      daemonize QEMU after initializing\n")

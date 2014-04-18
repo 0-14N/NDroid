@@ -10,6 +10,16 @@
 extern Monitor *cur_mon;
 extern Monitor *default_mon;
 
+/** START DECAF ADDITIONS **/
+typedef struct mon_cmd_t {
+	const char *name;
+	const char *args_type;
+	void *handler;
+	const char *params;
+	const char *help;
+} mon_cmd_t;
+/** END DECAF ADDITIONS **/
+
 /* flags for monitor_init */
 #define MONITOR_IS_DEFAULT    0x01
 #define MONITOR_USE_READLINE  0x02
