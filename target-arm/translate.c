@@ -779,7 +779,26 @@ static inline void gen_bx(DisasContext *s, TCGv var)
     s->is_jmp = DISAS_UPDATE;
 
 		/** START DECAF ADDITIONS **/
+		if (DECAF_is_callback_needed(DECAF_INSN_END_CB, cur_pc, next_pc)){
+			TCGv tmpPC = tcg_temp_new();
+			tcg_gen_movi_tl(tmpPC, cur_pc);
+			gen_helper_DECAF_invoke_insn_end_callback(cpu_env, tmpPC);
+			tcg_temp_free(tmpPC);
+		}
 
+		next_pc = -1;//set next_pc to -1 meaning it is an indirect jump
+
+		if (DECAF_is_BlockEndCallback_needed(cur_pc, next_pc)){
+			TCGv_ptr tmpTb = tcg_const_ptr((tcg_target_ulong)s->tb);
+			TCGv tmpFrom = tcg_temp_new();
+
+			tcg_gen_movi_tl(tmpFrom, cur_pc);
+
+			gen_helper_DECAF_invoke_block_end_callback(cpu_env, tmpTb, tmpFrom, var);//reuse var
+
+			tcg_temp_free(tmpFrom);
+			tcg_temp_free_ptr(tmpTb);
+		}
 		/** END DECAF ADDITIONS **/
 
     tcg_gen_andi_i32(cpu_R[15], var, ~1);
@@ -3490,6 +3509,32 @@ static inline void gen_goto_tb(DisasContext *s, int n, uint32_t dest)
     TranslationBlock *tb;
 
     tb = s->tb;
+
+		/** START DECAF ADDITIONS **/
+		if (DECAF_is_callback_needed(DECAF_INSN_END_CB, cur_pc, next_pc)){
+			TCGv tmpPC = tcg_temp_new();
+			tcg_gen_movi_tl(tmpPC, cur_pc);
+			gen_helper_DECAF_invoke_insn_end_callback(cpu_env, tmpPC);
+			tcg_temp_free(tmpPC);
+		}
+
+		next_pc = dest;
+
+		if (DECAF_is_BlockEndCallback_needed(cur_pc, next_pc)){
+			TCGv_ptr tmpTb = tcg_const_ptr((tcg_target_ulong)s->tb);
+			TCGv tmpFrom = tcg_temp_new();
+			TCGv tmpTo = tcg_temp_new();
+
+			tcg_gen_movi_tl(tmpFrom, cur_pc);
+			tcg_gen_movi_tl(tmpTo, next_pc);
+			gen_helper_DECAF_invoke_block_end_callback(cpu_env, tmpTb, tmpFrom, tmpTo);
+
+			tcg_temp_free(tmpTo);
+			tcg_temp_free(tmpFrom);
+			tcg_temp_free_ptr(tmpTb);
+		}
+		/** END DECAF ADDITIONS **/
+
     if ((tb->pc & TARGET_PAGE_MASK) == (dest & TARGET_PAGE_MASK)) {
         tcg_gen_goto_tb(n);
         gen_set_pc_im(dest);
@@ -6468,6 +6513,19 @@ static void disas_arm_insn(CPUState * env, DisasContext *s)
 
     ANDROID_TRACE_START_ARM();
 
+		/** START DECAF ADDITIONS **/
+		//The current instruction could be an illegal instruction,
+		//deal it in helper functions.
+		cur_pc = s->pc;
+		next_pc = (-1);
+		if (DECAF_is_callback_needed(DECAF_INSN_BEGIN_CB, cur_pc, next_pc)){
+			TCGv tmpPC = tcg_temp_new();
+			tcg_gen_movi_tl(tmpPC, cur_pc);
+			gen_helper_DECAF_invoke_insn_begin_callback(cpu_env, tmpPC);
+			tcg_temp_free(tmpPC);
+		}
+		/** END DECAF ADDITIONS **/
+
     s->pc += 4;
 
     /* M variants do not implement ARM mode.  */
@@ -7722,15 +7780,46 @@ static void disas_arm_insn(CPUState * env, DisasContext *s)
             break;
         case 0xf:
             /* swi */
+						/** START DECAF ADDITIONS **/
+						if (insn == 0xef000000){
+							TCGv tmpr7 = tcg_temp_new();
+							TCGv tmpPC = tcg_temp_new();
+
+							tcg_gen_movi_tl(tmpPC, cur_pc);
+							load_reg_var(s, tmpr7, 7);
+
+							gen_helper_DECAF_invoke_syscall_callback(cpu_env, tmpPC, tmpr7);
+
+							tcg_temp_free(tmpr7);
+							tcg_temp_free(tmpPC);
+						}
+						/** END DECAF ADDITIONS **/
             gen_set_pc_im(s->pc);
             s->is_jmp = DISAS_SWI;
             break;
         default:
         illegal_op:
+						/** START DECAF ADDITIONS **/
+						if (DECAF_is_callback_needed(DECAF_INSN_BEGIN_CB, cur_pc, next_pc)){
+							TCGv tmpPC = tcg_temp_new();
+							tcg_gen_movi_tl(tmpPC, -1);
+							gen_helper_DECAF_invoke_insn_begin_callback(cpu_env, tmpPC);
+							tcg_temp_free(tmpPC);
+						}
+						/** END DECAF ADDITIONS **/
             gen_exception_insn(s, 4, EXCP_UDEF);
             break;
         }
     }
+
+		/** START DECAF ADDITIONS **/
+		if (DECAF_is_callback_needed(DECAF_INSN_END_CB, cur_pc, next_pc)){
+			TCGv tmpPC = tcg_temp_new();
+			tcg_gen_movi_tl(tmpPC, cur_pc);
+			gen_helper_DECAF_invoke_insn_end_callback(cpu_env, tmpPC);
+			tcg_temp_free(tmpPC);
+		}
+		/** END DECAF ADDITIONS **/
 }
 
 /* Return true if this is a Thumb-2 logical op.  */
@@ -8911,6 +9000,17 @@ static void disas_thumb_insn(CPUState *env, DisasContext *s)
 
     ANDROID_TRACE_START_THUMB();
 
+		/** START DECAF ADDITIONS **/
+		cur_pc = s->pc | 1;
+		next_pc = (-1);
+		if (DECAF_is_callback_needed(DECAF_INSN_BEGIN_CB, cur_pc, next_pc)){
+			TCGv tmpPC = tcg_temp_new();
+			tcg_gen_movi_tl(tmpPC, cur_pc);
+			gen_helper_DECAF_invoke_insn_begin_callback(cpu_env, tmpPC);
+			tcg_temp_free(tmpPC);
+		}
+		/** END DECAF ADDITIONS **/
+
     s->pc += 2;
 
     switch (insn >> 12) {
@@ -9567,12 +9667,38 @@ static void disas_thumb_insn(CPUState *env, DisasContext *s)
             goto undef32;
         break;
     }
+
+		/** START DECAF ADDITIONS **/
+		if (DECAF_is_callback_needed(DECAF_INSN_END_CB, cur_pc, next_pc)){
+			TCGv tmpPC = tcg_temp_new();
+			tcg_gen_movi_tl(tmpPC, cur_pc);
+			gen_helper_DECAF_invoke_insn_end_callback(cpu_env, tmpPC);
+			tcg_temp_free(tmpPC);
+		}
+		/** END DECAF ADDITIONS **/
     return;
 undef32:
+		/** START DECAF ADDITIONS **/
+		if (DECAF_is_callback_needed(DECAF_INSN_BEGIN_CB, cur_pc, next_pc)){
+			TCGv tmpPC = tcg_temp_new();
+			tcg_gen_movi_tl(tmpPC, -1);
+			gen_helper_DECAF_invoke_insn_begin_callback(cpu_env, tmpPC);
+			tcg_temp_free(tmpPC);
+		}
+		/** END DECAF ADDITIONS **/
+
     gen_exception_insn(s, 4, EXCP_UDEF);
     return;
 illegal_op:
 undef:
+		/** START DECAF ADDITIONS **/
+		if (DECAF_is_callback_needed(DECAF_INSN_BEGIN_CB, cur_pc, next_pc)){
+			TCGv tmpPC = tcg_temp_new();
+			tcg_gen_movi_tl(tmpPC, -1);
+			gen_helper_DECAF_invoke_insn_begin_callback(cpu_env, tmpPC);
+			tcg_temp_free(tmpPC);
+		}
+		/** END DECAF ADDITIONS **/
     gen_exception_insn(s, 2, EXCP_UDEF);
 }
 
@@ -9672,6 +9798,19 @@ static inline void gen_intermediate_code_internal(CPUState *env,
         tcg_gen_movi_i32(tmp, 0);
         store_cpu_field(tmp, condexec_bits);
       }
+
+		/** START DECAF ADDITIONS **/
+		cur_pc = pc_start;
+		if (DECAF_is_BlockBeginCalllback_needed(cur_pc)){
+			TCGv_ptr tmpTb = tcg_const_ptr((tcg_target_ulong)tb);
+			TCGv tmpPC = tcg_temp_new();
+			tcg_gen_movi_tl(tmpPC, cur_pc);
+			gen_helper_DECAF_invoke_block_begin_callback(cpu_env, tmpTb, tmpPC);
+			tcg_temp_free(tmpPC);
+			tcg_temp_free_pt(tmpTb);
+		}
+		/** END DECAF ADDITIONS **/
+
     do {
 #ifdef CONFIG_USER_ONLY
         /* Intercept jump to the magic kernel page.  */
