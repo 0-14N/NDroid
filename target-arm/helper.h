@@ -15,6 +15,15 @@ DEF_HELPER_2(udiv, i32, i32, i32)
 DEF_HELPER_1(rbit, i32, i32)
 DEF_HELPER_1(abs, i32, i32)
 
+
+/** START DECAF ADDITIONS **/
+DEF_HELPER_3(DECAF_invoke_block_begin_callback, void, env, ptr, tl)
+DEF_HELPER_4(DECAF_invoke_block_end_callback, void, env, ptr, tl, tl)
+DEF_HELPER_2(DECAF_invoke_insn_begin_callback, void, env, tl)
+DEF_HELPER_2(DECAF_invoke_insn_end_callback, void, env, tl)
+DEF_HELPER_3(DECAF_invoke_syscall_callback, void, env, tl, tl)
+/** END DECAF ADDITIONS **/
+
 #define PAS_OP(pfx)  \
     DEF_HELPER_3(pfx ## add8, i32, i32, i32, ptr) \
     DEF_HELPER_3(pfx ## sub8, i32, i32, i32, ptr) \

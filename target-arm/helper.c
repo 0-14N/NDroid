@@ -1396,11 +1396,19 @@ static uint32_t extended_mpu_ap_bits(uint32_t val)
     return ret;
 }
 
+/** START DECAF ADDITIONS **/
+extern void DECAF_invoke_PGD_write_callback(CPUState* env, target_ulong oldpgd, target_ulong newpgd, uint32_t b2_base);
+/** END DECAF ADDITIONS **/
+
 void HELPER(set_cp15)(CPUState *env, uint32_t insn, uint32_t val)
 {
     int op1;
     int op2;
     int crm;
+
+		/** START DECAF ADDITIONS **/
+		target_ulong oldval;
+		/** END DECAF ADDITIONS **/
 
     op1 = (insn >> 21) & 7;
     op2 = (insn >> 5) & 7;
@@ -1494,9 +1502,17 @@ void HELPER(set_cp15)(CPUState *env, uint32_t insn, uint32_t val)
         } else {
 	    switch (op2) {
 	    case 0:
+					/** START DECAF ADDITIONS **/
+					oldval = env->cp15.c2_base0;
+					DECAF_invoke_PGD_write_callback(env, oldval, val, 0);
+					/** END DECAF ADDITIONS **/
 		env->cp15.c2_base0 = val;
 		break;
 	    case 1:
+					/** START DECAF ADDITIONS **/
+					oldval = env->cp15.c2_base1;
+					DECAF_invoke_PGD_write_callback(env, oldval, val, 0);
+					/** END DECAF ADDITIONS **/
 		env->cp15.c2_base1 = val;
 		break;
 	    case 2:

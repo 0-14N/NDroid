@@ -152,6 +152,12 @@ DECAF_SRC_FILES += \
 		DECAF_cmds.c \
 		DECAF_main.c \
 		DECAF_vm_compress.c \
+		DECAF_callback.c \
+		utils/HashtableWrapper.cpp \
+		utils/HelperFunctions.cpp \
+		utils/OutputWrapper.c \
+		utils/SimpleCallback.c \
+		utils/TULStringMapWrapper.cpp \
 
 DECAF_CFLAGS := -I$(LOCAL_PATH)/DECAF_shared
 DECAF_LDLIBS := -lstdc++

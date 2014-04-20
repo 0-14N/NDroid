@@ -611,7 +611,7 @@ extern void DECAF_callback_init(void);
 void DECAF_init(void)
 {
 	
-		//DECAF_callback_init(); NDROID
+		DECAF_callback_init();
 
   //DECAF_virtdev_init();
 
