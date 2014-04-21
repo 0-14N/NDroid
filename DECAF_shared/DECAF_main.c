@@ -620,13 +620,13 @@ void DECAF_init(void)
     * before function_map_load for function maps to load properly during loadvm.
     * This is because, TEMU_load restores guest.log, which is read into function map.
     */
-    //REGISTER_SAVEVM(NULL, "TEMU", 0, 1, DECAF_save, DECAF_load, NULL); NDROID
+    REGISTER_SAVEVM(NULL, "TEMU", 0, 1, DECAF_save, DECAF_load, NULL);
   
-    //DECAF_vm_compress_init(); NDROID
+    DECAF_vm_compress_init();
 
     //init_hookapi();
 
-    //DS_init(); NDROID
+    DS_init();
     /** Replaced these wih DroidScope's Versions
     function_map_init();
     procmod_init();
