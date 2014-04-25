@@ -144,7 +144,13 @@ DECAF_errno_t ProcessInfoMap::addProcess(gva_t task, gpid_t pid, gpid_t parentPi
   return (0);
 }
 
-int ProcessInfoMap::updateProcess(gva_t task, gpid_t pid, gpid_t parentPid, gpid_t tgid, gpid_t glpid, target_ulong uid, target_ulong gid, target_ulong euid, target_ulong egid, gpa_t pgd, const char* strName, const char* strComm)
+/**
+ * Comment added by Chenxiong0_14N
+ * Update process with 'pid': task, parentPid, tgid, .... would be updated if changed.
+ */
+int ProcessInfoMap::updateProcess(gva_t task, gpid_t pid, gpid_t parentPid, gpid_t tgid, 
+		gpid_t glpid, target_ulong uid, target_ulong gid, target_ulong euid, target_ulong egid, 
+		gpa_t pgd, const char* strName, const char* strComm)//Multiple-lined by Chenxiong0_14N
 {
   int ret = 0;
 
