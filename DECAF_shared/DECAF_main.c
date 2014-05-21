@@ -626,6 +626,7 @@ void DECAF_init(void)
 
     //init_hookapi();
 
+		//Comment temporarily
     //DS_init();
     /** Replaced these wih DroidScope's Versions
     function_map_init();
