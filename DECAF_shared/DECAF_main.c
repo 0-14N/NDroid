@@ -626,7 +626,7 @@ void DECAF_init(void)
 
     //init_hookapi();
 
-    DS_init();
+    //DS_init();
     /** Replaced these wih DroidScope's Versions
     function_map_init();
     procmod_init();
