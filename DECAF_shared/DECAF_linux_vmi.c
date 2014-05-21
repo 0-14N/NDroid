@@ -102,6 +102,12 @@ gva_t DECAF_get_current_task_struct(CPUState* env)
   return (curtask);
 }
 
+
+/**
+ * Comment added by Chenxiong0_14N
+ * return current thread group's leader
+ *
+ **/
 gva_t DECAF_get_current_process(CPUState* env)
 {
   gva_t task = DECAF_get_current_task_struct(env);
@@ -213,6 +219,23 @@ int DECAF_get_arg_name(CPUState* env, gva_t addr, char* buf, int size)
   }
 }
 
+/**
+ * Comment added by Chenxiong0_14N
+ *
+ * struct mm_struct {
+ *   int count;
+ *   pgd_t * pgd;
+ *   unsigned long context;
+ *   unsigned long start_code, end_code, start_data, end_data;
+ *   unsigned long start_brk, brk, start_stack, start_mmap;
+ *   unsigned long arg_start, arg_end, env_start, env_end;
+ *   unsigned long rss, total_vm, locked_vm;
+ *   unsigned long def_flags;
+ *   struct vm_area_struct * mmap;
+ *   struct vm_area_struct * mmap_avl;
+ *   struct semaphore mmap_sem;
+ * };
+ */
 gva_t DECAF_get_first_mmap(CPUState* env, gva_t addr)
 {
   gva_t mmaddr = 0;

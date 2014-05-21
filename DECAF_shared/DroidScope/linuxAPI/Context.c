@@ -107,6 +107,10 @@ void updateProcessModuleList(CPUState* env, gpid_t pid)
     return;
   }
 
+	/**
+	 * Comment added by Chenxiong0_14N
+	 * find the task_struct with 'pid'
+	 */
   task = DECAF_get_current_process(env);
   i = task;
   do
@@ -321,6 +325,13 @@ gva_t updateProcessListByTask(CPUState* env, gva_t task, int updateMask, int bNe
     name[0] = '\0';
   }
 
+	/**
+	 * Comment added by Chenxiong0_14N
+	 * The logic of this "if" condition expression confuses me:
+	 * 1. processMark(pid) == 1 means the process with 'pid' doesn't exist
+	 * 2. findProcessByPID(pid) == NULL also means 'pid' doesn't exist
+	 * So, it seems that bNeedMark is useless.
+	 */
   //update the info if needed
   if ( ((bNeedMark) && (processMark(pid) == 1))
        || ((!bNeedMark) && (findProcessByPID(pid) == NULL)) 
@@ -419,7 +430,13 @@ void updateProcessList(CPUState* env, gpa_t newpgd, int updateMask)
       curProcessPID = pid;
       curProcessPGD = pgd;
     }
- 
+
+		/**
+		 * Comment added by Chenxiong0_14N
+		 * update task and update threads or modules depends on 'updateMask'
+		 * The 'updateMask' would union with 'UPDATE_THREADS' and 'UPDATE_MODULES'
+		 * if the process is newly created.
+		 */	
     i = updateProcessListByTask(env, i, updateMask, 1);
   } while ( (i != task) && ( i != 0) );
 
