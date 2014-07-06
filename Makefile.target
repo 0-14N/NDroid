@@ -153,6 +153,13 @@ DECAF_SRC_FILES += \
 		DECAF_main.c \
 		DECAF_vm_compress.c \
 		DECAF_callback.c \
+		DECAF_linux_vmi.c \
+		DroidScope/DS_Init.c \
+		DroidScope/linuxAPI/Context.c \
+		DroidScope/linuxAPI/ProcessInfo.cpp \
+		DroidScope/linuxAPI/ModuleServer.cpp \
+		DroidScope/DS_utils/RangeList.c \
+		DroidScope/DS_utils/SymbolMap.cpp \
 		utils/HashtableWrapper.cpp \
 		utils/HelperFunctions.cpp \
 		utils/OutputWrapper.c \
@@ -160,6 +167,9 @@ DECAF_SRC_FILES += \
 		utils/TULStringMapWrapper.cpp \
 
 DECAF_CFLAGS := -I$(LOCAL_PATH)/DECAF_shared
+DECAF_CFLAGS += -I$(LOCAL_PATH)/DECAF_shared/DroidScope
+DECAF_CFLAGS += -I$(LOCAL_PATH)/DECAF_shared/DroidScope/linuxAPI
+DECAF_CFLAGS += -I$(LOCAL_PATH)/DECAF_shared/DroidScope/DS_utils
 DECAF_LDLIBS := -lstdc++
 
 # END DECAF SRC FILES

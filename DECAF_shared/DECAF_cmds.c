@@ -23,7 +23,7 @@
 void do_guest_ps(Monitor *mon)
 {
   //list_procs(mon);
-  //linux_ps(mon); NDROID
+  linux_ps(mon);
 }
 
 void do_guest_pt(Monitor* mon)

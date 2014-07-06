@@ -29,19 +29,23 @@ MY_CC  := $(HOST_CC)
 MY_CXX := $(HOST_CXX)
 MY_AR  := $(HOST_AR)
 
-MY_OPTIM := -O2 -g -fno-PIC -falign-functions=0 -fomit-frame-pointer
-ifeq ($(BUILD_DEBUG_EMULATOR),true)
+#NDROID DEBUG START
+#MY_OPTIM := -O2 -g -fno-PIC -falign-functions=0 -fomit-frame-pointer
+#ifeq ($(BUILD_DEBUG_EMULATOR),true)
     MY_OPTIM := -O0 -g
-endif
+#endif
+#NDROID DEBUG END
 
 MY_CFLAGS := $(CONFIG_INCLUDES) $(MY_OPTIM)
 
 # Overwrite configuration for debug builds.
 #
-ifeq ($(BUILD_DEBUG_EMULATOR),true)
+#NDROID DEBUG START
+#ifeq ($(BUILD_DEBUG_EMULATOR),true)
     MY_CFLAGS := $(CONFIG_INCLUDES) -O0 -g \
                  -fno-PIC -falign-functions=0
-endif
+#endif
+#NDROID DEBUG END
 
 MY_LDLIBS :=
 

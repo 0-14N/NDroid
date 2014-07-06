@@ -29,15 +29,22 @@ void DS_init()
 {
   DECAF_linux_vmi_init();
   context_init();
-  DalvikMterpOpcodes_init();
-  DalvikDisableJit_init();
-  DalvikPrinter_init();
 
-  atexit(DS_close);
+	/* NDROID START */
+  //DalvikMterpOpcodes_init();
+  //DalvikDisableJit_init();
+  //DalvikPrinter_init();
+
+  //atexit(DS_close);
+	/* NDROID END */
 }
 
+/* NDROID START */
+/*
 void DS_close()
 {
   DalvikMterpOpcodes_close();
   DalvikDisableJit_close();
 }
+*/
+/* NDROID END */

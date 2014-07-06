@@ -626,8 +626,7 @@ void DECAF_init(void)
 
     //init_hookapi();
 
-		//Comment temporarily
-    //DS_init();
+    DS_init();
     /** Replaced these wih DroidScope's Versions
     function_map_init();
     procmod_init();
@@ -656,7 +655,9 @@ void DECAF_nic_send(gva_t addr, int size, uint8_t * buf)
 
 void DECAF_nic_out(gva_t addr, int size)
 {
-    if (!DECAF_emulation_started)
+	/* NDROID START */
+    //if (!DECAF_emulation_started)
+	/* NDROID START */
         return;
 #if 0 //LOK: Removed // AWH TAINT_ENABLED
     taintcheck_nic_out(addr, size);
@@ -666,7 +667,9 @@ void DECAF_nic_out(gva_t addr, int size)
 
 void DECAF_nic_in(gva_t addr, int size)
 {
-    if (!DECAF_emulation_started)
+	/* NDROID START */
+    //if (!DECAF_emulation_started)
+	/* NDROID END */
         return;
 #if 0 //LOK: Removed // AWH TAINT_ENABLED
     taintcheck_nic_in(addr, size);

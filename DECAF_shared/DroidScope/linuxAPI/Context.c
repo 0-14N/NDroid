@@ -424,6 +424,7 @@ void updateProcessList(CPUState* env, gpa_t newpgd, int updateMask)
   {
     pgd = pgd_strip(DECAF_get_pgd(env, i));
     pid = DECAF_get_pid(env,i);
+		DECAF_fprintf(NULL, "DNDROID--updateProcessList: task=%i, pid=%i", task, pid);
     //see if this is the new process, if it is, then update the current PID
     if (pgd == pgd_strip(newpgd))
     {
@@ -492,6 +493,8 @@ void Context_PGDWriteCallback(DECAF_Callback_Params* params)
   gettimeofday(&t, NULL);
 
   DEFENSIVE_CHECK0(params == NULL);
+
+	//DECAF_fprintf(NULL, "PGDWriteCallback--pgd.env=%p, pgd.curPGD=%i, pgd.newPGD=%i, pgd.c2_base=%i\n", params->pgd.env, params->pgd.curPGD, params->pgd.newPGD, (int) params->pgd.c2_base);
 
   //TODO: Keep a record of what the current PGD is and the new PGD is
   // so that we don't do unnecessary updates - this applies to the
@@ -579,6 +582,7 @@ void contextBBCallback(DECAF_Callback_Params* params)
     } 
     else
     {
+			//DECAF_fprintf(NULL, "DNDROIDcontextBBCallback--%p, %i, %i\n", env, getCurrentPGD(), updateMask);
       updateProcessList(env, getCurrentPGD(), updateMask);
     }
 
