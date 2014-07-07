@@ -424,7 +424,7 @@ void updateProcessList(CPUState* env, gpa_t newpgd, int updateMask)
   {
     pgd = pgd_strip(DECAF_get_pgd(env, i));
     pid = DECAF_get_pid(env,i);
-		DECAF_fprintf(NULL, "DNDROID--updateProcessList: task=%i, pid=%i", task, pid);
+		//DECAF_fprintf(NULL, "DNDROID--updateProcessList: task=%i, pid=%i", task, pid);
     //see if this is the new process, if it is, then update the current PID
     if (pgd == pgd_strip(newpgd))
     {

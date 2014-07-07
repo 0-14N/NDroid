@@ -538,6 +538,10 @@ int DECAF_linux_vmi_init()
 
   if(fd == NULL) 
   {
+		/* NDROID START */
+		//file "kernelinfo.conf" should be copied to "td-source/external/qemu/objs"
+		DECAF_fprintf(NULL, "kernelinfo not found\n");
+		/* NDROID END */
     return (-1);
   }
 

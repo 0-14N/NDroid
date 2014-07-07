@@ -28,6 +28,11 @@
 void DS_init()
 {
   DECAF_linux_vmi_init();
+
+	/**
+	 * register a DECAF_BLOCK_BEGIN and a PGD_WRITE_BACK callback,
+	 * construct the shadow processes list
+	 */
   context_init();
 
 	/* NDROID START */
@@ -35,16 +40,15 @@ void DS_init()
   //DalvikDisableJit_init();
   //DalvikPrinter_init();
 
-  //atexit(DS_close);
+  atexit(DS_close);
 	/* NDROID END */
 }
 
-/* NDROID START */
-/*
 void DS_close()
 {
-  DalvikMterpOpcodes_close();
-  DalvikDisableJit_close();
+	/* NDROID START */
+  //DalvikMterpOpcodes_close();
+  //DalvikDisableJit_close();
+	context_close();
+	/* NDROID END */
 }
-*/
-/* NDROID END */
