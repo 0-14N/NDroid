@@ -28,15 +28,15 @@ void do_guest_ps(Monitor *mon)
 
 void do_guest_pt(Monitor* mon)
 {
-  //linux_pt(mon); NDROID
+  linux_pt(mon); NDROID
 }
 
 void do_guest_modules(Monitor* mon, int pid)
 {
-  //linux_print_mod(mon, pid);  NDROID
+  linux_print_mod(mon, pid);  NDROID
 }
 
 void do_sym_to_addr(Monitor* mon, int pid, const char* modName, const char* symName)
 {
-  //get_symbol_address(mon, pid, modName, symName); NDROID
+  get_symbol_address(mon, pid, modName, symName); NDROID
 }
