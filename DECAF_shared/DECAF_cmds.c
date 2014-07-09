@@ -28,15 +28,42 @@ void do_guest_ps(Monitor *mon)
 
 void do_guest_pt(Monitor* mon)
 {
-  linux_pt(mon); NDROID
+  linux_pt(mon);
 }
 
 void do_guest_modules(Monitor* mon, int pid)
 {
-  linux_print_mod(mon, pid);  NDROID
+  linux_print_mod(mon, pid);
 }
 
 void do_sym_to_addr(Monitor* mon, int pid, const char* modName, const char* symName)
 {
-  get_symbol_address(mon, pid, modName, symName); NDROID
+  get_symbol_address(mon, pid, modName, symName);
 }
+
+/* NDROID START */
+void nd_trace_pid(Monitor* mon, int pid)
+{
+	DECAF_printf("nd_trace_pid %d\n", pid);
+}
+
+void nd_trace_uid(Monitor* mon, const char* uid)
+{
+	DECAF_printf("nd_trace_uid %s\n", uid);
+}
+
+void nd_wait_and_trace_uid(Monitor* mon, const char* uid)
+{
+	DECAF_printf("nd_wait_and_trace_uid %s\n", uid);
+}
+
+void nd_stop_trace_pid(Monitor* mon, int pid)
+{
+	DECAF_printf("nd_stop_trace_pid %d\n", pid);
+}
+
+void nd_stop_trace_uid(Monitor* mon, const char* uid)
+{
+	DECAF_printf("nd_stop_trace_uid %s\n", uid);
+}
+/* NDROID END */

@@ -65,3 +65,46 @@
   .params       = "pid moduleName symbolName",
   .help         = "Tries to retrieve the address of a symbol in a module"
 },
+
+/* NDROID START */
+/* NDroid commands */
+{
+  .name         = "nd_trace_pid",
+  .args_type    = _QEMU_MON_KEY_VALUE("pid","i"),
+  ._QEMU_MON_HANDLER_CMD = nd_trace_pid,
+  .params       = "pid",
+  .help         = "NDroid: trace a running process with pid = <pid>"
+},
+
+{
+  .name         = "nd_trace_uid",
+  .args_type    = _QEMU_MON_KEY_VALUE("uid","s"),
+  ._QEMU_MON_HANDLER_CMD = nd_trace_uid,
+  .params       = "uid",
+  .help         = "NDroid: trace a running process with uid = <uid>"
+},
+
+{
+  .name         = "nd_wait_and_trace_uid",
+  .args_type    = _QEMU_MON_KEY_VALUE("uid","s"),
+  ._QEMU_MON_HANDLER_CMD = nd_wait_and_trace_uid,
+  .params       = "uid",
+  .help         = "NDroid: wait a process with uid = <uid> to start and trace it"
+},
+
+{
+  .name         = "nd_stop_trace_pid",
+  .args_type    = _QEMU_MON_KEY_VALUE("pid","i"),
+  ._QEMU_MON_HANDLER_CMD = nd_stop_trace_pid,
+  .params       = "pid",
+  .help         = "NDroid: stop tracing the process with pid = <pid>"
+},
+
+{
+  .name         = "nd_stop_trace_uid",
+  .args_type    = _QEMU_MON_KEY_VALUE("uid","s"),
+  ._QEMU_MON_HANDLER_CMD = nd_stop_trace_uid,
+  .params       = "uid",
+  .help         = "NDroid: stop tracing the process with uid = <uid>"
+},
+/* NDROID END */

@@ -52,6 +52,10 @@
 
 #include "DECAF_linux_vmi.h"
 
+/* NDROID START */
+#include "DECAF_shared/utils/OutputWrapper.h"
+/* NDROID END */
+
 char kernelinfo_filename[256] = "kernelinfo.conf";
 
 gva_t taskaddr = 0;

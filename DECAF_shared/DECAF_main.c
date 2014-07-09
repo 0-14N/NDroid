@@ -33,6 +33,9 @@
 #include "DECAF_shared/DECAF_main_internal.h"
 #include "DECAF_shared/DECAF_vm_compress.h"
 #include "DECAF_shared/DECAF_cmds.h"
+/* NDROID START */
+#include "DECAF_shared/DroidScope/DS_Init.h"
+/* NDROID END */
 //#include "DECAF_shared/procmod.h" //remove this later
 
 int should_monitor = 1;
