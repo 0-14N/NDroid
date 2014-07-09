@@ -107,10 +107,12 @@ void updateProcessModuleList(CPUState* env, gpid_t pid)
     return;
   }
 
+	/* NDROID START */
 	/**
 	 * Comment added by Chenxiong0_14N
 	 * find the task_struct with 'pid'
 	 */
+	/* NDROID END */
   task = DECAF_get_current_process(env);
   i = task;
   do
@@ -325,6 +327,7 @@ gva_t updateProcessListByTask(CPUState* env, gva_t task, int updateMask, int bNe
     name[0] = '\0';
   }
 
+	/* NDROID START */
 	/**
 	 * Comment added by Chenxiong0_14N
 	 * The logic of this "if" condition expression confuses me:
@@ -332,12 +335,17 @@ gva_t updateProcessListByTask(CPUState* env, gva_t task, int updateMask, int bNe
 	 * 2. findProcessByPID(pid) == NULL also means 'pid' doesn't exist
 	 * So, it seems that bNeedMark is useless.
 	 */
+	/* NDROID END */
   //update the info if needed
   if ( ((bNeedMark) && (processMark(pid) == 1))
        || ((!bNeedMark) && (findProcessByPID(pid) == NULL)) 
      ) // i.e. it doesn't exist
   {
     addProcess(i, pid, parentPid, tgid, glpid, uid, gid, euid, egid, pgd, (argName[0] == '\0') ? NULL : argName, (name[0] == '\0') ? NULL : name);
+		/* NDROID START */
+		//because process with 'pid' has been added to 'processInfoMap', so that 
+		//call 'processMark' again would add the new added process to 'processInfoMapTemp'
+		/* NDROID END */
     processMark(pid);
     params.cp.pid = pid;
     params.cp.pgd = pgd;
@@ -432,12 +440,14 @@ void updateProcessList(CPUState* env, gpa_t newpgd, int updateMask)
       curProcessPGD = pgd;
     }
 
+		/* NDROID START */
 		/**
 		 * Comment added by Chenxiong0_14N
 		 * update task and update threads or modules depends on 'updateMask'
 		 * The 'updateMask' would union with 'UPDATE_THREADS' and 'UPDATE_MODULES'
 		 * if the process is newly created.
 		 */	
+		/* NDROID END */
     i = updateProcessListByTask(env, i, updateMask, 1);
   } while ( (i != task) && ( i != 0) );
 
@@ -582,7 +592,6 @@ void contextBBCallback(DECAF_Callback_Params* params)
     } 
     else
     {
-			//DECAF_fprintf(NULL, "DNDROIDcontextBBCallback--%p, %i, %i\n", env, getCurrentPGD(), updateMask);
       updateProcessList(env, getCurrentPGD(), updateMask);
     }
 

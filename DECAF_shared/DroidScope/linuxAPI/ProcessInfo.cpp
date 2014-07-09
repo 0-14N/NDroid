@@ -144,10 +144,12 @@ DECAF_errno_t ProcessInfoMap::addProcess(gva_t task, gpid_t pid, gpid_t parentPi
   return (0);
 }
 
+/* NDROID START */
 /**
  * Comment added by Chenxiong0_14N
  * Update process with 'pid': task, parentPid, tgid, .... would be updated if changed.
  */
+/* NDROID END */
 int ProcessInfoMap::updateProcess(gva_t task, gpid_t pid, gpid_t parentPid, gpid_t tgid, 
 		gpid_t glpid, target_ulong uid, target_ulong gid, target_ulong euid, target_ulong egid, 
 		gpa_t pgd, const char* strName, const char* strComm)//Multiple-lined by Chenxiong0_14N
@@ -1041,7 +1043,18 @@ int processMarkBegin()
   return (0);
 }
 
-
+/* NDROID START */
+/**
+ * if process with 'pid' is in 'processInfoMap', also add
+ * it into 'processInfoMapTemp'.
+ *
+ * @pid 
+ * @return: -1 -- if not in Mark Mode
+ *          1  -- not in 'processInfoMap'
+ *          0  -- in 'processInfoMap'
+ *
+ */
+/* NDROID END */
 int processMark(gpid_t pid)
 {
   if (!bInMarkMode)

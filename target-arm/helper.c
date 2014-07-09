@@ -1511,7 +1511,7 @@ void HELPER(set_cp15)(CPUState *env, uint32_t insn, uint32_t val)
 	    case 1:
 					/** START DECAF ADDITIONS **/
 					oldval = env->cp15.c2_base1;
-					DECAF_invoke_PGD_write_callback(env, oldval, val, 0);
+					DECAF_invoke_PGD_write_callback(env, oldval, val, 1);
 					/** END DECAF ADDITIONS **/
 		env->cp15.c2_base1 = val;
 		break;
