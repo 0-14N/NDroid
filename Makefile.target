@@ -166,8 +166,14 @@ DECAF_SRC_FILES += \
 		utils/SimpleCallback.c \
 		utils/TULStringMapWrapper.cpp \
 
+# START NDROID SRC FILES
+DECAF_SRC_FILES += \
+		DroidScope/NDroid/ND_manager.c\
+# END NDROID SRC FILES
+
 DECAF_CFLAGS := -I$(LOCAL_PATH)/DECAF_shared
 DECAF_CFLAGS += -I$(LOCAL_PATH)/DECAF_shared/DroidScope
+DECAF_CFLAGS += -I$(LOCAL_PATH)/DECAF_shared/DroidScope/NDroid
 DECAF_CFLAGS += -I$(LOCAL_PATH)/DECAF_shared/DroidScope/linuxAPI
 DECAF_CFLAGS += -I$(LOCAL_PATH)/DECAF_shared/DroidScope/DS_utils
 DECAF_LDLIBS := -lstdc++

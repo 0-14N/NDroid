@@ -18,6 +18,10 @@
 **/
 
 #include "DECAF_cmds.h"
+/* NDROID START */
+#include "DroidScope/NDroid/ND_manager.h"
+#include "utils/OutputWrapper.h"
+/* NDROID END */
 //#include "procmod.h"
 
 void do_guest_ps(Monitor *mon)
@@ -42,28 +46,28 @@ void do_sym_to_addr(Monitor* mon, int pid, const char* modName, const char* symN
 }
 
 /* NDROID START */
-void nd_trace_pid(Monitor* mon, int pid)
+void nd_trace_pid(Monitor* mon, gpid_t pid)
 {
-	DECAF_printf("nd_trace_pid %d\n", pid);
+	nd_manager_trace_pid(mon, pid);
 }
 
-void nd_trace_uid(Monitor* mon, const char* uid)
+void nd_trace_uid(Monitor* mon, target_ulong uid)
 {
-	DECAF_printf("nd_trace_uid %s\n", uid);
+	nd_manager_trace_uid(mon, uid);
 }
 
-void nd_wait_and_trace_uid(Monitor* mon, const char* uid)
+void nd_wait_and_trace_uid(Monitor* mon, target_ulong uid)
 {
-	DECAF_printf("nd_wait_and_trace_uid %s\n", uid);
+	nd_manager_wait_and_trace_uid(mon, uid);
 }
 
-void nd_stop_trace_pid(Monitor* mon, int pid)
+void nd_stop_trace_pid(Monitor* mon, gpid_t pid)
 {
-	DECAF_printf("nd_stop_trace_pid %d\n", pid);
+	nd_manager_stop_trace_pid(mon, pid);
 }
 
-void nd_stop_trace_uid(Monitor* mon, const char* uid)
+void nd_stop_trace_uid(Monitor* mon, target_ulong uid)
 {
-	DECAF_printf("nd_stop_trace_uid %s\n", uid);
+	nd_manager_stop_trace_uid(mon, uid);
 }
 /* NDROID END */

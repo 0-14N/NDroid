@@ -49,6 +49,10 @@
 #include "DECAF_shared/utils/SimpleCallback.h"
 #include "DECAF_shared/utils/OutputWrapper.h"
 
+/* NDROID START */
+#include "DroidScope/NDroid/ND_manager.h"
+/* NDROID END */
+
 gpid_t curProcessPID = (-1);
 static gpa_t curProcessPGD = 0;
 
@@ -342,6 +346,13 @@ gva_t updateProcessListByTask(CPUState* env, gva_t task, int updateMask, int bNe
      ) // i.e. it doesn't exist
   {
     addProcess(i, pid, parentPid, tgid, glpid, uid, gid, euid, egid, pgd, (argName[0] == '\0') ? NULL : argName, (name[0] == '\0') ? NULL : name);
+		/* NDROID START */
+		if(ND_TRACING_STATE == ND_WAITING && uid == ND_GLOBAL_TRACING_UID){
+			DECAF_printf("Process with uid <%d> starts!\n", uid);
+			nd_manager_trace_uid(NULL, uid);
+		}
+		/* NDROID END */
+
 		/* NDROID START */
 		//because process with 'pid' has been added to 'processInfoMap', so that 
 		//call 'processMark' again would add the new added process to 'processInfoMapTemp'

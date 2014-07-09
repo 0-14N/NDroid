@@ -38,6 +38,11 @@ int processMarkBegin();
 int processMark(gpid_t pid);
 int processMarkEnd(gpid_t** aPIDs, size_t* len);
 
+/* NDROID START */
+ProcessInfo* findProcessByPID(gpid_t pid);
+ProcessInfo* findProcessByUID(target_ulong uid);
+/* NDROID END */
+
 //here are some functions that can be used to cleanup the process list through removal
 #ifdef __cplusplus
 }
@@ -54,6 +59,10 @@ public:
   ProcessInfo* findProcessByPGD(gpa_t pgd);
   ProcessInfo* findProcessByName(const char* strName);
   ProcessInfo* findProcessByTaskStruct(gva_t task_struct_addr);
+
+	/* NDROID START */
+	ProcessInfo* findProcessByUID(target_ulong uid);
+	/* NDROID END */
 
   int processExist(gpid_t pid) { return (findProcessByPID(pid) != NULL); }
   int processExistByPGD(gpa_t pgd) { return (findProcessByPGD(pgd) != NULL); }

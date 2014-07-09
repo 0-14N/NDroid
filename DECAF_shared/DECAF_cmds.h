@@ -30,6 +30,10 @@
 #include "monitor.h"
 #include "qdict.h"
 
+/* NDROID START */
+#include "DECAF_shared/DECAF_types.h"
+/* NDROID END */
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -41,11 +45,11 @@ void do_guest_modules(Monitor *mon, int pid);
 void do_sym_to_addr(Monitor* mon, int pid, const char* modName, const char* symName);
 
 /* NDROID START */
-void nd_trace_pid(Monitor* mon, int pid);
-void nd_trace_uid(Monitor* mon, const char* uid);
-void nd_wait_and_trace_uid(Monitor* mon, const char* uid);
-void nd_stop_trace_pid(Monitor* mon, int pid);
-void nd_stop_trace_uid(Monitor* mon, const char* uid);
+void nd_trace_pid(Monitor* mon, gpid_t pid);
+void nd_trace_uid(Monitor* mon, target_ulong uid);
+void nd_wait_and_trace_uid(Monitor* mon, target_ulong uid);
+void nd_stop_trace_pid(Monitor* mon, gpid_t pid);
+void nd_stop_trace_uid(Monitor* mon, target_ulong uid);
 /* NDROID END */
 
 #ifdef __cplusplus

@@ -42,6 +42,26 @@ ProcessInfo* ProcessInfoMap::findProcessByPID(gpid_t pid)
   return (it->second);
 }
 
+/* NDROID START */
+ProcessInfo* ProcessInfoMap::findProcessByUID(target_ulong uid)
+{
+	_ProcessInfoMap::iterator it;
+	for (it = processInfoMap.begin(); it != processInfoMap.end(); it++)
+	{
+		ProcessInfo* pTemp = it->second;
+		if(pTemp == NULL)
+		{
+			continue;
+		}
+		if(pTemp->uid == uid)
+		{
+			return (pTemp);
+		}
+	}
+	return (NULL);
+}
+/* NDROID END */
+
 ProcessInfo* ProcessInfoMap::findProcessByPGD(gpa_t pgd)
 {
   _ProcessInfoMap::iterator it;
@@ -1206,6 +1226,12 @@ ProcessInfo* findProcessByPID(gpid_t pid)
   return (processInfoMap.findProcessByPID(pid));
 }
 
+/* NDROID START */
+ProcessInfo* findProcessByUID(target_ulong uid){
+	return (processInfoMap.findProcessByUID(uid));
+}
+/* NDROID END */
+
 ProcessInfo* findProcessByPGD(gpa_t pgd)
 {
   return (processInfoMap.findProcessByPGD(pgd));
@@ -1285,3 +1311,5 @@ int getModuleInfoByName(gpid_t pid, gva_t * pStartAddr, gva_t * pEndAddr, const 
 {
   return (processInfoMap.getModuleInfoByName(pid, pStartAddr, pEndAddr, strName));
 }
+
+
