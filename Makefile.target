@@ -169,6 +169,7 @@ DECAF_SRC_FILES += \
 # START NDROID SRC FILES
 DECAF_SRC_FILES += \
 		DroidScope/NDroid/ND_manager.c\
+		DroidScope/NDroid/ND_instrument.c\
 # END NDROID SRC FILES
 
 DECAF_CFLAGS := -I$(LOCAL_PATH)/DECAF_shared

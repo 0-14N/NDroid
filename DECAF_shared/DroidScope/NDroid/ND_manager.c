@@ -4,6 +4,7 @@
  */
 
 #include "ND_manager.h"
+#include "ND_instrument.h"
 #include "DECAF_shared/utils/OutputWrapper.h"
 #include "DECAF_shared/DroidScope/linuxAPI/ProcessInfo.h"
 
@@ -21,7 +22,7 @@ int ND_TRACING_STATE = ND_STOP;
  * The start point of tracing process
  */
 void startTracing(){
-
+	nd_instrument_init();
 }
 
 void nd_reset(){
