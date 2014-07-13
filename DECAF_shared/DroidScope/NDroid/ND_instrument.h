@@ -12,6 +12,10 @@
 extern "C"
 {
 #endif
+
+	extern DECAF_Handle nd_ib_handle;
+	extern DECAF_Handle nd_be_handle;
+
 	void nd_instrument_init();
 #ifdef __cplusplus
 }

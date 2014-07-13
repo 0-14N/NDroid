@@ -8,6 +8,7 @@
 
 #include "monitor.h"
 #include "DECAF_shared/DECAF_types.h"
+#include "DECAF_shared/DroidScope/linuxAPI/ProcessInfo.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -17,6 +18,7 @@ extern "C"
 extern gpid_t ND_GLOBAL_TRACING_PID;
 extern target_ulong ND_GLOBAL_TRACING_UID;
 extern int ND_TRACING_STATE;
+extern ProcessInfo* ND_GLOBAL_TRACING_PROCESS;
 #define ND_STOP -1
 #define ND_WAITING 0
 #define ND_TRACING_PID 1

@@ -6,7 +6,6 @@
 #include "ND_manager.h"
 #include "ND_instrument.h"
 #include "DECAF_shared/utils/OutputWrapper.h"
-#include "DECAF_shared/DroidScope/linuxAPI/ProcessInfo.h"
 
 gpid_t ND_GLOBAL_TRACING_PID = -1;
 target_ulong ND_GLOBAL_TRACING_UID = -1;
@@ -17,6 +16,8 @@ target_ulong ND_GLOBAL_TRACING_UID = -1;
  * -1 -- stop tracing
  */
 int ND_TRACING_STATE = ND_STOP;
+//the tracing process
+ProcessInfo* ND_GLOBAL_TRACING_PROCESS = NULL;
 
 /**
  * The start point of tracing process
@@ -29,6 +30,7 @@ void nd_reset(){
 	ND_GLOBAL_TRACING_UID = -1;
 	ND_GLOBAL_TRACING_PID = -1;
 	ND_TRACING_STATE = ND_STOP;
+	ND_GLOBAL_TRACING_PROCESS = NULL;
 }
 
 void nd_manager_trace_pid(Monitor* mon, gpid_t pid){
@@ -45,6 +47,8 @@ void nd_manager_trace_pid(Monitor* mon, gpid_t pid){
 		ND_GLOBAL_TRACING_UID = processInfo->uid;
 		ND_TRACING_STATE = ND_TRACING_PID;
 		DECAF_printf("Find process with pid <%d>, start tracing!\n", pid);
+		ND_GLOBAL_TRACING_PROCESS = processInfo;
+		nd_instrument_init();
 	}else{
 		DECAF_printf("Canot find process with pid <%d>\n", pid);
 	}
@@ -66,6 +70,8 @@ void nd_manager_trace_uid(Monitor* mon, target_ulong uid){
 		ND_GLOBAL_TRACING_PID = processInfo->pid;
 		ND_TRACING_STATE = ND_TRACING_UID;
 		DECAF_printf("Find process with uid <%d>, start tracing!\n", uid);
+		ND_GLOBAL_TRACING_PROCESS = processInfo;
+		nd_instrument_init();
 	}else{
 		DECAF_printf("Canot find process with uid <%d>\n", uid);
 	}
