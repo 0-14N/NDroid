@@ -7,16 +7,19 @@
 #include "DECAF_shared/DECAF_main.h"
 #include "DECAF_shared/DECAF_callback.h"
 #include "DECAF_shared/utils/OutputWrapper.h"
+#include "DECAF_shared/DroidScope/NDroid/darm/darm.h"
 
 DECAF_Handle nd_ib_handle = DECAF_NULL_HANDLE;
 DECAF_Handle nd_be_handle = DECAF_NULL_HANDLE;
 
 int nd_instruction_begin_callback_cond(DECAF_callback_type_t cbType, gva_t curPC, gva_t nextPC){
+	/*
 	gva_t task = DECAF_get_current_process(env);
 	gpid_t pid = DECAF_get_pid(env, task);
 	if(pid == ND_GLOBAL_TRACING_PROCESS->pid){
 		return (1);
 	}
+	*/
 
 	return (0);
 }
@@ -46,6 +49,10 @@ void nd_instruction_begin_callback(DECAF_Callback_Params* params){
 	}else{
 		//ARM instruction
 		if(DECAF_read_mem(env, cur_pc, tmpARMInsn.chars, 4) != -1){
+			darm_t d;
+			darm_str_t str;
+			if(darm_armv7_disasm(&d, tmpARMInsn.insn) == 0){
+			}
 		}
 	}
 

@@ -167,9 +167,19 @@ DECAF_SRC_FILES += \
 		utils/TULStringMapWrapper.cpp \
 
 # START NDROID SRC FILES
+# armv7.c  armv7-tbl.c  darm.c  darm-tbl.c  thumb2.c  thumb2-decoder.c  thumb2-tbl.c  thumb.c  thumb-tbl.c
 DECAF_SRC_FILES += \
 		DroidScope/NDroid/ND_manager.c\
 		DroidScope/NDroid/ND_instrument.c\
+		DroidScope/NDroid/darm/armv7.c\
+		DroidScope/NDroid/darm/armv7-tbl.c\
+		DroidScope/NDroid/darm/darm.c\
+		DroidScope/NDroid/darm/darm-tbl.c\
+		DroidScope/NDroid/darm/thumb2.c\
+		DroidScope/NDroid/darm/thumb2-decoder.c\
+		DroidScope/NDroid/darm/thumb2-tbl.c\
+		DroidScope/NDroid/darm/thumb.c\
+		DroidScope/NDroid/darm/thumb-tbl.c\
 # END NDROID SRC FILES
 
 DECAF_CFLAGS := -I$(LOCAL_PATH)/DECAF_shared
@@ -177,6 +187,7 @@ DECAF_CFLAGS += -I$(LOCAL_PATH)/DECAF_shared/DroidScope
 DECAF_CFLAGS += -I$(LOCAL_PATH)/DECAF_shared/DroidScope/NDroid
 DECAF_CFLAGS += -I$(LOCAL_PATH)/DECAF_shared/DroidScope/linuxAPI
 DECAF_CFLAGS += -I$(LOCAL_PATH)/DECAF_shared/DroidScope/DS_utils
+DECAF_CFLAGS += -I$(LOCAL_PATH)/DECAF_shared/DroidScope/NDroid/darm
 DECAF_LDLIBS := -lstdc++
 
 # END DECAF SRC FILES
