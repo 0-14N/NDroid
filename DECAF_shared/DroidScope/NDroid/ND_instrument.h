@@ -17,6 +17,7 @@ extern "C"
 	extern DECAF_Handle nd_be_handle;
 
 	void nd_instrument_init();
+	void nd_instrument_stop();
 #ifdef __cplusplus
 }
 #endif

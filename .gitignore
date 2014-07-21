@@ -2,3 +2,6 @@ images/android_icon.o
 objs/*
 *.*~
 tags
+.gitignore
+/home/ndroid/tdroid/tdroid-4.1.1_r6/external/qemu/DECAF_shared/DroidScope/NDroid/scripts/tmp
+/home/ndroid/tdroid/tdroid-4.1.1_r6/external/qemu/DECAF_shared/DroidScope/NDroid/scripts/tmp2

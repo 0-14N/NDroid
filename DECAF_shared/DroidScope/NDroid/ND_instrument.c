@@ -8,22 +8,41 @@
 #include "DECAF_shared/DECAF_callback.h"
 #include "DECAF_shared/utils/OutputWrapper.h"
 #include "DECAF_shared/DroidScope/NDroid/darm/darm.h"
+#include "NativeLibraryWhitelist.h"
 
 DECAF_Handle nd_ib_handle = DECAF_NULL_HANDLE;
 DECAF_Handle nd_be_handle = DECAF_NULL_HANDLE;
 
-int nd_instruction_begin_callback_cond(DECAF_callback_type_t cbType, gva_t curPC, gva_t nextPC){
-	/*
-	gva_t task = DECAF_get_current_process(env);
-	gpid_t pid = DECAF_get_pid(env, task);
-	if(pid == ND_GLOBAL_TRACING_PROCESS->pid){
-		return (1);
-	}
-	*/
+StringHashtable* whitelistLibs = NULL;
+StringHashtable* blacklistLibs = NULL;
 
+
+/*
+ * Instruction Begin callback condition function.
+ *
+ * Since we cannot get process id at translation phase, it 
+ */
+int nd_instruction_begin_callback_cond(DECAF_callback_type_t cbType, gva_t curPC, gva_t nextPC){
+	char moduleName[128];
+	moduleName[0] = '\0';
+	gva_t startAddr = -1;
+	gva_t endAddr = -1;
+
+	if(ND_GLOBAL_TRACING_PID >= 0){
+		getModuleInfo(ND_GLOBAL_TRACING_PID, moduleName, 128, &startAddr, &endAddr, curPC);
+		if('\0' != moduleName[0]){
+			if(!StringHashtable_exist(whitelistLibs, moduleName)){
+				DECAF_printf("module name: %s\n", moduleName);
+			}
+		}
+	}
+	
 	return (0);
 }
 
+/**
+ * Instruction Begin callback.
+ */
 void nd_instruction_begin_callback(DECAF_Callback_Params* params){
 	DEFENSIVE_CHECK0(params == NULL);
 	CPUState* env = params->ib.env;
@@ -42,8 +61,7 @@ void nd_instruction_begin_callback(DECAF_Callback_Params* params){
 		return;
 	}
 	//THUMB instruction
-	if(cur_pc & 0x01){
-		assert(env->thumb == 1);
+	if(env->thumb == 1){
 		if(DECAF_read_mem(env, cur_pc & 0xfffffffe, tmpTHUMBInsn.chars, 2) != -1){
 		}
 	}else{
@@ -58,9 +76,31 @@ void nd_instruction_begin_callback(DECAF_Callback_Params* params){
 
 }
 
+
+/**
+ * Block end callback condition function.
+ */
+int nd_block_end_callback_cond(DECAF_callback_type_t cbType, gva_t curPC, gva_t nextPC){
+	return (0);
+}
+
+/**
+ * Block end callback.
+ */
+void nd_block_end_callback(DECAF_Callback_Params* params){
+}
+
 void nd_instrument_init(){
 	nd_ib_handle = DECAF_register_callback(DECAF_INSN_BEGIN_CB, 
 																				&nd_instruction_begin_callback, 
 																				&nd_instruction_begin_callback_cond);
+	nd_be_handle = DECAF_register_callback(DECAF_BLOCK_END_CB,
+																				&nd_block_end_callback,
+																				&nd_block_end_callback_cond);
+	
+	whitelistLibs = NativeLibraryWhitelist_new();
 }
 
+void nd_instrument_stop(){
+
+}

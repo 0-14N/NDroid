@@ -31,6 +31,8 @@ void nd_reset(){
 	ND_GLOBAL_TRACING_PID = -1;
 	ND_TRACING_STATE = ND_STOP;
 	ND_GLOBAL_TRACING_PROCESS = NULL;
+	
+	nd_instrument_stop();
 }
 
 void nd_manager_trace_pid(Monitor* mon, gpid_t pid){

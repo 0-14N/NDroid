@@ -29,8 +29,58 @@
 #include "OutputWrapper.h"
 
 #include <tr1/unordered_set>
+/* NDROID START */
+#include <string>
+/* NDROID END */
 
 using namespace std::tr1;
+
+/* NDROID START */
+typedef unordered_set<std::string> sset;
+
+StringHashtable* StringHashtable_new(){
+	sset* pTable = new sset();
+	return ((StringHashtable*)pTable);
+}
+
+void StringHashtable_free(StringHashtable* pTable){
+	if(pTable != NULL){
+		delete((sset*)pTable);
+	}
+}
+
+int StringHashtable_add(StringHashtable* pTable, char* item){
+	sset* pHash = (sset*) pTable;
+	if(NULL == pHash){
+		return (NULL_POINTER_ERROR);
+	}
+	std::string s(item);
+	std::pair<sset::iterator, bool> ret = pHash->insert(s);
+	if(ret.second){
+		return (1);
+	}
+	return (0);
+}
+
+int StringHashtable_remove(StringHashtable* pTable, char* item){
+	sset* pHash = (sset*) pTable;
+	if(NULL == pHash){
+		return (NULL_POINTER_ERROR);
+	}
+	std::string s(item);
+	pHash->erase(s);
+	return (1);
+}
+
+int StringHashtable_exist(StringHashtable* pTable, char* item){
+	sset* pHash = (sset*) pTable;
+	if(NULL == pHash){
+		return (NULL_POINTER_ERROR);
+	}
+	std::string s(item);
+	return ((pHash->find(s)) != pHash->end());
+}
+/* NDROID END */
 
 typedef unordered_set<target_ulong> uset;
 

@@ -50,6 +50,16 @@ extern "C"
 
   typedef struct OpaqueHashmap OpaqueHashmap;
 
+	/* NDROID START */
+	typedef struct StringHashtable StringHashtable;
+
+	StringHashtable* StringHashtable_new(void);
+	void StringHashtable_free(StringHashtable* pTable);
+	int StringHashtable_add(StringHashtable* pTable, char* item);
+	int StringHashtable_remove(StringHashtable* pTable, char* item);
+	int StringHashtable_exist(StringHashtable* pTable, char* item);
+	/* NDROID END */
+
   Hashtable* Hashtable_new(void);
   void Hashtable_free(Hashtable* pTable);
   int Hashtable_add(Hashtable* pHash, target_ulong item);
