@@ -811,6 +811,36 @@ int ProcessInfoMap::getModuleInfo(ProcessInfo* pInfo, char* str, size_t len, gva
   return (0);
 }
 
+/* NDROID START */
+int ProcessInfoMap::getExecutableModuleInfo(ProcessInfo* pInfo, char* str, size_t len, gva_t* pStartAddr, gva_t* pEndAddr, gva_t addr){
+	if((pInfo == NULL) || (str == NULL) || (pStartAddr == NULL) || (pEndAddr == NULL)){
+		return (NULL_POINTER_ERROR);
+	}
+
+	ModuleInfo* pModInfo = NULL;
+	ModuleNode* i = pInfo->modules;
+	for(; i != NULL; i = i->next){
+		if((addr >= i->startAddr) && (addr <= i->endAddr)){
+			//the module is executable
+			if(i->flags & 0x4){
+				pModInfo = (ModuleInfo*)(i->moduleInfo);
+				break;
+			}
+		}
+	}
+
+	if(pModInfo == NULL){
+		return (ITEM_NOT_FOUND_ERROR);
+	}
+
+	strncpy(str, pModInfo->getName().c_str(), len);
+	*pStartAddr = i->startAddr;
+	*pEndAddr = i->endAddr;
+
+	return (0);
+}
+/* NDROID END */
+
 
 int ProcessInfoMap::getModuleName(gpid_t pid, char* str, size_t len, gva_t  addr)
 {
@@ -833,6 +863,17 @@ int ProcessInfoMap::getModuleInfo(gpid_t pid, char* str, size_t len, gva_t * pSt
   ProcessInfo* pInfo = findProcessByPID(pid);
   return (ProcessInfoMap::getModuleInfo(pInfo, str, len, pStartAddr, pEndAddr, addr));
 }
+
+/* NDROID START */
+int ProcessInfoMap::getExecutableModuleInfo(gpid_t pid, char* str, size_t len, gva_t* pStartAddr, gva_t* pEndAddr, gva_t addr){
+	if((str == NULL) || (pStartAddr == NULL) || (pEndAddr == NULL)){
+		return (NULL_POINTER_ERROR);
+	}
+
+	ProcessInfo* pInfo = findProcessByPID(pid);
+	return (ProcessInfoMap::getExecutableModuleInfo(pInfo, str, len, pStartAddr, pEndAddr, addr));
+}
+/* NDROID END */
 
 int ProcessInfoMap::getModuleInfoByName(gpid_t pid, gva_t * pStartAddr, gva_t * pEndAddr, const char* strName)
 {
@@ -1281,6 +1322,12 @@ int getModuleInfo(gpid_t pid, char* str, size_t len, gva_t * pStartAddr, gva_t *
 {
   return (processInfoMap.getModuleInfo(pid, str, len, pStartAddr, pEndAddr, addr));
 }
+
+/* NDROID START */
+int getExecutableModuleInfo(gpid_t pid, char* str, size_t len, gva_t* pStartAddr, gva_t* pEndAddr, gva_t addr){
+	return (processInfoMap.getExecutableModuleInfo(pid, str, len, pStartAddr, pEndAddr, addr));
+}
+/* NDROID END */
 
 void printModuleList(FILE* fp, gpid_t pid)
 {
