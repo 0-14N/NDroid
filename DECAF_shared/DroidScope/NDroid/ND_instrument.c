@@ -42,6 +42,8 @@ int nd_instruction_begin_callback_cond(DECAF_callback_type_t cbType, gva_t curPC
 	}
 
 	if(ND_GLOBAL_TRACING_PID >= 0){
+	//if(ND_GLOBAL_TRACING_PID == getCurrentPID()){ //Note that during translation phase, getCurrentPID() returns 
+	//process running rather than process being translated
 		getExecutableModuleInfo(ND_GLOBAL_TRACING_PID, moduleName, 128, &startAddr, &endAddr, curPC);
 		if('\0' != moduleName[0]){
 			//in blacklist
@@ -66,8 +68,26 @@ int nd_instruction_begin_callback_cond(DECAF_callback_type_t cbType, gva_t curPC
  */
 void nd_instruction_begin_callback(DECAF_Callback_Params* params){
 	DEFENSIVE_CHECK0(params == NULL);
+	//DEFENSIVE_CHECK0(getCurrentPID() != ND_GLOBAL_TRACING_PID);
+
 	CPUState* env = params->ib.env;
 	gva_t cur_pc = params->ib.cur_pc;
+
+	if(getCurrentPID() != ND_GLOBAL_TRACING_PID){
+		DECAF_printf("curPID: %d\n", getCurrentPID());
+		
+		if(env == NULL){
+			DECAF_printf("env==null\n");
+		}
+
+		gva_t curTaskStruct = DECAF_get_current_task_struct(env);
+		DECAF_printf("curTaskStruct: %x\n", curTaskStruct);
+		gva_t curTask = DECAF_get_current_process(env);
+		DECAF_printf("curTask: %x\n", curTask);
+		gpid_t curPid = DECAF_get_pid(env, curTask);
+		DECAF_printf("curPid: %d\n", curPid);
+	}
+
 	//ARM Instruction
 	union _tmpARMInsn{
 		target_ulong insn;

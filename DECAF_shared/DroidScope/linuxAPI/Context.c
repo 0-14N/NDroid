@@ -608,7 +608,12 @@ void contextBBCallback(DECAF_Callback_Params* params)
 
     //since we updated the list already - lets skip the next PGD
     //write update
-    bSkipNextPGDUpdate = 1;
+		/* NDROID START */
+		//After conducting experiments, we should not skip the next PGD update handling,
+		//or in callbacks (e.g., instruction_begin_callback), curPID will refer other 
+		//process (e.g., system_server) rather than the running process.
+    //bSkipNextPGDUpdate = 1;
+		/* NDORID END */
     Context_retAddr = 0;
     DECAF_flushTranslationBlock_env(env, Context_retAddr);
   }
