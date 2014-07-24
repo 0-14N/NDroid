@@ -10,6 +10,7 @@
 #include "DECAF_shared/DroidScope/NDroid/darm/darm.h"
 #include "DECAF_shared/DroidScope/linuxAPI/ProcessInfo.h"
 #include "NativeLibraryWhitelist.h"
+#include "dvm_hooking/dvm_hook.h"
 
 DECAF_Handle nd_ib_handle = DECAF_NULL_HANDLE;
 DECAF_Handle nd_be_handle = DECAF_NULL_HANDLE;
@@ -147,7 +148,21 @@ void nd_instruction_begin_callback(DECAF_Callback_Params* params){
  * Block end callback condition function.
  */
 int nd_block_end_callback_cond(DECAF_callback_type_t cbType, gva_t curPC, gva_t nextPC){
+	DEFENSIVE_CHECK1(nativeTracingPid == -1, 0);
+	DEFENSIVE_CHECK1(tracingProcess == NULL, 0);
+	DEFENSIVE_CHECK1(curPC < 0 || curPC >= 0xC0000000, 0);
+
+	gva_t tmpNextPC = nextPC & 0xfffffffe;
+	if(tmpNextPC == (DVM_START_ADDR + OFFSET_JNICALLMETHOD)){
+		return (1);
+	}
 	return (0);
+}
+
+/**
+ * Block end callback.
+ */
+void nd_block_end_callback(DECAF_Callback_Params* params){
 }
 
 int is_empty(const char* str){
@@ -160,12 +175,6 @@ int is_empty(const char* str){
 	}
 	return (1);
 }
-/**
- * Block end callback.
- */
-void nd_block_end_callback(DECAF_Callback_Params* params){
-}
-
 void nd_instrument_init(){
 	nd_ib_handle = DECAF_register_callback(DECAF_INSN_BEGIN_CB, 
 																				&nd_instruction_begin_callback, 
