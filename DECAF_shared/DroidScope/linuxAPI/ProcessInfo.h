@@ -42,6 +42,9 @@ int processMarkEnd(gpid_t** aPIDs, size_t* len);
 ProcessInfo* findProcessByPID(gpid_t pid);
 ProcessInfo* findProcessByUID(target_ulong uid);
 int getExecutableModuleInfo(gpid_t pid, char* str, size_t len, gva_t* pStartAddr, gva_t* pEndAddr, gva_t addr);
+int getModuleInfoByName(gpid_t pid, gva_t* pStartAddr, gva_t* pEndAddr, const char* strName);
+ModuleNode* getModulesByName(gpid_t pid, const char* strName);
+const char* getModuleNodeName(ModuleNode* module);
 /* NDROID END */
 
 //here are some functions that can be used to cleanup the process list through removal
@@ -96,6 +99,9 @@ public:
   int getModuleInfoByName(gpid_t pid, gva_t* pStartAddr, gva_t* pEndAddr, const char* strName);
 	/* NDROID START */
 	int getExecutableModuleInfo(gpid_t pid, char* str, size_t len, gva_t* pStartAddr, gva_t* pEndAddr, gva_t addr);
+	int getExecutableModuleInfo(ProcessInfo* pInfo, char* str, size_t len, gva_t* pStartAddr, gva_t* pEndAddr, gva_t addr);
+	ModuleNode* getModulesByName(gpid_t pid, const char* strName);
+	ModuleNode* getModulesByName(ProcessInfo* pInfo, const char* strName);
 	/* NDROID END */
 
   int symbolExists(gpid_t pid, gva_t address);
@@ -109,9 +115,6 @@ public:
   static int symbolExists(ProcessInfo* pInfo, gva_t address);
   static int getModuleName(ProcessInfo* pInfo, char* str, size_t len, gva_t addr);
   static int getModuleInfo(ProcessInfo* pInfo, char* str, size_t len, gva_t* pStartAddr, gva_t* pEndAddr, gva_t addr);
-	/* NDROID START */
-	static int getExecutableModuleInfo(ProcessInfo* pInfo, char* str, size_t len, gva_t* pStartAddr, gva_t* pEndAddr, gva_t addr);
-	/* NDROID END */
   int getModuleInfoByName(ProcessInfo* pInfo, gva_t* pStartAddr, gva_t* pEndAddr, const char* strName);
 
   static int getSymbol(ProcessInfo* pInfo, char* symbol, size_t len, gva_t address);

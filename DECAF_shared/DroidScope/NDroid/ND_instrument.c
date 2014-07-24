@@ -21,6 +21,10 @@ DECAF_Handle nd_be_handle = DECAF_NULL_HANDLE;
 StringHashtable* whitelistLibs = NULL;
 StringHashtable* blacklistLibs = NULL;
 
+//"libdvm.so" start address and end address
+gva_t DVM_START_ADDR = -1;
+gva_t DVM_END_ADDR = -1;
+
 
 /*
  * Instruction Begin callback condition function.
@@ -146,6 +150,16 @@ int nd_block_end_callback_cond(DECAF_callback_type_t cbType, gva_t curPC, gva_t 
 	return (0);
 }
 
+int is_empty(const char* str){
+	int i = 0;
+	char c = str[i];
+	for(; c != '\0'; c = str[++i]){
+		if(c != ' ' && c != '\t' && c != '\r' && c != '\n' && c != '\x0b'){
+			return (0);
+		}
+	}
+	return (1);
+}
 /**
  * Block end callback.
  */
@@ -164,8 +178,36 @@ void nd_instrument_init(){
 
   blacklistLibs = StringHashtable_new();
 
+	ModuleNode* node = getModulesByName(ND_GLOBAL_TRACING_PID, "/lib/libdvm.so");
+	if(node != NULL){
+		ModuleNode* i = node;
+		DECAF_printf("libdvm.so's address space: \n");
+		for(; i != NULL; i = i->next){
+			char* moduleName = getModuleNodeName(i);
+			if((!is_empty(moduleName)) && (strcmp(moduleName, "/lib/libdvm.so") != 0)){
+				break;
+			}else{
+				if(i->flags & 0x04){
+					DVM_START_ADDR = i->startAddr;
+					DVM_END_ADDR = i->endAddr;
+					DECAF_printf("libdvm.so: [%x, %x]\n", DVM_START_ADDR, DVM_END_ADDR);
+				}
+			}
+		}
+	}else{
+		DECAF_printf("Cannot get start address and end address of libdvm.so\n");
+	}
+	/*	
+	if(getModuleInfoByName(ND_GLOBAL_TRACING_PID, &DVM_START_ADDR, &DVM_END_ADDR, "/lib/libdvm.so") != 0){
+		DECAF_printf("Cannot get start address and end address of libdvm.so\n");
+	}else{
+		DECAF_printf("libdvm.so: [%x, %x]\n", DVM_START_ADDR, DVM_END_ADDR);
+	}
+	*/
 }
 
+
+//TODO
 void nd_instrument_stop(){
 	NativeLibraryWhitelist_free(whitelistLibs);
 

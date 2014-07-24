@@ -839,6 +839,24 @@ int ProcessInfoMap::getExecutableModuleInfo(ProcessInfo* pInfo, char* str, size_
 
 	return (0);
 }
+
+ModuleNode* ProcessInfoMap::getModulesByName(ProcessInfo* pInfo, const char* strName){
+	if((pInfo == NULL) || (strName == NULL)){
+		return (NULL);
+	}
+
+	ModuleInfo* pModInfo = NULL;
+	ModuleNode* i = pInfo->modules;
+	ModuleNode* result = NULL;
+	for(; i != NULL; i = i->next){
+		pModInfo = (ModuleInfo*)(i->moduleInfo);
+		if(strcmp(pModInfo->getName().c_str(), strName) == 0){
+			result = i;
+			break;
+		}
+	}
+	return result;
+}
 /* NDROID END */
 
 
@@ -873,6 +891,20 @@ int ProcessInfoMap::getExecutableModuleInfo(gpid_t pid, char* str, size_t len, g
 	ProcessInfo* pInfo = findProcessByPID(pid);
 	return (ProcessInfoMap::getExecutableModuleInfo(pInfo, str, len, pStartAddr, pEndAddr, addr));
 }
+
+ModuleNode* ProcessInfoMap::getModulesByName(gpid_t pid, const char* strName){
+	if(strName == NULL){
+		return (NULL);
+	}
+
+	ProcessInfo* pInfo = findProcessByPID(pid);
+	return (ProcessInfoMap::getModulesByName(pInfo, strName));
+}
+
+const char* getModuleNodeName(ModuleNode* module){
+	return ((ModuleInfo*)(module->moduleInfo))->getName().c_str();
+}
+
 /* NDROID END */
 
 int ProcessInfoMap::getModuleInfoByName(gpid_t pid, gva_t * pStartAddr, gva_t * pEndAddr, const char* strName)
@@ -1326,6 +1358,10 @@ int getModuleInfo(gpid_t pid, char* str, size_t len, gva_t * pStartAddr, gva_t *
 /* NDROID START */
 int getExecutableModuleInfo(gpid_t pid, char* str, size_t len, gva_t* pStartAddr, gva_t* pEndAddr, gva_t addr){
 	return (processInfoMap.getExecutableModuleInfo(pid, str, len, pStartAddr, pEndAddr, addr));
+}
+
+ModuleNode* getModulesByName(gpid_t pid, const char* strName){
+	return (processInfoMap.getModulesByName(pid, strName));
 }
 /* NDROID END */
 

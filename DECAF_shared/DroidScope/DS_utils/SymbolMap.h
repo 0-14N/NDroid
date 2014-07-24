@@ -27,7 +27,8 @@
 
 #include "utils/TULStringMapWrapper.h"
 
-class SymbolMap : public TULStringMap
+
+class SymbolMap: public TULStringMap
 {
 public:
   SymbolMap() {}

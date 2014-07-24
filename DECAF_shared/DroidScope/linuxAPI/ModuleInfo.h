@@ -22,10 +22,12 @@
  *      Author: lok
  */
 
+
 #ifndef MODULEINFO_H_
 #define MODULEINFO_H_
 
-#include <string>
+
+#include <string.h>
 #include <inttypes.h>
 #include "DS_utils/SymbolMap.h"
 
@@ -62,5 +64,6 @@ public:
 protected:
   std::string moduleName;
 };
+
 
 #endif /* MODULEINFO_H_ */
