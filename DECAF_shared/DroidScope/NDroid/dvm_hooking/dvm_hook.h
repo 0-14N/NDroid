@@ -11,9 +11,76 @@ extern "C"
 {
 #endif
 
-#define OFFSET_JNICALLMETHOD 0x000050f84
+#define OFFSET_JNI_CALL_METHOD 0x00050f84
+#define OFFSET_PLATFORM_INVOKE 0x0001f040
+#define OFFSET_JNICALLMETHOD_INVOKE_PLATFORM_INVOKE 0x00051120
 
-	void dvmCallJNIMethodCallback();
+//===========method info begin========
+/*
+ * struct Method {
+ *    ClassObject*    clazz;
+ *    u4              accessFlags;
+ *    u2             methodIndex;
+ *    u2              registersSize;  // ins + locals
+ *    u2              outsSize;
+ *    u2              insSize;
+ *    const char*     name;
+ *    DexProto        prototype;
+ *    const char*     shorty;
+ *    const u2*       insns;          // instructions, in memory-mapped .dex
+ *    int             jniArgInfo;
+ *    DalvikBridgeFunc nativeFunc;
+ *    bool fastJni;
+ *    bool noRef;
+ *    bool shouldTrace;
+ *    const RegisterMap* registerMap;
+ *    bool            inProfile;
+ * };
+ *
+ */
+#define METHOD_ACCESS_FLAG_OFFSET 4
+#define METHOD_REGISTER_SIZE_OFFSET 10
+#define METHOD_OUTS_SIZE_OFFSET 12
+#define METHOD_INS_SIZE_OFFSET 14
+#define METHOD_NAME_OFFSET 16
+#define METHOD_SHORTY_OFFSET 28
+#define METHOD_INSN_OFFSET 32
+#define ACC_STATIC 0x0008
+#define ACC_NATIVE 0x0100
+
+/*
+ * struct Object {
+ *    ClassObject*    clazz;
+ *    u4              lock;
+ * };
+ *
+ * struct ClassObject : Object {
+ * 	#ifdef WITH_TAINT_TRACKING
+ *   	// x2 space for interleaved taint tags
+ *    // CLASS_FIELD_SLOTS = 8
+ *   	u4              instanceData[CLASS_FIELD_SLOTS*2];
+ *	#else
+ *   	u4              instanceData[CLASS_FIELD_SLOTS];
+ *	#endif
+ *   const char*     descriptor;
+ *   char*           descriptorAlloc;
+ *   ...
+ * }
+ *
+ * struct StringObject : Object {
+ * 	 u4							instanceData[1];
+ *	 ...
+ * }
+ */
+#define CLASS_DESCRIPTOR_OFFSET 40
+
+#define STRING_INSTANCE_DATA_OFFSET 8
+#define STRING_TAINT_OFFSET 12
+//===========method info end==========
+
+	void dvmCallJNIMethodCallback(CPUState* env);
+
+	void dvmPlatformInvokeCallback(CPUState* env);
 
 #ifdef __cplusplus
 }

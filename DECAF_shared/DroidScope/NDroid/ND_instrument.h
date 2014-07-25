@@ -16,6 +16,7 @@ extern "C"
 	extern DECAF_Handle nd_ib_handle;
 	extern DECAF_Handle nd_be_handle;
 
+	int nd_in_blacklist(gva_t addr);
 	void nd_instrument_init();
 	void nd_instrument_stop();
 #ifdef __cplusplus

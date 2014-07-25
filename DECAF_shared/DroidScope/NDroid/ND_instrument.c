@@ -26,42 +26,50 @@ StringHashtable* blacklistLibs = NULL;
 gva_t DVM_START_ADDR = -1;
 gva_t DVM_END_ADDR = -1;
 
-
 /*
- * Instruction Begin callback condition function.
- *
  * Since we cannot get process id at translation phase, in order to reduce the performance
  * overhead, we first lookup 'curPC' in the traced process to get in which module the current
  * instruction locates. Then, if the returned module is in 'blacklistLibs', we perform 
  * instrumentation; or if it isn't in 'whitelistLibs', we perform instrumentation too.
  */
-int nd_instruction_begin_callback_cond(DECAF_callback_type_t cbType, gva_t curPC, gva_t nextPC){
+int nd_in_blacklist(gva_t addr){
 	char moduleName[128];
 	moduleName[0] = '\0';
 	gva_t startAddr = -1;
 	gva_t endAddr = -1;
 
 	//check current pc
-	if(curPC < 0 || curPC >= 0xC0000000){
+	if(addr < 0 || addr >= 0xC0000000){
 		return (0);
 	}
 
-	if(ND_GLOBAL_TRACING_PID >= 0){
 	//if(ND_GLOBAL_TRACING_PID == getCurrentPID()){ //Note that during translation phase, getCurrentPID() returns 
 	//process running rather than process being translated
-		getExecutableModuleInfo(ND_GLOBAL_TRACING_PID, moduleName, 128, &startAddr, &endAddr, curPC);
-		if('\0' != moduleName[0]){
-			//in blacklist
-			if(StringHashtable_exist(blacklistLibs, moduleName)){
-				return (1);
-			}
+	getExecutableModuleInfo(ND_GLOBAL_TRACING_PID, moduleName, 128, &startAddr, &endAddr, addr);
+	if('\0' != moduleName[0]){
+		//in blacklist
+		if(StringHashtable_exist(blacklistLibs, moduleName)){
+			return (1);
+		}
 
-			//not in whitelist
-			if(!StringHashtable_exist(whitelistLibs, moduleName)){
-				DECAF_printf("Add %s to blacklist\n", moduleName);
-				StringHashtable_add(blacklistLibs, moduleName);
-				return (1);
-			}
+		//not in whitelist
+		if(!StringHashtable_exist(whitelistLibs, moduleName)){
+			DECAF_printf("Add %s to blacklist\n", moduleName);
+			StringHashtable_add(blacklistLibs, moduleName);
+			return (1);
+		}
+	}
+
+	return (0);
+}
+
+/*
+ * Instruction Begin callback condition function.
+ */
+int nd_instruction_begin_callback_cond(DECAF_callback_type_t cbType, gva_t curPC, gva_t nextPC){
+	if(ND_GLOBAL_TRACING_PID >= 0){
+		if(nd_in_blacklist(curPC)){
+			return (1);
 		}
 	}
 	
@@ -115,7 +123,7 @@ void nd_instruction_begin_callback(DECAF_Callback_Params* params){
 				if(DECAF_read_mem(env, cur_pc & 0xfffffffe, tmpThumb2Insn.chars, 4) != -1){
 					if(darm_thumb2_disasm(&d, tmpThumb2Insn.insn >> 16, tmpThumb2Insn.insn & 0x0000ffff) == 0){
 						if(darm_str(&d, &str) == 0){
-							DECAF_printf("%x: %s\n", cur_pc, str.total);
+							//DECAF_printf("%x: %s\n", cur_pc, str.total);
 						}
 					}
 				}
@@ -123,7 +131,7 @@ void nd_instruction_begin_callback(DECAF_Callback_Params* params){
 				//Thumb instruction
 				if(darm_thumb_disasm(&d, tmpThumbInsn.insn) == 0){
 					if(darm_str(&d, &str) == 0){
-						DECAF_printf("%x: %s\n", cur_pc, str.total);
+						//DECAF_printf("%x: %s\n", cur_pc, str.total);
 					}
 				}
 			}
@@ -135,7 +143,7 @@ void nd_instruction_begin_callback(DECAF_Callback_Params* params){
 			darm_str_t str;
 			if(darm_armv7_disasm(&d, tmpARMInsn.insn) == 0){
 				if(darm_str(&d, &str) == 0){
-					DECAF_printf("%x: %s\n", cur_pc, str.total);
+					//DECAF_printf("%x: %s\n", cur_pc, str.total);
 				}
 			}
 		}
@@ -152,10 +160,14 @@ int nd_block_end_callback_cond(DECAF_callback_type_t cbType, gva_t curPC, gva_t 
 	DEFENSIVE_CHECK1(ND_GLOBAL_TRACING_PROCESS == NULL, 0);
 	DEFENSIVE_CHECK1(curPC < 0 || curPC >= 0xC0000000, 0);
 
+	gva_t tmpCurPC = curPC & 0xfffffffe;
 	gva_t tmpNextPC = nextPC & 0xfffffffe;
-	if(tmpNextPC == (DVM_START_ADDR + OFFSET_JNICALLMETHOD)){
+
+	//dvmCallJNIMethod
+	if(tmpNextPC == (DVM_START_ADDR + OFFSET_JNI_CALL_METHOD)){
 		return (1);
 	}
+
 	return (0);
 }
 
@@ -167,10 +179,10 @@ void nd_block_end_callback(DECAF_Callback_Params* params){
 	gva_t cur_pc = params->be.cur_pc & 0xfffffffe;
 	gva_t next_pc = params->be.next_pc & 0xfffffffe;
 
+	//dvmCallJNIMethod
 	if((getCurrentPID() == ND_GLOBAL_TRACING_PID) 
-			&& (cur_pc < 0xc0000000)
-			&& (next_pc == DVM_START_ADDR + OFFSET_JNICALLMETHOD)){
-		dvmCallJNIMethodCallback();
+			&& (next_pc == DVM_START_ADDR + OFFSET_JNI_CALL_METHOD)){
+		dvmCallJNIMethodCallback(env);
 	}
 }
 
@@ -184,6 +196,7 @@ int is_empty(const char* str){
 	}
 	return (1);
 }
+
 void nd_instrument_init(){
 	nd_ib_handle = DECAF_register_callback(DECAF_INSN_BEGIN_CB, 
 																				&nd_instruction_begin_callback, 
@@ -201,7 +214,7 @@ void nd_instrument_init(){
 		ModuleNode* i = node;
 		DECAF_printf("libdvm.so's address space: \n");
 		for(; i != NULL; i = i->next){
-			char* moduleName = getModuleNodeName(i);
+			const char* moduleName = getModuleNodeName(i);
 			if((!is_empty(moduleName)) && (strcmp(moduleName, "/lib/libdvm.so") != 0)){
 				break;
 			}else{
