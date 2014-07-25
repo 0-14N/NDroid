@@ -13,6 +13,8 @@ extern "C"
 
 #define OFFSET_JNICALLMETHOD 0x000050f84
 
+	void dvmCallJNIMethodCallback();
+
 #ifdef __cplusplus
 }
 #endif

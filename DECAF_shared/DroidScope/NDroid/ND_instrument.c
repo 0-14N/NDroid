@@ -148,8 +148,8 @@ void nd_instruction_begin_callback(DECAF_Callback_Params* params){
  * Block end callback condition function.
  */
 int nd_block_end_callback_cond(DECAF_callback_type_t cbType, gva_t curPC, gva_t nextPC){
-	DEFENSIVE_CHECK1(nativeTracingPid == -1, 0);
-	DEFENSIVE_CHECK1(tracingProcess == NULL, 0);
+	DEFENSIVE_CHECK1(ND_GLOBAL_TRACING_PID == -1, 0);
+	DEFENSIVE_CHECK1(ND_GLOBAL_TRACING_PROCESS == NULL, 0);
 	DEFENSIVE_CHECK1(curPC < 0 || curPC >= 0xC0000000, 0);
 
 	gva_t tmpNextPC = nextPC & 0xfffffffe;
@@ -163,6 +163,15 @@ int nd_block_end_callback_cond(DECAF_callback_type_t cbType, gva_t curPC, gva_t 
  * Block end callback.
  */
 void nd_block_end_callback(DECAF_Callback_Params* params){
+	CPUState* env = params->be.env;
+	gva_t cur_pc = params->be.cur_pc & 0xfffffffe;
+	gva_t next_pc = params->be.next_pc & 0xfffffffe;
+
+	if((getCurrentPID() == ND_GLOBAL_TRACING_PID) 
+			&& (cur_pc < 0xc0000000)
+			&& (next_pc == DVM_START_ADDR + OFFSET_JNICALLMETHOD)){
+		dvmCallJNIMethodCallback();
+	}
 }
 
 int is_empty(const char* str){

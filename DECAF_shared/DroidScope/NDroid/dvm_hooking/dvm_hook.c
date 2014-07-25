@@ -5,4 +5,5 @@
 
 #include "dvm_hook.h"
 
-
+void dvmCallJNIMethodCallback(){
+}
