@@ -18,7 +18,7 @@ static source_policy_map sourcePolicyMap;
  * handler of Java_com_ndroid_demo_MainActivity_send
  */
 void source_policy_handler(SourcePolicy* sourcePolicy, CPUState* env){
-	DECAF_myFprintf(NULL, "SourceHandler\n");
+	DECAF_printf("SourceHandler\n");
 	/*
 	//Set taint of R0, R1, R2, R3
 	if(sourcePolicy->tR0 > 0){
