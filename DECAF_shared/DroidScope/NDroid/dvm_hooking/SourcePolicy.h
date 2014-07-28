@@ -3,27 +3,19 @@
  * date: 2013-4-14
  *
  * We design a policy for source functions to indicate
- * that which parameters have taint.
+ * which parameters have taint.
  */
 
 /**
  * A policy for each source function should have the following elements:
- * 1. modulename ---- which module this function belongs to.
- * 2. offset	   ---- the offset of the function, base address is the module's start address.
- * 3. tR0, tR1, tR2, tR3   ----- the taint of the first 4 arguments, -1 means no taint.
- * 4. num    ---- number of the parameters on the stack.
- * 5. taints[num] ---- the taints of the parameters on the stack, -1 means no taint.
- * 6. handler    ----- the handler to initialize the taints
+ * 1. className  ---- in which class this function locates
+ * 2. methodName
+ * 3. addr   ---- start address of this method
+ * 4. tR0, tR1, tR2, tR3   ----- the taint of the first 4 arguments, <= 0 means no taint.
+ * 5. num    ---- number of the parameters on the stack.
+ * 6. taints[num] ---- the taints of the parameters on the stack, -1 means no taint.
+ * 7. handler    ----- the handler to initialize the taints
  *
- * For example:
- * JNIEXPORT jboolean JNICALL Java_com_ndroid_demo_MainActivity_send(JNIEnv* env, jobject thiz,
- * jdouble lat, jdouble lng);
- *
- * modulename: libdemo.so
- * offset: 0x00000e90
- * tR0, tR1, tR2, tR3: -1, -1, 1, 1 //assume taint value of latitude and longitude is 1
- * num: 0
- * taints: NULL
  */
 
 #ifndef __NDROID_SOURCE_POLICY_
@@ -42,23 +34,21 @@ extern "C" {
 
 
 typedef struct _SourcePolicy{
-	char* modulename;
-	int offset;
+	char* className;
+	char* methodName;
+	gva_t addr;
 	int tR0, tR1, tR2, tR3;
 	int num;
 	int* taints;
 	char* funcShorty;
+	int isStatic;
 	//SourcePolicy_handler_t handler;
 	void (*handler) (struct _SourcePolicy*, CPUState*);
 } SourcePolicy; 
 
 void source_policy_handler(SourcePolicy* sourcePolicy, CPUState* env);
 
-void initSourcePolicies(int pid);
-
-int addSourcePolicy(int pid, SourcePolicy* policy);
-
-int addEasySourcePolicy(int pid, int addr, SourcePolicy* policy);
+int addSourcePolicy(int addr, SourcePolicy* policy);
 
 SourcePolicy* findSourcePolicy(int cur_pc);
 

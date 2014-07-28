@@ -172,6 +172,7 @@ DECAF_SRC_FILES += \
 		DroidScope/NDroid/ND_manager.c\
 		DroidScope/NDroid/ND_instrument.c\
 		DroidScope/NDroid/dvm_hooking/dvm_hook.c\
+		DroidScope/NDroid/dvm_hooking/SourcePolicy.cpp\
 		DroidScope/NDroid/darm/armv7.c\
 		DroidScope/NDroid/darm/armv7-tbl.c\
 		DroidScope/NDroid/darm/darm.c\
