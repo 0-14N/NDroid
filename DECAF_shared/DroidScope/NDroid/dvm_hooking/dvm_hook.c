@@ -57,6 +57,12 @@ int getTaintOfStringAtAddr(CPUState* env, gva_t addr){
  * 					 |___0x4093487e___|
  * 					 |___ ........ ___|
  * 					 |___ ........ ___|
+ * 					 |___return taint_|
+ * 					 |___arg0 taint___|
+ * 					 |___arg1 taint___|
+ * 					 |___arg1 taint___|
+ * 					 |___arg2 taint___|
+ * 					 |___arg2 taint___|
  *
  * WARN: Currently, we do not consider the case that argument is CPRC (Co-processor Register Candidate)
  *
@@ -67,6 +73,9 @@ void dvmCallJNIMethodCallback(CPUState* env){
 	gva_t methodAddr = env->regs[2];
 	gva_t taintsAddr = 0;
 	int i = 0;
+	int argsOffset = 0;
+	int spTaintsOffset = 0;
+	int taintsOffset = 0;
 
 	gva_t insnAddr;
 	if(DECAF_read_mem(env, methodAddr + METHOD_INSN_OFFSET, &insnAddr, 4) != -1){
@@ -84,8 +93,10 @@ void dvmCallJNIMethodCallback(CPUState* env){
 			assert(DECAF_read_mem(env, classAddr + CLASS_DESCRIPTOR_OFFSET, &classDescriptorAddr, 4) != -1);
 			assert(DECAF_read_mem_until(env, classDescriptorAddr, &classDescriptor, 128) > 0);
 			assert(classDescriptor[0] != '\0');
-			DECAF_printf("Class: %s\n", classDescriptor);
-			sp->className = classDescriptor;
+			//DECAF_printf("Class: %s\n", classDescriptor);
+			sp->className = (char*) calloc(128, sizeof(char));
+			strncpy(sp->className, classDescriptor, 127);
+			sp->className[127] = '\0';
 
 			//read method name
 			gva_t methodNameAddr;
@@ -94,22 +105,25 @@ void dvmCallJNIMethodCallback(CPUState* env){
 			assert(DECAF_read_mem(env, methodAddr + METHOD_NAME_OFFSET, &methodNameAddr, 4) != -1);
 			assert(DECAF_read_mem_until(env, methodNameAddr, &methodName, 128) > 0);
 			assert(methodName[0] != '\0');
-			DECAF_printf("\n[====dvmCallJNIMethod <%s>====]\n", methodName);
-			sp->methodName = methodName;
+			//DECAF_printf("\n[====dvmCallJNIMethod <%s>====]\n", methodName);
+			sp->methodName = (char*) calloc(128, sizeof(char));
+			strncpy(sp->methodName, methodName, 127);
+			sp->methodName[127] = '\0';
 
-			//read the shorty
+			//read the shorty: ReturnType_Param1Type_Param2Type...
 			int shortyAddr;
 			char shorty[128];
 			shorty[0] = '\0';
 			assert(DECAF_read_mem(env, methodAddr + METHOD_SHORTY_OFFSET, &shortyAddr, 4) != -1);
 			assert(DECAF_read_mem_until(env, shortyAddr, shorty, 128) > 0);
 			assert(shorty[0] != '\0');
-			DECAF_printf("shorty: %s\n", shorty);
+			//DECAF_printf("shorty: %s\n", shorty);
 
-			//initialize then funcShorty, replace return type with 'this' or 'jclz'
-			sp->funcShorty = (char*) malloc(strlen(shorty));	
-			sp->funcShorty[0] = 'L';//'this' or 'jclz'
-			strcpy(&(sp->funcShorty[1]), &shorty[1]);
+			int shortyLen = strlen(shorty);
+			sp->funcShorty = (char*) calloc(shortyLen + 1, sizeof(char));	
+			strncpy(sp->funcShorty, shorty, shortyLen);
+			sp->funcShorty[shortyLen] = '\0';
+
 
 			//initialize tR0 ~ tR3
 			sp->tR0 = 0;
@@ -120,47 +134,35 @@ void dvmCallJNIMethodCallback(CPUState* env){
 			//read insSize
 			unsigned short insSize;
 			assert(DECAF_read_mem(env, methodAddr + METHOD_INS_SIZE_OFFSET, &insSize, 2) != -1);
-			DECAF_printf("insSize: %d\n", insSize);
+			//start address of taints
 			taintsAddr = argsAddr + (insSize + 1) * 4;
 
 			//read access_flag
 			int accessFlag;
 			assert(DECAF_read_mem(env, methodAddr + METHOD_ACCESS_FLAG_OFFSET, &accessFlag, 4) != -1);
-			DECAF_printf("accessFlag: %d\n", accessFlag);
-
-			/*
-			int i = 0;
-			int arg = 0;
-			for(; i < insSize; i++){
-				assert(DECAF_read_mem(env, argsAddr + (i * 4), &arg, 4) != -1);
-				printf("argsAddr[%d] = %x\n", i, arg);
-			}
-			*/
 
 			if((accessFlag & ACC_STATIC) != 0){//static method
 				sp->isStatic = 1;
+				//set taints of 'env' and 'jclz'
+				sp->tR0 = 0;//env
+				sp->tR1 = 0;//jclz
 				//2 additional parameters: 'env' and 'jclz'
 				if(insSize + 2 > 4){
-					sp->num = (insSize + 2) - 4;
-					sp->taints = (int*)calloc(sp->num, sizeof(int));
-					//set taints
-					sp->tR0 = 0;//env
-					sp->tR1 = 0;//jclz
-
-					int argsOffset = 0;
-					int spTaintsOffset = 0;
-					int taintsOffset = 0;
 					if((sp->funcShorty[1] == 'D') || (sp->funcShorty[1] == 'J')){
+						//if the first parameter is double or long, it occupies two slots,
+						//and the left parameters are all stored on stack.
+						sp->num = (insSize + 2) - 4;
+						sp->taints = (int*)calloc(sp->num, sizeof(int));
 						//the first parameter is double or long, then it is stored in R2, R3
-						//set sp->tR2, sp->tR3
+						//set sp->tR2, sp->tR3, actually sp->tR2 and sp->tR3 both store taint of the first parameter
 						assert(DECAF_read_mem(env, taintsAddr, &(sp->tR2), 4) != -1);
 						assert(DECAF_read_mem(env, taintsAddr + 4, &(sp->tR3), 4) != -1);
 						taintsOffset += 8;
 						argsOffset += 8;
 
 						//the left parameters are all stored on stack
-						for(i = 1/*start at second parameter*/; i < insSize; i++){
-							char type = sp->funcShorty[i + 1];
+						for(i = 2/*start at second parameter*/; i < shortyLen; i++){
+							char type = sp->funcShorty[i];
 							switch(type){
 								case 'L':
 									{
@@ -168,8 +170,13 @@ void dvmCallJNIMethodCallback(CPUState* env){
 										tmpClassName[0] = '\0';
 										getClassTypeAtAddr(env, argsAddr + argsOffset, &tmpClassName[0], 128);
 										if(strcmp("Ljava/lang/String;", tmpClassName) == 0){
-											sp->taints[spTaintsOffset] = getTaintOfStringAtAddr(env, argsAddr + argsOffset);		
+											//taint of string instance data
+											sp->taints[spTaintsOffset] = getTaintOfStringAtAddr(env, argsAddr + argsOffset);
 										}
+										//taint of object reference
+										int tmpTaintOfObjRef = 0;
+										assert(DECAF_read_mem(env, taintsAddr + taintsOffset, &tmpTaintOfObjRef, 4) != -1);
+										sp->taints[spTaintsOffset] |= tmpTaintOfObjRef;
 									}
 									spTaintsOffset += 1;
 									argsOffset += 4;
@@ -195,10 +202,160 @@ void dvmCallJNIMethodCallback(CPUState* env){
 							}
 						}
 					}else{
+						//the first parameter is not double and long
+						
+						//first parameter
+						if(sp->funcShorty[1] == 'L'){
+							char tmpClassName[128];
+							tmpClassName[0] = '\0';
+							getClassTypeAtAddr(env, argsAddr + argsOffset, &tmpClassName[0], 128);
+							if(strcmp("Ljava/lang/String;", tmpClassName) == 0){
+								//taint of string instance data
+								sp->tR2 = getTaintOfStringAtAddr(env, argsAddr + argsOffset);
+							}
+							//taint of object reference
+							int tmpTaintOfObjRef = 0;
+							assert(DECAF_read_mem(env, taintsAddr + taintsOffset, &tmpTaintOfObjRef, 4) != -1);
+							sp->tR2 |= tmpTaintOfObjRef;
+						}else{
+							assert(DECAF_read_mem(env, taintsAddr + taintsOffset, &(sp->tR2), 4) != -1);
+						}
+						argsOffset += 4;
+						taintsOffset += 4;
+
+						//second parameter
+						if((sp->funcShorty[2] == 'D') || (sp->funcShorty[2] == 'J')){
+							//because the second parameter occupies 8 bytes, according to APCS,
+							//the parameter is stored on the stack, rather than the R3
+							sp->tR3 = 0;
+							sp->num = (insSize + 2) - 3;
+							sp->taints = (int*)calloc(sp->num, sizeof(int));
+
+							assert(DECAF_read_mem(env, taintsAddr + taintsOffset, 
+										&(sp->taints[spTaintsOffset]), 4) != -1);
+							assert(DECAF_read_mem(env, taintsAddr + taintsOffset + 4,
+										&(sp->taints[spTaintsOffset + 1]), 4) != -1);
+							spTaintsOffset += 2;
+							argsOffset += 8;
+							taintsOffset += 8;
+						}else{
+							//the second parameter occupies 4 bytes
+							if(sp->funcShorty[2] == 'L'){
+								char tmpClassName[128];
+								tmpClassName[0] = '\0';
+								getClassTypeAtAddr(env, argsAddr + argsOffset, &tmpClassName[0], 128);
+								if(strcmp("Ljava/lang/String;", tmpClassName) == 0){
+									//taint of string instance data
+									sp->tR3 = getTaintOfStringAtAddr(env, argsAddr + argsOffset);
+								}
+								//taint of object reference
+								int tmpTaintOfObjRef = 0;
+								assert(DECAF_read_mem(env, taintsAddr + taintsOffset, &tmpTaintOfObjRef, 4) != -1);
+								sp->tR3 |= tmpTaintOfObjRef;
+							}else{
+								assert(DECAF_read_mem(env, taintsAddr + taintsOffset, &(sp->tR3), 4) != -1);
+							}
+							argsOffset += 4;
+							taintsOffset += 4;
+						}
+						
+						for(i = 3/*start at the third parameter*/; i < shortyLen; i++){
+							char type = sp->funcShorty[i];
+							switch(type){
+								case 'L':
+									{
+										char tmpClassName[128];
+										tmpClassName[0] = '\0';
+										getClassTypeAtAddr(env, argsAddr + argsOffset, &tmpClassName[0], 128);
+										if(strcmp("Ljava/lang/String;", tmpClassName) == 0){
+											//taint of string instance data
+											sp->taints[spTaintsOffset] = getTaintOfStringAtAddr(env, argsAddr + argsOffset);
+										}
+										//taint of object reference
+										int tmpTaintOfObjRef = 0;
+										assert(DECAF_read_mem(env, taintsAddr + taintsOffset, &tmpTaintOfObjRef, 4) != -1);
+										sp->taints[spTaintsOffset] |= tmpTaintOfObjRef;
+									}
+									spTaintsOffset += 1;
+									argsOffset += 4;
+									taintsOffset += 4;
+									break;
+								case 'D':
+								case 'J':
+									assert(DECAF_read_mem(env, taintsAddr + taintsOffset, 
+												&(sp->taints[spTaintsOffset]), 4) != -1);
+									assert(DECAF_read_mem(env, taintsAddr + taintsOffset + 4,
+												&(sp->taints[spTaintsOffset + 1]), 4) != -1);
+									spTaintsOffset += 2;
+									argsOffset += 8;
+									taintsOffset += 8;
+									break;
+								default:
+									assert(DECAF_read_mem(env, taintsAddr + taintsOffset, 
+												&(sp->taints[spTaintsOffset]), 4) != -1);
+									spTaintsOffset += 1;
+									argsOffset += 4;
+									taintsOffset += 4;
+									break;
+							}
+						}
 					}
 				}else{
+					//insSize + 2 <= 4
 					sp->num = 0;
 					sp->taints = NULL;
+					if(shortyLen == 2){
+						//only one parameter, occupies 4 or 8 bytes
+						if((sp->funcShorty[1] == 'D') || (sp->funcShorty[1] == 'J')){
+							//double or long
+							assert(DECAF_read_mem(env, taintsAddr, &(sp->tR2), 4) != -1);
+							assert(DECAF_read_mem(env, taintsAddr + 4, &(sp->tR3), 4) != -1);
+						}else{
+							sp->tR3 = 0;
+							if(sp->funcShorty[1] == 'L'){
+								char tmpClassName[128];
+								tmpClassName[0] = '\0';
+								getClassTypeAtAddr(env, argsAddr + argsOffset, &tmpClassName[0], 128);
+								if(strcmp("Ljava/lang/String;", tmpClassName) == 0){
+									//taint of string instance data
+									sp->tR2 = getTaintOfStringAtAddr(env, argsAddr + argsOffset);
+								}
+								//taint of object reference
+								int tmpTaintOfObjRef = 0;
+								assert(DECAF_read_mem(env, taintsAddr + taintsOffset, &tmpTaintOfObjRef, 4) != -1);
+								sp->tR2 |= tmpTaintOfObjRef;
+							}
+						}
+					}else if(shortyLen == 3){
+						//two parameter, each occupies 4 bytes
+						if(sp->funcShorty[1] == 'L'){
+							char tmpClassName[128];
+							tmpClassName[0] = '\0';
+							getClassTypeAtAddr(env, argsAddr + argsOffset, &tmpClassName[0], 128);
+							if(strcmp("Ljava/lang/String;", tmpClassName) == 0){
+								//taint of string instance data
+								sp->tR2 = getTaintOfStringAtAddr(env, argsAddr + argsOffset);
+							}
+							//taint of object reference
+							int tmpTaintOfObjRef = 0;
+							assert(DECAF_read_mem(env, taintsAddr + taintsOffset, &tmpTaintOfObjRef, 4) != -1);
+							sp->tR2 |= tmpTaintOfObjRef;
+						}
+
+						if(sp->funcShorty[2] == 'L'){
+							char tmpClassName[128];
+							tmpClassName[0] = '\0';
+							getClassTypeAtAddr(env, argsAddr + argsOffset, &tmpClassName[0], 128);
+							if(strcmp("Ljava/lang/String;", tmpClassName) == 0){
+								//taint of string instance data
+								sp->tR3 = getTaintOfStringAtAddr(env, argsAddr + argsOffset);
+							}
+							//taint of object reference
+							int tmpTaintOfObjRef = 0;
+							assert(DECAF_read_mem(env, taintsAddr + taintsOffset, &tmpTaintOfObjRef, 4) != -1);
+							sp->tR3 |= tmpTaintOfObjRef;
+						}
+					}
 				}
 			}else{//non-static method
 				sp->isStatic = 0;
