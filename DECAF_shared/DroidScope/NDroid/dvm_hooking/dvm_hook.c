@@ -240,6 +240,9 @@ void dvmCallJNIMethodCallback(CPUState* env){
 							taintsOffset += 8;
 						}else{
 							//the second parameter occupies 4 bytes
+							sp->num = (insSize + 2) - 4;
+							sp->taints = (int*)calloc(sp->num, sizeof(int));
+
 							if(sp->funcShorty[2] == 'L'){
 								char tmpClassName[128];
 								tmpClassName[0] = '\0';
