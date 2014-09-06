@@ -6,18 +6,6 @@
  * which parameters have taint.
  */
 
-/**
- * A policy for each source function should have the following elements:
- * 1. className  ---- in which class this function locates
- * 2. methodName
- * 3. addr   ---- start address of this method
- * 4. tR0, tR1, tR2, tR3   ----- the taint of the first 4 arguments, <= 0 means no taint.
- * 5. num    ---- number of the parameters on the stack.
- * 6. taints[num] ---- the taints of the parameters on the stack, -1 means no taint.
- * 7. handler    ----- the handler to initialize the taints
- *
- */
-
 #ifndef __NDROID_SOURCE_POLICY_
 #define __NDROID_SOURCE_POLICY_
 
@@ -36,12 +24,12 @@ extern "C" {
 typedef struct _SourcePolicy{
 	char* className;
 	char* methodName;
-	gva_t addr;
-	int tR0, tR1, tR2, tR3;
-	int num;
-	int* taints;
-	char* funcShorty;
-	int isStatic;
+	gva_t addr;								//the target native method address
+	int tR0, tR1, tR2, tR3;		//taints of registers: R0, R1, R2, R3
+	int num;									//number of stack slots saving parameters
+	int* taints;							//taints of parameters on stack
+	char* funcShorty;					//ReturnType_Param1Type_Param2Type
+	int isStatic;							//whether the method is static
 	//SourcePolicy_handler_t handler;
 	void (*handler) (struct _SourcePolicy*, CPUState*);
 } SourcePolicy; 
