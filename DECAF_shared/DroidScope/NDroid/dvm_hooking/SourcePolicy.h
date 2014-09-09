@@ -15,12 +15,6 @@ extern "C" {
 #include "DECAF_shared/DroidScope/LinuxAPI.h"
 #include "DECAF_shared/utils/OutputWrapper.h"
 
-#define SOURCES_FILE "SourcePolicies"
-
-//the first arg 'void*' is actually a pointer of SourcePolicy
-//typedef void (*SourcePolicy_handler_t)(void*, CPUState*);
-
-
 typedef struct _SourcePolicy{
 	char* className;
 	char* methodName;
@@ -36,9 +30,9 @@ typedef struct _SourcePolicy{
 
 void source_policy_handler(SourcePolicy* sourcePolicy, CPUState* env);
 
-int addSourcePolicy(int addr, SourcePolicy* policy);
+int addSourcePolicy(gva_t addr, SourcePolicy* policy);
 
-SourcePolicy* findSourcePolicy(int cur_pc);
+SourcePolicy* findSourcePolicy(gva_t cur_pc);
 
 #ifdef __cplusplus
 }

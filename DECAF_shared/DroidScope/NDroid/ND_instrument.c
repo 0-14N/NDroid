@@ -11,6 +11,7 @@
 #include "DECAF_shared/DroidScope/linuxAPI/ProcessInfo.h"
 #include "NativeLibraryWhitelist.h"
 #include "dvm_hooking/dvm_hook.h"
+#include "dvm_hooking/SourcePolicy.h"
 
 DECAF_Handle nd_ib_handle = DECAF_NULL_HANDLE;
 DECAF_Handle nd_be_handle = DECAF_NULL_HANDLE;
@@ -85,6 +86,8 @@ void nd_instruction_begin_callback(DECAF_Callback_Params* params){
 
 	CPUState* env = params->ib.env;
 	gva_t cur_pc = params->ib.cur_pc;
+	//since for thumb instruction, the last bit is '1'	
+	gva_t cur_pc_even = cur_pc & 0xfffffffe;
 
 	//ARM Instruction
 	union _tmpARMInsn{
@@ -106,9 +109,16 @@ void nd_instruction_begin_callback(DECAF_Callback_Params* params){
 	if(cur_pc == -1){
 		return;
 	}
+
+	//the first instruction of target native method
+	SourcePolicy* sourcePolicy = findSourcePolicy(cur_pc_even);
+	if(sourcePolicy != NULL){
+		sourcePolicy->handler(sourcePolicy, env);
+	}
+	
 	//Thumb instruction
 	if(env->thumb == 1){
-		if(DECAF_read_mem(env, cur_pc & 0xfffffffe, tmpThumbInsn.chars, 2) != -1){
+		if(DECAF_read_mem(env, cur_pc_even, tmpThumbInsn.chars, 2) != -1){
 			darm_t d;
 			darm_str_t str;
     	// magic table constructed based on section A6.1 of the ARM manual
@@ -120,10 +130,10 @@ void nd_instruction_begin_callback(DECAF_Callback_Params* params){
 
 			if(is_thumb2[tmpThumbInsn.insn >> 11]){
 				//Thumb2 instruction
-				if(DECAF_read_mem(env, cur_pc & 0xfffffffe, tmpThumb2Insn.chars, 4) != -1){
+				if(DECAF_read_mem(env, cur_pc_even, tmpThumb2Insn.chars, 4) != -1){
 					if(darm_thumb2_disasm(&d, tmpThumb2Insn.insn >> 16, tmpThumb2Insn.insn & 0x0000ffff) == 0){
 						if(darm_str(&d, &str) == 0){
-							//DECAF_printf("%x: %s\n", cur_pc, str.total);
+							DECAF_printf("T2  %x: %s\n", cur_pc, str.total);
 						}
 					}
 				}
@@ -131,7 +141,7 @@ void nd_instruction_begin_callback(DECAF_Callback_Params* params){
 				//Thumb instruction
 				if(darm_thumb_disasm(&d, tmpThumbInsn.insn) == 0){
 					if(darm_str(&d, &str) == 0){
-						//DECAF_printf("%x: %s\n", cur_pc, str.total);
+						DECAF_printf("T   %x: %s\n", cur_pc, str.total);
 					}
 				}
 			}
@@ -143,7 +153,7 @@ void nd_instruction_begin_callback(DECAF_Callback_Params* params){
 			darm_str_t str;
 			if(darm_armv7_disasm(&d, tmpARMInsn.insn) == 0){
 				if(darm_str(&d, &str) == 0){
-					//DECAF_printf("%x: %s\n", cur_pc, str.total);
+					DECAF_printf("A   %x: %s\n", cur_pc, str.total);
 				}
 			}
 		}
@@ -160,7 +170,6 @@ int nd_block_end_callback_cond(DECAF_callback_type_t cbType, gva_t curPC, gva_t 
 	DEFENSIVE_CHECK1(ND_GLOBAL_TRACING_PROCESS == NULL, 0);
 	DEFENSIVE_CHECK1(curPC < 0 || curPC >= 0xC0000000, 0);
 
-	gva_t tmpCurPC = curPC & 0xfffffffe;
 	gva_t tmpNextPC = nextPC & 0xfffffffe;
 
 	//dvmCallJNIMethod
@@ -176,7 +185,7 @@ int nd_block_end_callback_cond(DECAF_callback_type_t cbType, gva_t curPC, gva_t 
  */
 void nd_block_end_callback(DECAF_Callback_Params* params){
 	CPUState* env = params->be.env;
-	gva_t cur_pc = params->be.cur_pc & 0xfffffffe;
+	//gva_t cur_pc = params->be.cur_pc & 0xfffffffe;
 	gva_t next_pc = params->be.next_pc & 0xfffffffe;
 
 	//dvmCallJNIMethod

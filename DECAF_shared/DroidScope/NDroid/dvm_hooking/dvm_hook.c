@@ -83,6 +83,8 @@ void dvmCallJNIMethodCallback(CPUState* env){
 		if(nd_in_blacklist(insnAddr)){
 			SourcePolicy *sp = (SourcePolicy*) malloc(sizeof(SourcePolicy));
 			sp->addr = insnAddr;
+			sp->handler = source_policy_handler;
+			addSourcePolicy(sp->addr, sp);
 
 			//read class name
 			int classAddr;

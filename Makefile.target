@@ -173,6 +173,7 @@ DECAF_SRC_FILES += \
 		DroidScope/NDroid/ND_instrument.c\
 		DroidScope/NDroid/dvm_hooking/dvm_hook.c\
 		DroidScope/NDroid/dvm_hooking/SourcePolicy.cpp\
+		DroidScope/NDroid/taint/TaintEngine.cpp\
 		DroidScope/NDroid/darm/armv7.c\
 		DroidScope/NDroid/darm/armv7-tbl.c\
 		DroidScope/NDroid/darm/darm.c\
@@ -190,6 +191,8 @@ DECAF_CFLAGS += -I$(LOCAL_PATH)/DECAF_shared/DroidScope/NDroid
 DECAF_CFLAGS += -I$(LOCAL_PATH)/DECAF_shared/DroidScope/linuxAPI
 DECAF_CFLAGS += -I$(LOCAL_PATH)/DECAF_shared/DroidScope/DS_utils
 DECAF_CFLAGS += -I$(LOCAL_PATH)/DECAF_shared/DroidScope/NDroid/darm
+DECAF_CFLAGS += -I$(LOCAL_PATH)/DECAF_shared/DroidScope/NDroid/dvm_hooking
+DECAF_CFLAGS += -I$(LOCAL_PATH)/DECAF_shared/DroidScope/NDroid/taint
 DECAF_LDLIBS := -lstdc++
 
 # END DECAF SRC FILES
