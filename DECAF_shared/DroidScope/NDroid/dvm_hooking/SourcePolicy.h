@@ -22,6 +22,7 @@ typedef struct _SourcePolicy{
 	int tR0, tR1, tR2, tR3;		//taints of registers: R0, R1, R2, R3
 	int num;									//number of stack slots saving parameters
 	int* taints;							//taints of parameters on stack
+	int shortyLen;						//length of funcShorty
 	char* funcShorty;					//ReturnType_Param1Type_Param2Type
 	int isStatic;							//whether the method is static
 	//SourcePolicy_handler_t handler;

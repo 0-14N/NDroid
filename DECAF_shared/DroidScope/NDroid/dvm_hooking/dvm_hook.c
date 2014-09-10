@@ -122,6 +122,7 @@ void dvmCallJNIMethodCallback(CPUState* env){
 			//DECAF_printf("shorty: %s\n", shorty);
 
 			int shortyLen = strlen(shorty);
+			sp->shortyLen = shortyLen;
 			sp->funcShorty = (char*) calloc(shortyLen + 1, sizeof(char));	
 			strncpy(sp->funcShorty, shorty, shortyLen);
 			sp->funcShorty[shortyLen] = '\0';
