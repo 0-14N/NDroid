@@ -39,15 +39,18 @@ void source_policy_handler(SourcePolicy* sourcePolicy, CPUState* env){
 			int i;
 			int taintsIdx = 0;
 			for(i = 2; i < sourcePolicy->shortyLen; i++){
+				assert(taintsIdx < sourcePolicy->num);
 				char type = sourcePolicy->funcShorty[i];
 				switch(type){
 					case 'L':
-						setTaint(env->regs[13] + taintsIdx * 4, sourcePolicy->taints[taintsIdx]);		
-						int addr = 0;
-						assert(DECAF_read_mem(env, env->regs[13] + taintsIdx * 4, &addr, 4) != -1);
-						setTaint(addr, sourcePolicy->taints[taintsIdx]);
-						taintsIdx++;
+						{
+							setTaint(env->regs[13] + taintsIdx * 4, sourcePolicy->taints[taintsIdx]);		
+							int addr = 0;
+							assert(DECAF_read_mem(env, env->regs[13] + taintsIdx * 4, &addr, 4) != -1);
+							setTaint(addr, sourcePolicy->taints[taintsIdx]);
+							taintsIdx++;
 						break;
+						}
 					case 'D':
 					case 'J':
 						setTaint(env->regs[13] + taintsIdx * 4, sourcePolicy->taints[taintsIdx]);
@@ -67,6 +70,48 @@ void source_policy_handler(SourcePolicy* sourcePolicy, CPUState* env){
 				setTaint(env->regs[2], sourcePolicy->tR2);
 			}else{
 				setRegTaint(2, sourcePolicy->tR2);
+			}
+
+			if(sourcePolicy->shortyLen > 2){
+				int i;
+				int taintsIdx = 0;
+				if((sourcePolicy->funcShorty[2] == 'D') ||
+						(sourcePolicy->funcShorty[2] == 'J')){
+					i = 2;
+				}else{
+					i = 3;
+					if(sourcePolicy->funcShorty[2] == 'L'){
+						setRegTaint(3, sourcePolicy->tR3);
+						setTaint(env->regs[3], sourcePolicy->tR3);
+					}else{
+						setRegTaint(3, sourcePolicy->tR3);
+					}
+				}
+				for(; i < sourcePolicy->shortyLen; i++){
+					assert(taintsIdx < sourcePolicy->num);
+					char type = sourcePolicy->funcShorty[i];
+					switch(type){
+						case 'L':
+							{
+								setTaint(env->regs[13] + taintsIdx * 4, sourcePolicy->taints[taintsIdx]);		
+								int addr = 0;
+								assert(DECAF_read_mem(env, env->regs[13] + taintsIdx * 4, &addr, 4) != -1);
+								setTaint(addr, sourcePolicy->taints[taintsIdx]);
+								taintsIdx++;
+								break;
+							}
+						case 'D':
+						case 'J':
+							setTaint(env->regs[13] + taintsIdx * 4, sourcePolicy->taints[taintsIdx]);
+							setTaint(env->regs[13] + (taintsIdx + 1) * 4, sourcePolicy->taints[taintsIdx + 1]);
+							taintsIdx += 2;
+							break;
+						default:
+							setTaint(env->regs[13] + taintsIdx * 4, sourcePolicy->taints[taintsIdx]);
+							taintsIdx++;
+							break;
+					}
+				}
 			}
 		}
 	}
