@@ -7,8 +7,9 @@
 #include "DECAF_shared/DroidScope/NDroid/ND_instrument.h"
 #include "dvm_hook.h"
 #include "SourcePolicy.h"
+#include <locale.h>
 
-/*
+/**
  * mem[addr] stores an object reference, get its type
  */
 void getClassTypeAtAddr(CPUState* env, gva_t addr, char* type, int length){
@@ -23,8 +24,8 @@ void getClassTypeAtAddr(CPUState* env, gva_t addr, char* type, int length){
 			assert(type[0] != '\0');
 }
 
-/*
- * mem[add] stores an string reference, get its taint
+/**
+ * mem[addr] stores an string reference, get its taint
  */
 int getTaintOfStringAtAddr(CPUState* env, gva_t addr){
 	int stringObjAddr = 0;
@@ -34,6 +35,38 @@ int getTaintOfStringAtAddr(CPUState* env, gva_t addr){
 	assert(DECAF_read_mem(env, stringObjAddr + STRING_INSTANCE_DATA_OFFSET, &charArrayAddr, 4) != -1);
 	assert(DECAF_read_mem(env, charArrayAddr + STRING_TAINT_OFFSET, &taint, 4) != -1);
 	return taint;
+}
+
+/**
+ * mem[addr] stores an StringObject reference, return its length
+ * pls refer to "dvm_hook.h"
+ */
+int getLengthOfStringAtAddr(CPUState* env, gva_t addr){
+	int stringObjAddr = 0;
+	int length = 0;
+	assert(DECAF_read_mem(env, addr, &stringObjAddr, 4) != -1);
+	assert(DECAF_read_mem(env, stringObjAddr + STRING_LENGTH, &length, 4) != -1);
+	return length;
+}
+
+/**
+ * mem[addr] stores an StringObject reference, return its contents
+ * pls refer to "dvm_hook.h"
+ */
+wchar_t* getContentsOfStringAtAddr(CPUState* env, gva_t addr){
+	int stringObjAddr = 0;
+	int charArrayAddr = 0;
+	int length = 0;
+	assert(DECAF_read_mem(env, addr, &stringObjAddr, 4) != -1);
+	assert(DECAF_read_mem(env, stringObjAddr + STRING_LENGTH, &length, 4) != -1);
+	wchar_t* contents = (wchar_t*) calloc(length+1, sizeof(wchar_t));
+	assert(DECAF_read_mem(env, stringObjAddr + STRING_INSTANCE_DATA_OFFSET, &charArrayAddr, 4) != -1);
+	int i;
+	for(i = 0; i < length; i++){
+		assert(DECAF_read_mem(env, charArrayAddr + STRING_CONTENT_OFFSET + i * 2, &contents[i], 16) != -1);
+	}
+	contents[length] = '\0';
+	return contents;
 }
 
 /**
@@ -95,7 +128,7 @@ void dvmCallJNIMethodCallback(CPUState* env){
 			assert(DECAF_read_mem(env, classAddr + CLASS_DESCRIPTOR_OFFSET, &classDescriptorAddr, 4) != -1);
 			assert(DECAF_read_mem_until(env, classDescriptorAddr, &classDescriptor, 128) > 0);
 			assert(classDescriptor[0] != '\0');
-			//DECAF_printf("Class: %s\n", classDescriptor);
+			DECAF_printf("Class: %s\n", classDescriptor);
 			sp->className = (char*) calloc(128, sizeof(char));
 			strncpy(sp->className, classDescriptor, 127);
 			sp->className[127] = '\0';
@@ -107,7 +140,7 @@ void dvmCallJNIMethodCallback(CPUState* env){
 			assert(DECAF_read_mem(env, methodAddr + METHOD_NAME_OFFSET, &methodNameAddr, 4) != -1);
 			assert(DECAF_read_mem_until(env, methodNameAddr, &methodName, 128) > 0);
 			assert(methodName[0] != '\0');
-			//DECAF_printf("\n[====dvmCallJNIMethod <%s>====]\n", methodName);
+			DECAF_printf("[====dvmCallJNIMethod <%s>====]\n", methodName);
 			sp->methodName = (char*) calloc(128, sizeof(char));
 			strncpy(sp->methodName, methodName, 127);
 			sp->methodName[127] = '\0';
@@ -119,7 +152,7 @@ void dvmCallJNIMethodCallback(CPUState* env){
 			assert(DECAF_read_mem(env, methodAddr + METHOD_SHORTY_OFFSET, &shortyAddr, 4) != -1);
 			assert(DECAF_read_mem_until(env, shortyAddr, shorty, 128) > 0);
 			assert(shorty[0] != '\0');
-			//DECAF_printf("shorty: %s\n", shorty);
+			DECAF_printf("shorty: %s\n", shorty);
 
 			int shortyLen = strlen(shorty);
 			sp->shortyLen = shortyLen;
@@ -143,7 +176,8 @@ void dvmCallJNIMethodCallback(CPUState* env){
 			//read access_flag
 			int accessFlag;
 			assert(DECAF_read_mem(env, methodAddr + METHOD_ACCESS_FLAG_OFFSET, &accessFlag, 4) != -1);
-
+			DECAF_printf("isStatic: %d\n", (accessFlag & ACC_STATIC));
+			
 			if((accessFlag & ACC_STATIC) != 0){//static method
 				sp->isStatic = 1;
 				//set taints of 'env' and 'jclz'
@@ -162,6 +196,17 @@ void dvmCallJNIMethodCallback(CPUState* env){
 						assert(DECAF_read_mem(env, taintsAddr + 4, &(sp->tR3), 4) != -1);
 						taintsOffset += 8;
 						argsOffset += 8;
+						if(sp->funcShorty[1] == 'D'){
+							double tmpDouble = 0;
+							assert(DECAF_read_mem(env, argsAddr + argsOffset, &tmpDouble, 8) != -1);
+							DECAF_printf("param[%d]: %lf\n", 1, tmpDouble);
+						}else if(sp->funcShorty[1] == 'J'){
+							long long tmpLong = 0;
+							assert(DECAF_read_mem(env, argsAddr + argsOffset, &tmpLong, 8) != -1);
+							DECAF_printf("param[%d]: %ld\n", 1, tmpLong);
+						}
+						argsOffset += 8;
+						taintsOffset += 8;
 
 						//the left parameters are all stored on stack
 						for(i = 2/*start at second parameter*/; i < shortyLen; i++){

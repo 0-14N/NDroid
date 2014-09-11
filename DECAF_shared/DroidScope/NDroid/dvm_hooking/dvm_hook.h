@@ -71,11 +71,22 @@ extern "C"
  * 	 u4							instanceData[1];
  *	 ...
  * }
+ *
+ * **instanceData[0] stores reference to char array (ArrayObject)
+ *   instanceData[3] stores number of characters in the char array
+ *
+ * struct ArrayObject : Object {
+ * 	 u4 						length;
+ * 	 Taint					taint;
+ * 	 u8 						contents[1];
+ * }
  */
 #define CLASS_DESCRIPTOR_OFFSET 40
 
 #define STRING_INSTANCE_DATA_OFFSET 8
+#define STRING_LENGTH 20
 #define STRING_TAINT_OFFSET 12
+#define STRING_CONTENT_OFFSET 16
 //===========method info end==========
 
 	void dvmCallJNIMethodCallback(CPUState* env);
