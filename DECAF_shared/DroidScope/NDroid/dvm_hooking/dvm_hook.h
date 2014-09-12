@@ -84,8 +84,9 @@ extern "C"
 #define CLASS_DESCRIPTOR_OFFSET 40
 
 #define STRING_INSTANCE_DATA_OFFSET 8
-#define STRING_LENGTH 20
+#define STRING_LENGTH_OFFSET 20
 #define STRING_TAINT_OFFSET 12
+#define STRING_ARRAY_LENGTH_OFFSET 8
 #define STRING_CONTENT_OFFSET 16
 //===========method info end==========
 
