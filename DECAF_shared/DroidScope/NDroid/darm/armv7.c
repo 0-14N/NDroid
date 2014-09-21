@@ -279,14 +279,22 @@ static int armv7_disas_cond(darm_t *d, uint32_t w, CPUState* env)
             d->P = (w >> 24) & 1;
             d->U = (w >> 23) & 1;
 
+						/* NDROID START */
+						int offset_addr = 0, address = 0;
+						/* NDROID END */
+
             // depending on the register form we either have to extract a
             // register or an immediate
             if(((w >> 22) & 1) == 0) {
                 d->Rm = w & b1111;
 								
 								/* NDROID START */
-								//int offset_addr = (d->U == 1) ? 
-
+								offset_addr = (d->U == 1) ? (env->regs[d->Rn] + env->regs[d->Rm])
+									: (env->regs[d->Rn] - env->regs[d->Rm]);
+								if(d->P == 0){
+									//R[t] = offset_addr?
+									addRegToReg(d->Rn, d->Rm);
+								}
 								/* NDROID END */
             }
             else {
@@ -294,7 +302,32 @@ static int armv7_disas_cond(darm_t *d, uint32_t w, CPUState* env)
                 // to their destination
                 d->imm = ((w >> 4) & b11110000) | (w & b1111);
                 d->I = B_SET;
+
+								/* NDROID START */
+								offset_addr = (d->U == 1) ? (env->regs[d->Rn] + d->imm)
+									: (env->regs[d->Rn] - d->imm);
+								/* NDROID END */
             }
+						
+						/* NDROID START */
+						address = (d->P == 0) ? (env->regs[d->Rn]) : offset_addr;
+						switch (d->instr){
+							case I_STRHT:
+								//mem[address, 2] = R[t]<15:0>
+								setRegToMem2(address, d->Rt);
+								break;
+							case I_LDRHT:
+							case I_LDRSHT:
+								//R[t] = *Extend(mem[address, 2])
+								setMem2ToReg(d->Rt, address);
+								break;
+							case I_LDRSBT:
+								//R[t] = SignExtend(mem[address, 1])
+								setMemToReg(d->Rt, address);
+								break;
+						}
+						/* NDROID END */
+
             return 0;
         }
         else if(((w >> 5) & b11) != 0 && ((w >> 20) & b10010) != b00010) {

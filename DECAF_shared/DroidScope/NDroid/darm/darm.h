@@ -131,6 +131,10 @@ typedef struct _darm_t {
 
     // specifies whether this instruction uses pre-indexed addressing or
     // post-indexed addressing
+		/* NDROID START */
+		//0 = Post; add offset after transfer
+		//1 = Pre; add offset before transfer
+		/* NDROID END */
     uint32_t        P;
 
     // specifies whether signed multiplication results should be rounded
