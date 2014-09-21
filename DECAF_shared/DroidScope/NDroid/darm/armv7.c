@@ -421,15 +421,53 @@ static int armv7_disas_cond(darm_t *d, uint32_t w, CPUState* env)
                 d->B = (w >> 22) & 1;
                 d->Rt = (w >> 12) & b1111;
                 d->Rt2 = w & b1111;
+								/* NDROID START */
+								//data = MemA[R[n], size]
+								//MemA[R[n], size] = R[t2]<8*size-1:0>
+								//R[t] = ZeroExtend(data, 32) SWPB
+								//R[t] = ROR(data, 8*UInt(address<1:0>)) SWP
+								if(d->B == 1){//SWPB
+									setRegToMem(env->regs[d->Rn], d->Rt2);
+									setMemToReg(d->Rt, env->regs[d->Rn]);
+								}else{
+									setRegToMem4(env->regs[d->Rn], d->Rt2);
+									setMem4ToReg(d->Rt, env->regs[d->Rn]);
+								}
+								/* NDROID END */
                 return 0;
 
             case I_LDREX: case I_LDREXD: case I_LDREXB: case I_LDREXH:
                 d->Rt = (w >> 12) & b1111;
+								/* NDROID START */
+								if(d->instr == I_LDREX){
+									setMem4ToReg(d->Rt, env->regs[d->Rn]);
+								}else if(d->instr == I_LDREXD){
+									setMem4ToReg(d->Rt, env->regs[d->Rn]);
+									setMem4ToReg(d->Rt + 1, env->regs[d->Rn] + 4);
+								}else if(d->instr == I_LDREXB){
+									setMemToReg(d->Rt, env->regs[d->Rn]);
+								}else if(d->instr == I_LDREXH){
+									setMem2ToReg(d->Rt, env->regs[d->Rn]);
+								}
+								/* NDROID END */
                 return 0;
 
             case I_STREX: case I_STREXD: case I_STREXB: case I_STREXH:
                 d->Rd = (w >> 12) & b1111;
                 d->Rt = w & b1111;
+								/* NDROID START */
+								clearRegTaint(d->Rd);
+								if(d->instr == I_STREX){
+									setRegToMem4(env->regs[d->Rn], d->Rt);
+								}else if(d->instr == I_STREXD){
+									setRegToMem4(env->regs[d->Rn], d->Rt);
+									setRegToMem4(env->regs[d->Rn] + 4, d->Rt + 1);
+								}else if(d->instr == I_STREXB){
+									setRegToMem(env->regs[d->Rn], d->Rt);
+								}else if(d->instr == I_STREXH){
+									setRegToMem2(env->regs[d->Rn], d->Rt);
+								}
+								/* NDROID END */
                 return 0;
             }
         }
