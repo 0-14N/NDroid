@@ -358,36 +358,54 @@ static int armv7_disas_cond(darm_t *d, uint32_t w, CPUState* env)
             }
 
 						/* NDROID START */
-						int offset_addr = 0, address = 0;
+						int offset_addr = 0, address = 0, base = 0;
+						if(d->I == B_SET){
+							base = env->regs[d->Rn];
+							if((d->instr == I_LDRH) || (d->instr == I_LDRD) 
+									|| (d->instr == I_LDRSB) || (d->instr == I_LDRSH)){
+								if(d->Rn == 15){
+									base = base & 0b00;
+								}
+							}
+							offset_addr = (d->U == 1) ? (base + d->imm)
+								: (base - d->imm);
+							//R[n] = offset_addr ? Never mind because of imm
+						}else{
+							//(shift_t, shift_n) = (SRType_LSL, 0)
+							//because shift_n == 0, so offset is equal to Rm
+							offset_addr = (d->U == 1) ? (env->regs[d->Rn] + env->regs[d->Rm])
+								: (env->regs[d->Rn] - env->regs[d->Rm]);
+							//R[n] = offset_addr ?
+							if((d->P == 0) || (d->W == 1)){
+								addRegToReg(d->Rn, d->Rm);
+							}
+						}
+						address = (d->P == 1) ? offset_addr : env->regs[d->Rn];
+
 						switch(d->instr){
 							case I_STRH:
-								if(d->I == B_SET){
-									offset_addr = (d->U == 1) ? (env->regs[d->Rn] + d->imm)
-										: (env->regs[d->Rn] - d->imm);
-									//R[n] = offset_addr ? Never mind because of imm
-								}else{
-									//(shift_t, shift_n) = (SRType_LSL, 0)
-									//because shift_n == 0, so offset is equal to Rm
-									offset_addr = (d->U == 1) ? (env->regs[d->Rn] + env->regs[d->Rm])
-										: (env->regs[d->Rn] - env->regs[d->Rm]);
-									//R[n] = offset_addr ?
-									if((d->P == 0) || (d->W == 1)){
-										addRegToReg(d->Rn, d->Rm);
-									}
-								}
-								address = (d->P == 1) ? offset_addr : env->regs[d->Rn];
 								//mem[address, 2] = R[t]<15:0>;
 								setRegToMem2(address, d->Rt);
 								break;
-							case I_LDRH:
-								break;
-							case I_LDRD:
+							case I_STRD:
+								//mem[address, 4] = R[t], mem[address + 4, 4] = R[t+1]
+								setRegToMem4(address, d->Rt);
+								setRegToMem4(address + 4, d->Rt + 1);
 								break;
 							case I_LDRSB:
+								//R[t] = SignExtend(MemU[address,1], 32)
+								setMemToReg(d->Rt, address);
 								break;
-							case I_STRD:
-								break;
+							case I_LDRH:
+								//R[t] = ZeroExtend(mem[address, 2], 32)
 							case I_LDRSH:
+								//R[t] = SignExtend(mem[address, 2], 32)
+								setMem2ToReg(d->Rt, address);
+								break;
+							case I_LDRD:
+								//R[t] = MemA[address,4], R[t2] = MemA[address+4,4]
+								setMem4ToReg(d->Rt, address);
+								setMem4ToReg(d->Rt + 1, address + 4);
 								break;
 						}
 						/* NDROID END */
