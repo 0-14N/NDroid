@@ -2,7 +2,7 @@
  * author: Chenxiong (R0r5ch4ch) Qian
  * date: 2013-4-3
  *
- * APIs for taint add, change, remove
+ * APIs for taint add, change, clear
  */
 
 #ifndef __NDROID_TAINT_ENGINE_
@@ -15,11 +15,11 @@ extern "C" {
 	int addTaint(int addr, int tValue);
 	void addBlockTaint(int startAddr, int endAddr, int tValue);
 	int setTaint(int addr, int tValue);
-	int removeTaint(int addr);
-	void removeBlockTaint(int startAddr, int endAddr);
+	int clearTaint(int addr);
+	void clearBlockTaint(int startAddr, int endAddr);
 	void addTaintToReg(int regIdx, int tValue);
 	void setRegTaint(int regIdx, int tValue);
-	void removeRegTaint(int regIdx);
+	void clearRegTaint(int regIdx);
 	int getTaint(int addr);
 	int getRegTaint(int regIdx);
 

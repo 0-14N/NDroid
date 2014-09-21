@@ -58,7 +58,7 @@ int setTaint(int addr, int tValue){
 	}
 }
 
-int removeTaint(int addr){
+int clearTaint(int addr){
 	taint_iterator it = taintMap.find(addr);
 	if(it != taintMap.end()){
 		taintMap.erase(it);
@@ -68,11 +68,11 @@ int removeTaint(int addr){
 	}
 }
 
-void removeBlockTaint(int startAddr, int endAddr){
+void clearBlockTaint(int startAddr, int endAddr){
 	int addr;
 	assert(startAddr <= endAddr);
 	for(addr = startAddr; addr <= endAddr; addr++){
-		removeTaint(addr);
+		clearTaint(addr);
 	}
 }
 
@@ -88,7 +88,7 @@ void setRegTaint(int regIdx, int tValue){
 	taintRegs[regIdx] = tValue;
 }
 
-void removeRegTaint(int regIdx){
+void clearRegTaint(int regIdx){
 	assert((regIdx >= 0) && (regIdx <= 15));
 	taintRegs[regIdx] = 0;
 }

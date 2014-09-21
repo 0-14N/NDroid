@@ -33,6 +33,9 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "darm.h"
 #include "darm-internal.h"
 #include "armv7-tbl.h"
+/* NDROID START */
+#include "DECAF_shared/DroidScope/NDroid/taint/TaintEngine.h"
+/* NDROID END */
 
 #define BITMSK_12 ((1 << 12) - 1)
 #define BITMSK_16 ((1 << 16) - 1)
@@ -198,6 +201,12 @@ static int armv7_disas_uncond(darm_t *d, uint32_t w)
     return -1;
 }
 
+/* NDROID START */
+/**
+ * Taint propagation of instructions are handled along with
+ * parsing.
+ */
+/* NDROID END   */
 static int armv7_disas_cond(darm_t *d, uint32_t w)
 {
     // we first handle some exceptions for MUL, STR, and LDR-like
@@ -229,19 +238,31 @@ static int armv7_disas_cond(darm_t *d, uint32_t w)
                 return -1;
             }
 
+						/* NDROID START */
+						int taintValue = getRegTaint(d->Rm) | getRegTaint(d->Rn);	
+						/* NDROID END */
             switch ((uint32_t) d->instr) {
             case I_MLA: case I_MLS:
                 d->Ra = (w >> 12) & b1111;
                 // fall-through
-
+								/* NDROID START */
+								taintValue |= getRegTaint(d->Ra);
+								/* NDROID END */
             case I_MUL:
                 d->Rd = (w >> 16) & b1111;
+								/* NDROID START */
+								setRegTaint(d->Rd, taintValue);
+								/* NDROID END */
                 break;
 
             case I_UMAAL: case I_UMULL: case I_UMLAL: case I_SMULL:
             case I_SMLAL:
                 d->RdHi = (w >> 16) & b1111;
                 d->RdLo = (w >> 12) & b1111;
+								/* NDROID START */
+								setRegTaint(d->RdHi, taintValue);
+								setRegTaint(d->RdLo, taintValue);
+								/* NDROID END */
                 break;
             }
             return 0;
