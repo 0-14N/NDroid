@@ -32,6 +32,11 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include "armv7-tbl.h"
 
+/* NDROID START */
+#include "DECAF_shared/DroidScope/NDroid/taint/TaintEngine.h"
+#include "cpu.h"
+/* NDROID END */
+
 #ifndef ARRAYSIZE
 #define ARRAYSIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 #endif
@@ -212,13 +217,13 @@ typedef struct _darm_str_t {
 void darm_init(darm_t *d);
 
 // disassemble an armv7 instruction
-int darm_armv7_disasm(darm_t *d, uint32_t w);
+int darm_armv7_disasm(darm_t *d, uint32_t w, CPUState* env);//NDROID
 
 // disassemble a thumb instruction
-int darm_thumb_disasm(darm_t *d, uint16_t w);
+int darm_thumb_disasm(darm_t *d, uint16_t w, CPUState* env);//NDROID
 
 // disassemble a thumb2 instruction
-int darm_thumb2_disasm(darm_t *d, uint16_t w, uint16_t w2);
+int darm_thumb2_disasm(darm_t *d, uint16_t w, uint16_t w2, CPUState* env);//NDROID
 
 //
 // Disassembles an instruction - determines instruction set
@@ -241,7 +246,7 @@ int darm_thumb2_disasm(darm_t *d, uint16_t w, uint16_t w2);
 // disassembled as ARMv7, but do not rely on this being defined behavior in
 // the ARM CPU.
 //
-int darm_disasm(darm_t *d, uint16_t w, uint16_t w2, uint32_t addr);
+int darm_disasm(darm_t *d, uint16_t w, uint16_t w2, uint32_t addr, CPUState* env);//NDROID
 
 int darm_immshift_decode(const darm_t *d, const char **type,
     uint32_t *immediate);
@@ -266,7 +271,7 @@ darm_cond_t darm_condition_index(const char *condition_code);
 int darm_reglist(uint16_t reglist, char *out);
 void darm_dump(const darm_t *d);
 
-int darm_str(const darm_t *d, darm_str_t *str);
-int darm_str2(const darm_t *d, darm_str_t *str, int lowercase);
+int darm_str(const darm_t *d, darm_str_t *str, CPUState* env);//NDROID
+int darm_str2(const darm_t *d, darm_str_t *str, int lowercase, CPUState* env);//NDROID
 
 #endif

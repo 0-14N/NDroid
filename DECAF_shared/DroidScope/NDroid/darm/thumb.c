@@ -326,7 +326,7 @@ static int thumb_disasm(darm_t *d, uint16_t w)
     return -1;
 }
 
-int darm_thumb_disasm(darm_t *d, uint16_t w)
+int darm_thumb_disasm(darm_t *d, uint16_t w, CPUState* env)
 {
     darm_init(d);
     d->w = w;

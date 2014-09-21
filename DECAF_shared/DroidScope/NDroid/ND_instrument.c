@@ -131,16 +131,17 @@ void nd_instruction_begin_callback(DECAF_Callback_Params* params){
 			if(is_thumb2[tmpThumbInsn.insn >> 11]){
 				//Thumb2 instruction
 				if(DECAF_read_mem(env, cur_pc_even, tmpThumb2Insn.chars, 4) != -1){
-					if(darm_thumb2_disasm(&d, tmpThumb2Insn.insn >> 16, tmpThumb2Insn.insn & 0x0000ffff) == 0){
-						if(darm_str(&d, &str) == 0){
+					if(darm_thumb2_disasm(&d, tmpThumb2Insn.insn >> 16, 
+								tmpThumb2Insn.insn & 0x0000ffff, env) == 0){
+						if(darm_str(&d, &str, env) == 0){
 							//DECAF_printf("T2  %x: %s\n", cur_pc, str.total);
 						}
 					}
 				}
 			}else{
 				//Thumb instruction
-				if(darm_thumb_disasm(&d, tmpThumbInsn.insn) == 0){
-					if(darm_str(&d, &str) == 0){
+				if(darm_thumb_disasm(&d, tmpThumbInsn.insn, env) == 0){
+					if(darm_str(&d, &str, env) == 0){
 						//DECAF_printf("T   %x: %s\n", cur_pc, str.total);
 					}
 				}
@@ -151,8 +152,8 @@ void nd_instruction_begin_callback(DECAF_Callback_Params* params){
 		if(DECAF_read_mem(env, cur_pc, tmpARMInsn.chars, 4) != -1){
 			darm_t d;
 			darm_str_t str;
-			if(darm_armv7_disasm(&d, tmpARMInsn.insn) == 0){
-				if(darm_str(&d, &str) == 0){
+			if(darm_armv7_disasm(&d, tmpARMInsn.insn, env) == 0){
+				if(darm_str(&d, &str, env) == 0){
 					//DECAF_printf("A   %x: %s\n", cur_pc, str.total);
 				}
 			}

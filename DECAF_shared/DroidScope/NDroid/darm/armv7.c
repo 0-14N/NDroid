@@ -33,9 +33,6 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "darm.h"
 #include "darm-internal.h"
 #include "armv7-tbl.h"
-/* NDROID START */
-#include "DECAF_shared/DroidScope/NDroid/taint/TaintEngine.h"
-/* NDROID END */
 
 #define BITMSK_12 ((1 << 12) - 1)
 #define BITMSK_16 ((1 << 16) - 1)
@@ -103,7 +100,7 @@ int darm_immshift_decode(const darm_t *d, const char **type,
     return 0;
 }
 
-static int armv7_disas_uncond(darm_t *d, uint32_t w)
+static int armv7_disas_uncond(darm_t *d, uint32_t w, CPUState* env)
 {
     d->instr_type = T_ARM_UNCOND;
 
@@ -207,7 +204,7 @@ static int armv7_disas_uncond(darm_t *d, uint32_t w)
  * parsing.
  */
 /* NDROID END   */
-static int armv7_disas_cond(darm_t *d, uint32_t w)
+static int armv7_disas_cond(darm_t *d, uint32_t w, CPUState* env)
 {
     // we first handle some exceptions for MUL, STR, and LDR-like
     // instructions, which don't fit in the regular table (as they interfere
@@ -286,6 +283,11 @@ static int armv7_disas_cond(darm_t *d, uint32_t w)
             // register or an immediate
             if(((w >> 22) & 1) == 0) {
                 d->Rm = w & b1111;
+								
+								/* NDROID START */
+								//int offset_addr = (d->U == 1) ? 
+
+								/* NDROID END */
             }
             else {
                 // the four high bits start at bit 8, so we shift them right
@@ -868,7 +870,7 @@ static int armv7_disas_cond(darm_t *d, uint32_t w)
     return -1;
 }
 
-int darm_armv7_disasm(darm_t *d, uint32_t w)
+int darm_armv7_disasm(darm_t *d, uint32_t w, CPUState* env)
 {
     int ret;
 
@@ -877,10 +879,10 @@ int darm_armv7_disasm(darm_t *d, uint32_t w)
     d->cond = (w >> 28) & b1111;
 
     if(d->cond == C_UNCOND) {
-        ret = armv7_disas_uncond(d, w);
+        ret = armv7_disas_uncond(d, w, env);
     }
     else {
-        ret = armv7_disas_cond(d, w);
+        ret = armv7_disas_cond(d, w, env);
     }
 
     // return error

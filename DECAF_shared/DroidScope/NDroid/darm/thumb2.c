@@ -634,7 +634,7 @@ char *darm_thumb2_str(darm_t *d)
     return stringbuf;
 }
 
-int darm_thumb2_disasm(darm_t *d, uint16_t w, uint16_t w2)
+int darm_thumb2_disasm(darm_t *d, uint16_t w, uint16_t w2, CPUState* env)
 {
     darm_init(d);
     d->w = (w << 16) | w2;

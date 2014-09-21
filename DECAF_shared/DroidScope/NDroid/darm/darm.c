@@ -91,14 +91,14 @@ void darm_init(darm_t *d)
     d->firstcond = C_INVLD, d->mask = 0;
 }
 
-int darm_disasm(darm_t *d, uint16_t w, uint16_t w2, uint32_t addr)
+int darm_disasm(darm_t *d, uint16_t w, uint16_t w2, uint32_t addr, CPUState* env)
 {
     // if the least significant bit is not set, then this is
     // an ARMv7 instruction
     if((addr & 1) == 0) {
 
         // disassemble and check for error return values
-        if(darm_armv7_disasm(d, (w2 << 16) | w) < 0) {
+        if(darm_armv7_disasm(d, (w2 << 16) | w, env) < 0) {
             return 0;
         }
         else {
@@ -117,7 +117,7 @@ int darm_disasm(darm_t *d, uint16_t w, uint16_t w2, uint32_t addr)
     if(is_thumb2[w >> 11] == 0) {
 
         // this is a Thumb instruction
-        if(darm_thumb_disasm(d, w) < 0) {
+        if(darm_thumb_disasm(d, w, env) < 0) {
             return 0;
         }
         else {
@@ -126,7 +126,7 @@ int darm_disasm(darm_t *d, uint16_t w, uint16_t w2, uint32_t addr)
     }
 
     // this is a Thumb2 instruction
-    if(darm_thumb2_disasm(d, w, w2) < 0) {
+    if(darm_thumb2_disasm(d, w, w2, env) < 0) {
         return 0;
     }
     else {
@@ -134,7 +134,7 @@ int darm_disasm(darm_t *d, uint16_t w, uint16_t w2, uint32_t addr)
     }
 }
 
-int darm_str(const darm_t *d, darm_str_t *str)
+int darm_str(const darm_t *d, darm_str_t *str, CPUState* env)
 {
     if(d->instr == I_INVLD || d->instr >= ARRAYSIZE(darm_mnemonics)) {
         return -1;
@@ -562,9 +562,9 @@ finalize:
     return 0;
 }
 
-int darm_str2(const darm_t *d, darm_str_t *str, int lowercase)
+int darm_str2(const darm_t *d, darm_str_t *str, int lowercase, CPUState* env)
 {
-    if(darm_str(d, str) < 0) {
+    if(darm_str(d, str, env) < 0) {
         return -1;
     }
 
