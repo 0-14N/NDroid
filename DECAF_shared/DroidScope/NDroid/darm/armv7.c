@@ -356,6 +356,41 @@ static int armv7_disas_cond(darm_t *d, uint32_t w, CPUState* env)
                 d->imm = ((w >> 4) & b11110000) | (w & b1111);
                 d->I = B_SET;
             }
+
+						/* NDROID START */
+						int offset_addr = 0, address = 0;
+						switch(d->instr){
+							case I_STRH:
+								if(d->I == B_SET){
+									offset_addr = (d->U == 1) ? (env->regs[d->Rn] + d->imm)
+										: (env->regs[d->Rn] - d->imm);
+									//R[n] = offset_addr ? Never mind because of imm
+								}else{
+									//(shift_t, shift_n) = (SRType_LSL, 0)
+									//because shift_n == 0, so offset is equal to Rm
+									offset_addr = (d->U == 1) ? (env->regs[d->Rn] + env->regs[d->Rm])
+										: (env->regs[d->Rn] - env->regs[d->Rm]);
+									//R[n] = offset_addr ?
+									if((d->P == 0) || (d->W == 1)){
+										addRegToReg(d->Rn, d->Rm);
+									}
+								}
+								address = (d->P == 1) ? offset_addr : env->regs[d->Rn];
+								//mem[address, 2] = R[t]<15:0>;
+								setRegToMem2(address, d->Rt);
+								break;
+							case I_LDRH:
+								break;
+							case I_LDRD:
+								break;
+							case I_LDRSB:
+								break;
+							case I_STRD:
+								break;
+							case I_LDRSH:
+								break;
+						}
+						/* NDROID END */
             return 0;
         }
         // synchronization primitive instructions
