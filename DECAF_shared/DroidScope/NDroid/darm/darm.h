@@ -35,6 +35,7 @@ POSSIBILITY OF SUCH DAMAGE.
 /* NDROID START */
 #include "DECAF_shared/DroidScope/NDroid/taint/TaintEngine.h"
 #include "cpu.h"
+#include "ndroid_darm_utils.h"
 /* NDROID END */
 
 #ifndef ARRAYSIZE

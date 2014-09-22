@@ -491,30 +491,98 @@ static int armv7_disas_cond(darm_t *d, uint32_t w, CPUState* env)
             d->U = (w >> 23) & 1;
             d->W = (w >> 21) & 1;
 
+						/* NDROID START */
+						int offset_addr = 0, address = 0;
+						/* NDROID END */
+
             // if the 25th bit is not set, then this instruction takes an
             // immediate, otherwise, it takes a shifted register
             if(((w >> 25) & 1) == 0) {
                 d->imm = w & BITMSK_12;
                 d->I = B_SET;
+
+								/* NDROID START */
+								int base = env->regs[d->Rn];
+								if((d->instr == I_LDR) || (d->instr == I_LDRB)){
+									if(d->Rn == 15){
+										base = base & 0b00;
+									}
+								}
+								offset_addr = (d->U == 1) ? (base + d->imm)
+									: (base - d->imm);
+								/* NDROID END */
             }
             else {
                 d->shift_type = (w >> 5) & b11;
                 d->shift = (w >> 7) & b11111;
                 d->Rm = w & b1111;
+
+								/* NDROID START */
+								int reg_shift_offset = darm_shift(env->regs[d->Rm], 
+										d->shift_type, d->shift, env->CF);
+								offset_addr = (d->U == 1) ? (env->regs[d->Rn] + reg_shift_offset)
+									: (env->regs[d->Rn] - reg_shift_offset);
+								if((d->P == 0) || (d->W == 1)){
+									addRegToReg(d->Rn, d->Rm);
+								}
+								/* NDROID END */
             }
+
+						/* NDROID START */
+						address = (d->P == 1) ? offset_addr : env->regs[d->Rn];
+						/* NDROID END */
 
             // if Rn == SP and P = 1 and U = 0 and W = 1 and imm12 = 4 and
             // this is a STR instruction, then this is a PUSH instruction
             if(d->instr == I_STR && d->Rn == SP && d->P == 1 && d->U == 0 &&
                     d->W == 1 && d->imm == 4) {
                 d->instr = I_PUSH;
+
+								/* NDROID START */
+								//PUSH -- Encoding A2
+								//t = UInt(Rt); registers = Zeros(16); registers<t> = ‘1’;
+								address = env->regs[SP] - 4;
+								//mem[address, 4] = R[t]
+								setRegToMem4(address, d->Rt);
+								/* NDROID END */
             }
             // if Rn == SP and P = 0 and U = 1 and W = 0 and imm12 = 4 and
             // this is a LDR instruction, then this is a POP instruction
             else if(d->instr == I_LDR && d->Rn == SP && d->P == 0 &&
                     d->U == 1 && d->W == 0 && d->imm == 4) {
                 d->instr = I_POP;
+
+								/* NDROID START */
+								//POP -- ENCODING A2
+								//t = UInt(Rt); registers = Zeros(16); registers<t> = ‘1’;
+								address = env->regs[SP];
+								//R[t] = mem[address, 4]
+								setMem4ToReg(d->Rt, address);
+								/* NDROID END */
             }
+
+						/* NDROID START */
+						else{
+							switch(d->instr){
+								case I_STR:
+								case I_STRT:
+									setRegToMem4(address, d->Rt);
+									break;
+								case I_STRB:
+								case I_STRBT:
+									setRegToMem(address, d->Rt);
+									break;
+								case I_LDR:
+								case I_LDRT:
+									setMem4ToReg(d->Rt, address);
+									break;
+								case I_LDRB:
+								case I_LDRBT:
+									setMemToReg(d->Rt, address);
+									break;
+							}
+						}
+						/* NDROID END */
             return 0;
         }
     }
