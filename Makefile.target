@@ -183,6 +183,7 @@ DECAF_SRC_FILES += \
 		DroidScope/NDroid/darm/thumb2-tbl.c\
 		DroidScope/NDroid/darm/thumb.c\
 		DroidScope/NDroid/darm/thumb-tbl.c\
+		DroidScope/NDroid/darm/ndroid_darm_utils.c\
 # END NDROID SRC FILES
 
 DECAF_CFLAGS := -I$(LOCAL_PATH)/DECAF_shared
