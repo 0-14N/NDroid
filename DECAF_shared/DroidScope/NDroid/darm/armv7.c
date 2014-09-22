@@ -597,6 +597,12 @@ static int armv7_disas_cond(darm_t *d, uint32_t w, CPUState* env)
         d->Rn = (w >> 16) & b1111;
         d->Rd = (w >> 12) & b1111;
         d->Rm = w & b1111;
+
+				/* NDROID START */
+				setRegToReg(d->Rd, d->Rm);
+				addRegToReg(d->Rd, d->Rn);
+				/* NDROID END */
+
         return 0;
     }
     // handle packing, unpacking, saturation, and reversal instructions, these
