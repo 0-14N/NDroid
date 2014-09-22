@@ -660,6 +660,11 @@ static int armv7_disas_cond(darm_t *d, uint32_t w, CPUState* env)
             d->shift = (w >> 7) & b11111;
             d->shift_type = (w >> 5) & b11;
             d->Rn = w & b1111;
+						
+						/* NDROID START */
+						setRegToReg(d->Rd, d->Rn);
+						/* NDROID END */
+
             return 0;
         }
 
@@ -674,6 +679,11 @@ static int armv7_disas_cond(darm_t *d, uint32_t w, CPUState* env)
             }
             d->Rd = (w >> 12) & b1111;
             d->Rn = w & b1111;
+
+						/* NDROID START */
+						setRegToReg(d->Rd, d->Rn);
+						/* NDROID END */
+
             return 0;
         }
     }
