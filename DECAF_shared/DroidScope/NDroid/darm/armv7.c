@@ -630,9 +630,17 @@ static int armv7_disas_cond(darm_t *d, uint32_t w, CPUState* env)
                 // directly in our shift as well
                 d->rotate = (w >> 7) & b11000;
 
+								/* NDROID START */
+								setRegToReg(d->Rd, d->Rm);
+								/* NDROID END */
+
                 // if A is not 0b1111, then A represents the Rn operand
                 if(A != b1111) {
                     d->Rn = A;
+
+										/* NDROID START */
+										addRegToReg(d->Rd, d->Rn);
+										/* NDROID END */
                 }
                 return 0;
             }
