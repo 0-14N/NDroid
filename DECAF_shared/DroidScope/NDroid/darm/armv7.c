@@ -701,9 +701,18 @@ static int armv7_disas_cond(darm_t *d, uint32_t w, CPUState* env)
         d->Rm = w & b1111;
         d->shift_type = (w >> 5) & b11;
 
+				/* NDROID START */
+				setRegToReg(d->Rd, d->Rn);
+				addRegToReg(d->Rd, d->Rm);
+				/* NDROID END */
+
         // type == 1, shift with the value of the lower bits of Rs
         if(((w >> 4) & 1) == B_SET) {
             d->Rs = (w >> 8) & b1111;
+
+						/* NDROID START */
+						addRegToReg(d->Rd, d->Rs);
+						/* NDROID END */
         }
         else {
             d->shift = (w >> 7) & b11111;
@@ -722,7 +731,18 @@ static int armv7_disas_cond(darm_t *d, uint32_t w, CPUState* env)
                 d->S == 0 && d->Rn == PC) {
             d->instr = I_ADR, d->Rn = R_INVLD;
             d->U = (w >> 23) & 1;
+
+						/* NDROID START */
+						setRegToReg(d->Rd, PC);
+						/* NDROID END */
         }
+
+				/* NDROID START */
+				else{
+					setRegToReg(d->Rd, d->Rn);
+				}
+				/* NDROID END */
+
         return 0;
 
     case T_ARM_BITS:
