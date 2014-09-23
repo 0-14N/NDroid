@@ -821,6 +821,11 @@ static int armv7_disas_cond(darm_t *d, uint32_t w, CPUState* env)
 
         case I_QSUB: case I_SMLAW: case I_SMULW: default:
             // returns -1
+
+						/* NDROID START */
+						//???
+						/* NDROID END */
+
             break;
         }
         break;
@@ -842,6 +847,11 @@ static int armv7_disas_cond(darm_t *d, uint32_t w, CPUState* env)
         else {
             d->imm |= ((w >> 16) & b1111) << 12;
         }
+
+				/* NDROID START */
+				clearRegTaint(d->Rd);
+				/* NDROID END */
+
         return 0;
 
     case T_ARM_CMP_OP:
@@ -878,6 +888,11 @@ static int armv7_disas_cond(darm_t *d, uint32_t w, CPUState* env)
         if((w >> 4) & 1) {
             d->Rm = (w >> 8) & b1111;
             d->Rn = w & b1111;
+
+						/* NDROID START */
+						setRegToReg(d->Rd, d->Rn);
+						addRegToReg(d->Rd, d->Rm);
+						/* NDROID END */
         }
         else {
             d->Rm = w & b1111;
@@ -895,6 +910,10 @@ static int armv7_disas_cond(darm_t *d, uint32_t w, CPUState* env)
                     d->shift == 0) {
                 d->instr = I_RRX;
             }
+
+						/* NDROID START */
+						setRegToReg(d->Rd, d->Rm);
+						/* NDROID END */
         }
 
         return 0;
