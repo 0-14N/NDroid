@@ -763,9 +763,19 @@ static int armv7_disas_cond(darm_t *d, uint32_t w, CPUState* env)
                 d->Rn = R_INVLD;
                 d->instr = I_BFC;
             }
+
+						/* NDROID START */
+						else{
+							addRegToReg(d->Rd, d->Rn);
+						}
+						/* NDROID END */
         }
         else {
             d->width = ((w >> 16) & b11111) + 1;
+
+						/* NDROID START */
+						setRegToReg(d->Rd, d->Rn);
+						/* NDROID END */
         }
         return 0;
 
