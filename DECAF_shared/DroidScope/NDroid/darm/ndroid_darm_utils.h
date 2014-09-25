@@ -24,6 +24,8 @@ extern "C"
 
 	darm_sr_type darm_decode_imm_shift(int type, int imm);
 
+	int darm_bit_count_16(int bit_string);
+
 #ifdef __cplusplus
 }
 #endif

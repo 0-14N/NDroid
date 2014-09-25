@@ -105,3 +105,15 @@ darm_sr_type darm_decode_imm_shift(int type, int imm){
 	}
 	return retType;
 }
+
+int darm_bit_count_16(int bit_string){
+	int bitCount = 0;
+	int i = 0;
+	for(; i < 16; i++){
+		if((bit_string & (0b1 << i)) == 1){
+			bitCount++;
+		}
+	}
+	return bitCount;
+}
+

@@ -927,11 +927,34 @@ static int armv7_disas_cond(darm_t *d, uint32_t w, CPUState* env)
         // a POP instruction
         if(d->instr == I_LDM && d->W == 1 && d->Rn == SP) {
             d->instr = I_POP;
+
+						/* NDROID START */
+						int address = env->regs[SP];
+						int i = 0;
+						for(; i < 16; i++){
+							if((d->reglist & (0b1 << i)) == 1){
+								setMem4ToReg(i, address);
+								address += 4;
+							}
+						}
+						/* NDROID END */
+
         }
         // if this is the STMDB instruction and W = 1 and Rn = SP then this is
         // the PUSH instruction
         else if(d->instr == I_STMDB && d->W == 1 && d->Rn == SP) {
             d->instr = I_PUSH;
+
+						/* NDROID START */
+						int address = env->regs[SP] - 4 * darm_bit_count_16(d->reglist);
+						int i = 0;
+						for(; i < 16; i++){
+							if((d->reglist & (0b1 << i)) == 1){
+								setRegToMem4(address, i);
+								address += 4;
+							}
+						}
+						/* NDROID END */
         }
         return 0;
 
@@ -943,11 +966,19 @@ static int armv7_disas_cond(darm_t *d, uint32_t w, CPUState* env)
         // this is in fact the REV instruction
         if(d->instr == I_REV16 && ((w >> 4) & b1111) == b0011) {
             d->instr = I_REV;
+
+						/* NDROID START */
+						setRegToReg(d->Rd, d->Rm);
+						/* NDROID END */
         }
         // if this is the REVSH instruction and bits 4..7 are 0b0011, then
         // this is in fact the RBIT instruction
         else if(d->instr == I_REVSH && ((w >> 4) & b1111) == b0011) {
             d->instr = I_RBIT;
+
+						/* NDROID START */
+						setRegToReg(d->Rd, d->Rm);
+						/* NDROID END */
         }
         return 0;
 
@@ -958,11 +989,20 @@ static int armv7_disas_cond(darm_t *d, uint32_t w, CPUState* env)
             d->Rd = (w >> 12) & b1111;
             d->shift_type = (w >> 5) & b11;
             d->Rm = w & b1111;
+
+						/* NDROID START */
+						setRegToReg(d->Rd, d->Rm);
+						/* NDROID END */
+
             if(((w >> 4) & 1) == B_UNSET) {
                 d->shift = (w >> 7) & b11111;
             }
             else {
                 d->Rs = (w >> 8) & b1111;
+
+								/* NDROID START */
+								addRegToReg(d->Rd, d->Rs);
+								/* NDROID END */
             }
             return 0;
 
@@ -982,6 +1022,12 @@ static int armv7_disas_cond(darm_t *d, uint32_t w, CPUState* env)
                 d->M  = (w >> 6) & 1;
                 d->N  = (w >> 5) & 1;
                 d->Rn = w & b1111;
+
+								/* NDROID START */
+								setRegToReg(d->Rd, d->Rm);
+								addRegToReg(d->Rd, d->Rn);
+								/* NDROID END */
+
                 break;
 
             // smc
@@ -996,6 +1042,11 @@ static int armv7_disas_cond(darm_t *d, uint32_t w, CPUState* env)
                 d->instr = I_CLZ;
                 d->Rm = w & b1111;
                 d->Rd = (w >> 12) & b1111;
+
+								/* NDROID START */
+								setRegToReg(d->Rd, d->Rm);
+								/* NDROID END */
+
                 break;
 
             default:
@@ -1007,6 +1058,11 @@ static int armv7_disas_cond(darm_t *d, uint32_t w, CPUState* env)
             d->Rd = (w >> 12) & b1111;
             d->Rn = (w >> 16) & b1111;
             d->Rm = w & b1111;
+
+						/* NDROID START */
+						setRegToReg(d->Rd, d->Rm);
+						addRegToReg(d->Rd, d->Rn);
+						/* NDROID END */
 
             // the SEL and PKH instructions share the same 8-bit identifier,
             // if the 5th bit is set, then this is the SEL instruction,
@@ -1029,6 +1085,12 @@ static int armv7_disas_cond(darm_t *d, uint32_t w, CPUState* env)
             d->R  = (w >> 5) & 1;
             d->Rn = w & b1111;
 
+						/* NDROID START */
+						setRegToReg(d->Rd, d->Rm);
+						addRegToReg(d->Rd, d->Rn);
+						addRegToReg(d->Rd, d->Ra);
+						/* NDROID END */
+
             // this can be either the SMMUL, the SMMLA, or the SMMLS
             // instruction, depending on the 6th bit and Ra
             if((w >> 6) & 1) {
@@ -1048,6 +1110,12 @@ static int armv7_disas_cond(darm_t *d, uint32_t w, CPUState* env)
             d->M  = (w >> 5) & 1;
             d->Rn = w & b1111;
 
+						/* NDROID START */
+						setRegToReg(d->Rd, d->Rm);
+						addRegToReg(d->Rd, d->Rn);
+						addRegToReg(d->Rd, d->Ra);
+						/* NDROID END */
+
             // this can be either the SMLAD, the SMLSD, the SMUAD, or the
             // SMUSD instruction, depending on the 6th bit and Ra
             if((w >> 6) & 1 && d->Rn != b1111) {
@@ -1065,6 +1133,13 @@ static int armv7_disas_cond(darm_t *d, uint32_t w, CPUState* env)
             d->M = (w >> 5) & 1;
             d->Rn = w & b1111;
 
+						/* NDROID START */
+						setRegToReg(d->RdHi, d->Rm);
+						addRegToReg(d->RdHi, d->Rn);
+						setRegToReg(d->RdLo, d->Rm);
+						addRegToReg(d->RdLo, d->Rn);
+						/* NDROID END */
+
             // if the 6th bit is zero, then this is in fact the SMLALD
             // instruction
             if(((w >> 6) & 1) == 0) {
@@ -1079,6 +1154,13 @@ static int armv7_disas_cond(darm_t *d, uint32_t w, CPUState* env)
             d->M  = (w >> 6) & 1;
             d->N  = (w >> 5) & 1;
             d->Rn = w & b1111;
+
+						/* NDROID START */
+						setRegToReg(d->Rd, d->Rm);
+						addRegToReg(d->Rd, d->Rn);
+						addRegToReg(d->Rd, d->Ra);
+						/* NDROID END */
+
             return 0;
 
         case I_SMLAL:
@@ -1088,6 +1170,14 @@ static int armv7_disas_cond(darm_t *d, uint32_t w, CPUState* env)
             d->M  = (w >> 6) & 1;
             d->N  = (w >> 5) & 1;
             d->Rn = w & b1111;
+
+						/* NDROID START */
+						setRegToReg(d->RdHi, d->Rm);
+						addRegToReg(d->RdHi, d->Rn);
+						setRegToReg(d->RdLo, d->Rm);
+						addRegToReg(d->RdLo, d->Rn);
+						/* NDROID END */
+
             return 0;
 
         case I_SMUL:
@@ -1108,6 +1198,11 @@ static int armv7_disas_cond(darm_t *d, uint32_t w, CPUState* env)
         d->Rn = (w >> 16) & b1111;
         d->Rd = (w >> 12) & b1111;
         d->Rm = w & b1111;
+
+				/* NDROID START */
+				setRegToReg(d->Rd, d->Rn);
+				addRegToReg(d->Rd, d->Rm);
+				/* NDROID END */
         return 0;
 
     case T_ARM_MVCR:
@@ -1125,6 +1220,11 @@ static int armv7_disas_cond(darm_t *d, uint32_t w, CPUState* env)
             d->opc1 = (w >> 21) & b111;
             d->Rt = (w >> 12) & b1111;
         }
+
+				/* NDROID START */
+				//??? Currently, we don't take co-processor instructions into account.
+				/* NDROID END */
+
         return 0;
 
     case T_ARM_UDF:
