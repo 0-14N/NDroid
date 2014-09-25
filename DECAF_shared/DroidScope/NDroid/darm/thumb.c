@@ -36,7 +36,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #define BITMSK_8 ((1 << 8) - 1)
 
-static int thumb_disasm(darm_t *d, uint16_t w)
+static int thumb_disasm(darm_t *d, uint16_t w, CPUState* env)
 {
     d->instr = thumb_instr_labels[w >> 8];
     d->instr_type = thumb_instr_types[w >> 8];
@@ -340,6 +340,6 @@ int darm_thumb_disasm(darm_t *d, uint16_t w, CPUState* env)
         return -1;
 
     default:
-        return thumb_disasm(d, w);
+        return thumb_disasm(d, w, env);
     }
 }
