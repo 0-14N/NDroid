@@ -41,6 +41,10 @@ static int thumb_disasm(darm_t *d, uint16_t w, CPUState* env)
     d->instr = thumb_instr_labels[w >> 8];
     d->instr_type = thumb_instr_types[w >> 8];
 
+		/* NDROID START */
+		int offset_addr = 0, address = 0, base = 0;
+		/* NDROID END */
+
     switch ((uint32_t) d->instr_type) {
     case T_THUMB_ONLY_IMM8:
         d->I = B_SET;
@@ -70,6 +74,10 @@ static int thumb_disasm(darm_t *d, uint16_t w, CPUState* env)
         d->Rd = (w >> 0) & b111;
         d->Rm = (w >> 3) & b111;
         d->shift = (w >> 6) & b11111;
+
+				/* NDROID START */
+				setRegTaint(d->Rd, d->Rm);
+				/* NDROID END */
 
         // if the shift is zero and this is the lsl instruction, then this is
         // actually a mov instruction
@@ -102,6 +110,17 @@ static int thumb_disasm(darm_t *d, uint16_t w, CPUState* env)
         d->U = B_SET;
         d->W = B_UNSET;
         d->P = B_SET;
+
+				/* NDROID START */
+				offset_addr = (d->W == 1) ? (env->regs[d->Rn] + d->imm)
+					: (env->regs[d->Rn] - d->imm);
+				address = offset_addr;
+				if(d->instr == I_LDR){
+					setMem4ToReg(d->Rt, address);
+				}else{
+					setRegToMem4(address, d->Rt);
+				}
+				/* NDROID END */
         return 0;
 
     case T_THUMB_LDR_PC:
@@ -112,6 +131,12 @@ static int thumb_disasm(darm_t *d, uint16_t w, CPUState* env)
         d->U = B_SET;
         d->W = B_UNSET;
         d->P = B_SET;
+
+				/* NDROID START */
+				base = env->regs[PC] & 0b00;
+				address = base + d->imm;
+				setMem4ToReg(d->Rt, address);
+				/* NDROID END */
         return 0;
 
     case T_THUMB_GPI:
@@ -121,6 +146,10 @@ static int thumb_disasm(darm_t *d, uint16_t w, CPUState* env)
         case I_ASR: case I_ADC: case I_SBC: case I_ROR:
             d->Rd = d->Rn = w & b111;
             d->Rm = (w >> 3) & b111;
+
+						/* NDROID START */
+						addRegToReg(d->Rd, d->Rm);
+						/* NDROID END */
             return 0;
 
         case I_TST: case I_CMP: case I_CMN:
@@ -133,6 +162,10 @@ static int thumb_disasm(darm_t *d, uint16_t w, CPUState* env)
             d->imm = 0;
             d->Rd = w & b111;
             d->Rn = (w >> 3) & b111;
+
+						/* NDROID START */
+						setRegToReg(d->Rd, d->Rn);
+						/* NDROID END */
             return 0;
 
         case I_ORR: case I_BIC:
@@ -143,11 +176,19 @@ static int thumb_disasm(darm_t *d, uint16_t w, CPUState* env)
         case I_MVN:
             d->Rd = w & b111;
             d->Rm = (w >> 3) & b111;
+
+						/* NDROID START */
+						setRegToReg(d->Rd, d->Rm);
+						/* NDROID END */
             return 0;
 
         case I_MUL:
             d->Rd = d->Rm = w & b111;
             d->Rn = (w >> 3) & b111;
+
+						/* NDROID START */
+						addRegToReg(d->Rd, d->Rn);
+						/* NDROID END */
             return 0;
         }
 
@@ -187,6 +228,10 @@ static int thumb_disasm(darm_t *d, uint16_t w, CPUState* env)
 
         case I_MOV:
             d->Rd = (w >> 8) & b111;
+						
+						/* NDROID START */
+						setRegToReg(d->Rd, d->Rn);
+						/* NDROID END */
             return 0;
 
         case I_CMP:
@@ -198,6 +243,10 @@ static int thumb_disasm(darm_t *d, uint16_t w, CPUState* env)
         d->instr = type_extend_instr_lookup[(w >> 6) & b11];
         d->Rd = w & b111;
         d->Rm = (w >> 3) & b111;
+
+				/* NDROID START */
+				setRegToReg(d->Rd, d->Rm);
+				/* NDROID END */
         return 0;
 
     case T_THUMB_MOD_SP_IMM:
@@ -211,6 +260,11 @@ static int thumb_disasm(darm_t *d, uint16_t w, CPUState* env)
         d->Rd = (w >> 0) & b111;
         d->Rn = (w >> 3) & b111;
         d->Rm = (w >> 6) & b111;
+
+				/* NDROID START */
+				setRegToReg(d->Rd, d->Rn);
+				addRegToReg(d->Rd, d->Rm);
+				/* NDROID END */
         return 0;
 
     case T_THUMB_2REG_IMM:
@@ -218,6 +272,10 @@ static int thumb_disasm(darm_t *d, uint16_t w, CPUState* env)
         d->Rn = (w >> 3) & b111;
         d->I = B_SET;
         d->imm = (w >> 6) & b111;
+
+				/* NDROID START */
+				setRegToReg(d->Rd, d->Rn);
+				/* NDROID END */
         return 0;
 
     case T_THUMB_ADD_SP_IMM:
@@ -225,6 +283,10 @@ static int thumb_disasm(darm_t *d, uint16_t w, CPUState* env)
         d->imm = (w & BITMSK_8) << 2;
         d->Rn = SP;
         d->Rd = (w >> 8) & b111;
+
+				/* NDROID START */
+				setRegToReg(d->Rd, SP);
+				/* NDROID END */
         return 0;
 
     case T_THUMB_MOV4:
@@ -232,6 +294,10 @@ static int thumb_disasm(darm_t *d, uint16_t w, CPUState* env)
         // highest bit for Rd
         d->Rd = ((w >> 4) & 8) | (w & b111);
         d->Rm = (w >> 3) & b1111;
+
+				/* NDROID START */
+				setRegToReg(d->Rd, d->Rm);
+				/* NDROID END */
         return 0;
 
     case T_THUMB_RW_MEMI:
@@ -244,10 +310,30 @@ static int thumb_disasm(darm_t *d, uint16_t w, CPUState* env)
         switch ((uint32_t) d->instr) {
         case I_LDR: case I_STR:
             d->imm <<= 2;
+						
+						/* NDROID START */
+						offset_addr = env->regs[d->Rn] + d->imm;
+						address = offset_addr;
+						if(d->instr == I_LDR){
+							setMem4ToReg(d->Rt, address);
+						}else{
+							setRegToMem4(address, d->Rt);
+						}
+						/* NDROID END */
             break;
 
         case I_LDRH: case I_STRH:
             d->imm <<= 1;
+
+						/* NDROID START */
+						offset_addr = env->regs[d->Rn] + d->imm;
+						address = offset_addr;
+						if(d->instr == I_LDRH){
+							setMem2ToReg(d->Rt, address);
+						}else{
+							setRegToMem2(address, d->Rt);
+						}
+						/* NDROID END */
             break;
         }
 
@@ -263,6 +349,33 @@ static int thumb_disasm(darm_t *d, uint16_t w, CPUState* env)
         d->P = B_SET;
         d->U = B_SET;
         d->W = B_UNSET;
+
+				/* NDROID START */
+				offset_addr = env->regs[d->Rn] + env->regs[d->Rm];
+				address = offset_addr;
+				switch(d->instr){
+					case I_STR:
+						setRegToMem4(address, d->Rt);
+						break;
+					case I_STRH:
+						setRegToMem2(address, d->Rt);
+						break;
+					case I_STRB:
+						setRegToMem(address, d->Rt);
+						break;
+					case I_LDR:
+						setMem4ToReg(d->Rt, address);
+						break;
+					case I_LDRB:
+					case I_LDRSB:
+						setMemToReg(d->Rt, address);
+						break;
+					case I_LDRH:
+					case I_LDRSH:
+						setMem2ToReg(d->Rt, address);
+						break;
+				}
+				/* NDROID END */
         return 0;
 
     case T_THUMB_RW_REG:
