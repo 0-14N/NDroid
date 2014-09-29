@@ -713,70 +713,266 @@ darm_instr_t thumb2_modified_immediate(darm_t *d, uint16_t w, uint16_t w2, CPUSt
     d->instr_type = T_THUMB2_RN_RD_REG;
     d->instr_imm_type = T_THUMB2_IMM1_IMM3_IMM8;
     d->instr_flag_type = T_THUMB2_S_FLAG;
+		/* NDROID START */
+		/*
+    d->Rn = w & b1111;
+    d->Rd = (w2 >> 8) & b1111;
+    if((w & 0x300) == 0x200) {
+        d->imm = ((w & 0x400) << 1) | ((w2 & 0x7000) >> 4) | (w2 & 0xff);
+    }
+    else {
+        d->imm = ((w & 0x400) << 1) | ((w2 & 0x7000) >> 4) | (w2 & 0xff);
+        d->imm = thumb_expand_imm(d->imm);
+    }
+    d->S = (w >> 4) & 1 ? B_SET : B_UNSET;
+		*/
+		/* NDROID END */
 
     switch (op) {
     case 0:
         if(Rd_S == 0x1f) {
             d->instr_type = T_THUMB2_RN_REG;
             d->instr_flag_type = T_THUMB2_NO_FLAG;
+						/* NDROID START */
+        		d->Rn = w & b1111;
+    				if((w & 0x300) == 0x200) {
+        				d->imm = ((w & 0x400) << 1) | ((w2 & 0x7000) >> 4) | (w2 & 0xff);
+    				}
+    				else {
+        				d->imm = ((w & 0x400) << 1) | ((w2 & 0x7000) >> 4) | (w2 & 0xff);
+        				d->imm = thumb_expand_imm(d->imm);
+    				}
+						/* NDROID END */
             return I_TST;
         }
 
+				/* NDROID START */
+    		d->Rn = w & b1111;
+    		d->Rd = (w2 >> 8) & b1111;
+    		if((w & 0x300) == 0x200) {
+        		d->imm = ((w & 0x400) << 1) | ((w2 & 0x7000) >> 4) | (w2 & 0xff);
+    		}
+    		else {
+        		d->imm = ((w & 0x400) << 1) | ((w2 & 0x7000) >> 4) | (w2 & 0xff);
+        		d->imm = thumb_expand_imm(d->imm);
+    		}
+    		d->S = (w >> 4) & 1 ? B_SET : B_UNSET;
+				/* NDROID END */
         return I_AND;
 
     case 1:
+				/* NDROID START */
+    		d->Rn = w & b1111;
+    		d->Rd = (w2 >> 8) & b1111;
+    		if((w & 0x300) == 0x200) {
+        		d->imm = ((w & 0x400) << 1) | ((w2 & 0x7000) >> 4) | (w2 & 0xff);
+    		}
+    		else {
+        		d->imm = ((w & 0x400) << 1) | ((w2 & 0x7000) >> 4) | (w2 & 0xff);
+        		d->imm = thumb_expand_imm(d->imm);
+    		}
+    		d->S = (w >> 4) & 1 ? B_SET : B_UNSET;
+				/* NDROID END */
         return I_BIC;
 
     case 2:
         if(Rn == b1111) {
             d->instr_type = T_THUMB2_RD_REG;
+						/* NDROID START */
+        		d->Rd = (w2 >> 8) & b1111;
+    				if((w & 0x300) == 0x200) {
+        				d->imm = ((w & 0x400) << 1) | ((w2 & 0x7000) >> 4) | (w2 & 0xff);
+    				}
+    				else {
+        				d->imm = ((w & 0x400) << 1) | ((w2 & 0x7000) >> 4) | (w2 & 0xff);
+        				d->imm = thumb_expand_imm(d->imm);
+    				}
+    				d->S = (w >> 4) & 1 ? B_SET : B_UNSET;
+						/* NDROID END */
             return I_MOV;
         }
 
+				/* NDROID START */
+    		d->Rn = w & b1111;
+    		d->Rd = (w2 >> 8) & b1111;
+    		if((w & 0x300) == 0x200) {
+        		d->imm = ((w & 0x400) << 1) | ((w2 & 0x7000) >> 4) | (w2 & 0xff);
+    		}
+    		else {
+        		d->imm = ((w & 0x400) << 1) | ((w2 & 0x7000) >> 4) | (w2 & 0xff);
+        		d->imm = thumb_expand_imm(d->imm);
+    		}
+    		d->S = (w >> 4) & 1 ? B_SET : B_UNSET;
+				/* NDROID END */
         return I_ORR;
 
     case 3:
         if(Rn == b1111) {
             d->instr_type = T_THUMB2_RD_REG;
+						/* NDROID START */
+        		d->Rd = (w2 >> 8) & b1111;
+    				if((w & 0x300) == 0x200) {
+        				d->imm = ((w & 0x400) << 1) | ((w2 & 0x7000) >> 4) | (w2 & 0xff);
+    				}
+    				else {
+        				d->imm = ((w & 0x400) << 1) | ((w2 & 0x7000) >> 4) | (w2 & 0xff);
+        				d->imm = thumb_expand_imm(d->imm);
+    				}
+    				d->S = (w >> 4) & 1 ? B_SET : B_UNSET;
+						/* NDROID END */
             return I_MVN;
         }
 
+				/* NDROID START */
+    		d->Rn = w & b1111;
+    		d->Rd = (w2 >> 8) & b1111;
+    		if((w & 0x300) == 0x200) {
+        		d->imm = ((w & 0x400) << 1) | ((w2 & 0x7000) >> 4) | (w2 & 0xff);
+    		}
+    		else {
+        		d->imm = ((w & 0x400) << 1) | ((w2 & 0x7000) >> 4) | (w2 & 0xff);
+        		d->imm = thumb_expand_imm(d->imm);
+    		}
+    		d->S = (w >> 4) & 1 ? B_SET : B_UNSET;
+				/* NDROID END */
         return I_ORN;
 
     case 4:
         if(Rd_S == 0x1f) {
             d->instr_type = T_THUMB2_RN_REG;
             d->instr_flag_type = T_THUMB2_NO_FLAG;
+						/* NDROID START */
+    				d->Rn = w & b1111;
+    				if((w & 0x300) == 0x200) {
+        				d->imm = ((w & 0x400) << 1) | ((w2 & 0x7000) >> 4) | (w2 & 0xff);
+    				}
+    				else {
+        				d->imm = ((w & 0x400) << 1) | ((w2 & 0x7000) >> 4) | (w2 & 0xff);
+        				d->imm = thumb_expand_imm(d->imm);
+    				}
+						/* NDROID END */
             return I_TEQ;
         }
 
+				/* NDROID START */
+    		d->Rn = w & b1111;
+    		d->Rd = (w2 >> 8) & b1111;
+    		if((w & 0x300) == 0x200) {
+        		d->imm = ((w & 0x400) << 1) | ((w2 & 0x7000) >> 4) | (w2 & 0xff);
+    		}
+    		else {
+        		d->imm = ((w & 0x400) << 1) | ((w2 & 0x7000) >> 4) | (w2 & 0xff);
+        		d->imm = thumb_expand_imm(d->imm);
+    		}
+    		d->S = (w >> 4) & 1 ? B_SET : B_UNSET;
+				/* NDROID END */
         return I_EOR;
 
     case 8:
         if(Rd_S == 0x1f) {
             d->instr_type = T_THUMB2_RN_REG;
             d->instr_flag_type = T_THUMB2_NO_FLAG;
+						/* NDROID START */
+    				d->Rn = w & b1111;
+    				if((w & 0x300) == 0x200) {
+        				d->imm = ((w & 0x400) << 1) | ((w2 & 0x7000) >> 4) | (w2 & 0xff);
+    				}
+    				else {
+        				d->imm = ((w & 0x400) << 1) | ((w2 & 0x7000) >> 4) | (w2 & 0xff);
+        				d->imm = thumb_expand_imm(d->imm);
+    				}
+						/* NDROID END */
             return I_CMN;
         }
 
+				/* NDROID START */
+    		d->Rn = w & b1111;
+    		d->Rd = (w2 >> 8) & b1111;
+    		if((w & 0x300) == 0x200) {
+        		d->imm = ((w & 0x400) << 1) | ((w2 & 0x7000) >> 4) | (w2 & 0xff);
+    		}
+    		else {
+        		d->imm = ((w & 0x400) << 1) | ((w2 & 0x7000) >> 4) | (w2 & 0xff);
+        		d->imm = thumb_expand_imm(d->imm);
+    		}
+    		d->S = (w >> 4) & 1 ? B_SET : B_UNSET;
+				/* NDROID END */
         return I_ADD;
 
     case 10:
+				/* NDROID START */
+    		d->Rn = w & b1111;
+    		d->Rd = (w2 >> 8) & b1111;
+    		if((w & 0x300) == 0x200) {
+        		d->imm = ((w & 0x400) << 1) | ((w2 & 0x7000) >> 4) | (w2 & 0xff);
+    		}
+    		else {
+        		d->imm = ((w & 0x400) << 1) | ((w2 & 0x7000) >> 4) | (w2 & 0xff);
+        		d->imm = thumb_expand_imm(d->imm);
+    		}
+    		d->S = (w >> 4) & 1 ? B_SET : B_UNSET;
+				/* NDROID END */
         return I_ADC;
 
     case 11:
+				/* NDROID START */
+    		d->Rn = w & b1111;
+    		d->Rd = (w2 >> 8) & b1111;
+    		if((w & 0x300) == 0x200) {
+        		d->imm = ((w & 0x400) << 1) | ((w2 & 0x7000) >> 4) | (w2 & 0xff);
+    		}
+    		else {
+        		d->imm = ((w & 0x400) << 1) | ((w2 & 0x7000) >> 4) | (w2 & 0xff);
+        		d->imm = thumb_expand_imm(d->imm);
+    		}
+    		d->S = (w >> 4) & 1 ? B_SET : B_UNSET;
+				/* NDROID END */
         return I_SBC;
 
     case 13:
         if(Rd_S == 0x1f) {
             d->instr_type = T_THUMB2_RN_REG;
             d->instr_flag_type = T_THUMB2_NO_FLAG;
+						/* NDROID START */
+    				d->Rn = w & b1111;
+    				if((w & 0x300) == 0x200) {
+        				d->imm = ((w & 0x400) << 1) | ((w2 & 0x7000) >> 4) | (w2 & 0xff);
+    				}
+    				else {
+        				d->imm = ((w & 0x400) << 1) | ((w2 & 0x7000) >> 4) | (w2 & 0xff);
+        				d->imm = thumb_expand_imm(d->imm);
+    				}
+						/* NDROID END */
             return I_CMP;
         }
 
+				/* NDROID START */
+    		d->Rn = w & b1111;
+    		d->Rd = (w2 >> 8) & b1111;
+    		if((w & 0x300) == 0x200) {
+        		d->imm = ((w & 0x400) << 1) | ((w2 & 0x7000) >> 4) | (w2 & 0xff);
+    		}
+    		else {
+        		d->imm = ((w & 0x400) << 1) | ((w2 & 0x7000) >> 4) | (w2 & 0xff);
+        		d->imm = thumb_expand_imm(d->imm);
+    		}
+    		d->S = (w >> 4) & 1 ? B_SET : B_UNSET;
+				/* NDROID END */
         return I_SUB;
 
     case 14:
+				/* NDROID START */
+    		d->Rn = w & b1111;
+    		d->Rd = (w2 >> 8) & b1111;
+    		if((w & 0x300) == 0x200) {
+        		d->imm = ((w & 0x400) << 1) | ((w2 & 0x7000) >> 4) | (w2 & 0xff);
+    		}
+    		else {
+        		d->imm = ((w & 0x400) << 1) | ((w2 & 0x7000) >> 4) | (w2 & 0xff);
+        		d->imm = thumb_expand_imm(d->imm);
+    		}
+    		d->S = (w >> 4) & 1 ? B_SET : B_UNSET;
+				/* NDROID END */
         return I_RSB;
     }
 
