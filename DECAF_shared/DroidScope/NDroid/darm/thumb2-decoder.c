@@ -164,28 +164,57 @@ darm_instr_t thumb2_load_store_multiple(darm_t *d, uint16_t w, uint16_t w2, CPUS
 
     case 1:
         if(L == 0) {
+						/* NDROID START */
+        		d->Rn = w & b1111;
+        		d->I = B_UNSET;
+        		d->reglist = w2 & 0xffff;
+						/* NDROID END */
             return I_STM;
         }
 
         if(W_Rn == 0x1d) {
             d->instr_type = T_THUMB2_NO_REG;
+						/* NDROID START */
+        		d->I = B_UNSET;
+        		d->reglist = w2 & 0xffff;
+						/* NDROID END */
             return I_POP;
         }
 
         d->instr_flag_type = T_THUMB2_WP_REGLIST_FLAG;
+				/* NDROID START */
+        d->I = B_UNSET;
+        d->reglist = w2 & 0xffff;
+        d->W = (w >> 5) & 1 ? B_SET : B_UNSET;
+				/* NDROID END */
         return I_LDM;
 
     case 2:
         if(L == 0) {
             if(W_Rn == 0x1d) {
                 d->instr_type = T_THUMB2_NO_REG;
+								/* NDROID START */
+        				d->I = B_UNSET;
+        				d->reglist = w2 & 0xffff;
+								/* NDROID END */
                 return I_PUSH;
             }
 
+						/* NDROID START */
+        		d->Rn = w & b1111;
+        		d->I = B_UNSET;
+        		d->reglist = w2 & 0xffff;
+						/* NDROID END */
             return I_STMDB;
         }
 
         d->instr_flag_type = T_THUMB2_WP_REGLIST_FLAG;
+				/* NDROID START */
+        d->Rn = w & b1111;
+        d->I = B_UNSET;
+        d->reglist = w2 & 0xffff;
+        d->W = (w >> 5) & 1 ? B_SET : B_UNSET;
+				/* NDROID END */
         return I_LDMDB;
     }
 
