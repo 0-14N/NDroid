@@ -575,7 +575,7 @@ void thumb2_parse_misc(darm_t *d, uint16_t w, uint16_t w2)
 
 static int thumb2_disasm(darm_t *d, uint16_t w, uint16_t w2, CPUState* env)
 {
-    d->instr = thumb2_decode_instruction(d, w, w2);
+    d->instr = thumb2_decode_instruction(d, w, w2, env);
     if(d->instr == I_INVLD) {
         return -1;
     }

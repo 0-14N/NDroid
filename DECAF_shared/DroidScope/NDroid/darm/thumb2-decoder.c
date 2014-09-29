@@ -37,22 +37,22 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "thumb2-tbl.h"
 #include "thumb2.h"
 
-darm_instr_t thumb2_load_store_multiple(darm_t *d, uint16_t w, uint16_t w2);
-darm_instr_t thumb2_load_store_dual(darm_t *d, uint16_t w, uint16_t w2);
-darm_instr_t thumb2_data_shifted_reg(darm_t *d, uint16_t w, uint16_t w2);
-darm_instr_t thumb2_coproc_simd(darm_t *d, uint16_t w, uint16_t w2);
-darm_instr_t thumb2_modified_immediate(darm_t *d, uint16_t w, uint16_t w2);
-darm_instr_t thumb2_plain_immediate(darm_t *d, uint16_t w, uint16_t w2);
-darm_instr_t thumb2_branch_misc_ctrl(darm_t *d, uint16_t w, uint16_t w2);
-darm_instr_t thumb2_store_single_item(darm_t *d, uint16_t w, uint16_t w2);
-darm_instr_t thumb2_data_reg(darm_t *d, uint16_t w, uint16_t w2);
-darm_instr_t thumb2_mult_acc_diff(darm_t *d, uint16_t w, uint16_t w2);
-darm_instr_t thumb2_long_mult_acc(darm_t *d, uint16_t w, uint16_t w2);
-darm_instr_t thumb2_load_byte_hints(darm_t *d, uint16_t w, uint16_t w2);
-darm_instr_t thumb2_load_word(darm_t *d, uint16_t w, uint16_t w2);
-darm_instr_t thumb2_load_halfword_hints(darm_t *d, uint16_t w, uint16_t w2);
+darm_instr_t thumb2_load_store_multiple(darm_t *d, uint16_t w, uint16_t w2, CPUState* env);
+darm_instr_t thumb2_load_store_dual(darm_t *d, uint16_t w, uint16_t w2, CPUState* env);
+darm_instr_t thumb2_data_shifted_reg(darm_t *d, uint16_t w, uint16_t w2, CPUState* env);
+darm_instr_t thumb2_coproc_simd(darm_t *d, uint16_t w, uint16_t w2, CPUState* env);
+darm_instr_t thumb2_modified_immediate(darm_t *d, uint16_t w, uint16_t w2, CPUState* env);
+darm_instr_t thumb2_plain_immediate(darm_t *d, uint16_t w, uint16_t w2, CPUState* env);
+darm_instr_t thumb2_branch_misc_ctrl(darm_t *d, uint16_t w, uint16_t w2, CPUState* env);
+darm_instr_t thumb2_store_single_item(darm_t *d, uint16_t w, uint16_t w2, CPUState* env);
+darm_instr_t thumb2_data_reg(darm_t *d, uint16_t w, uint16_t w2, CPUState* env);
+darm_instr_t thumb2_mult_acc_diff(darm_t *d, uint16_t w, uint16_t w2, CPUState* env);
+darm_instr_t thumb2_long_mult_acc(darm_t *d, uint16_t w, uint16_t w2, CPUState* env);
+darm_instr_t thumb2_load_byte_hints(darm_t *d, uint16_t w, uint16_t w2, CPUState* env);
+darm_instr_t thumb2_load_word(darm_t *d, uint16_t w, uint16_t w2, CPUState* env);
+darm_instr_t thumb2_load_halfword_hints(darm_t *d, uint16_t w, uint16_t w2, CPUState* env);
 
-darm_instr_t thumb2_decode_instruction(darm_t *d, uint16_t w, uint16_t w2)
+darm_instr_t thumb2_decode_instruction(darm_t *d, uint16_t w, uint16_t w2, CPUState* env)
 {
     uint32_t op2 = (w >> 4) & 0x7f;
 
@@ -61,19 +61,19 @@ darm_instr_t thumb2_decode_instruction(darm_t *d, uint16_t w, uint16_t w2)
         op2 &= 0x64;
         if(op2 == 0) {
             // load, store multiple
-            return thumb2_load_store_multiple(d, w, w2);
+            return thumb2_load_store_multiple(d, w, w2, env);
         }
         else if(op2 == b100) {
             // load/store dual, load/store exclusive, table branch
-            return thumb2_load_store_dual(d, w, w2);
+            return thumb2_load_store_dual(d, w, w2, env);
         }
         else if(((op2 >> 5) & b11) == b1) {
             // dataprocessing (shifted register)
-            return thumb2_data_shifted_reg(d, w, w2);
+            return thumb2_data_shifted_reg(d, w, w2, env);
         }
         else if(((op2 >> 6) & b1) == b1) {
             // coproc, simd, fpu
-            return thumb2_coproc_simd(d, w, w2);
+            return thumb2_coproc_simd(d, w, w2, env);
         }
         break;
 
@@ -81,22 +81,22 @@ darm_instr_t thumb2_decode_instruction(darm_t *d, uint16_t w, uint16_t w2)
         op2 = (op2 & 0x20) >> 5;
         if(op2 == 0 && (w2 & 0x8000) == 0) {
             // dataprocessing (modified immediate)
-            return thumb2_modified_immediate(d, w, w2);
+            return thumb2_modified_immediate(d, w, w2, env);
         }
         else if(op2 == 1 && (w2 & 0x8000) == 0) {
             // dataprocessing (plain binary immediate)
-            return thumb2_plain_immediate(d, w, w2);
+            return thumb2_plain_immediate(d, w, w2, env);
         }
         else if((w2 & 0x8000) == 0x8000) {
             // branches and miscellaneous control
-            return thumb2_branch_misc_ctrl(d, w, w2);
+            return thumb2_branch_misc_ctrl(d, w, w2, env);
         }
         break;
 
     case 3:
         if((op2 & 0x71) == 0) {
             // store single data item
-            return thumb2_store_single_item(d, w, w2);
+            return thumb2_store_single_item(d, w, w2, env);
         }
         else if((op2 & 0x71) == 0x10) {
             // Advanced SIMD element or structure load/store instructions
@@ -105,29 +105,29 @@ darm_instr_t thumb2_decode_instruction(darm_t *d, uint16_t w, uint16_t w2)
         }
         else if((op2 & 0x70) == 0x20) {
             // data-processing (register)
-            return thumb2_data_reg(d, w, w2);
+            return thumb2_data_reg(d, w, w2, env);
         }
         else if((op2 & 0x78) == 0x30) {
             // multiply, multiply accumulate, and absolute difference
-            return thumb2_mult_acc_diff(d, w, w2);
+            return thumb2_mult_acc_diff(d, w, w2, env);
         }
         else if((op2 & 0x78) == 0x38) {
             // long multiply, long multiply accumulate, and divide
-            return thumb2_long_mult_acc(d, w, w2);
+            return thumb2_long_mult_acc(d, w, w2, env);
         }
         else {
             switch (op2 & 0x67) {
             case 1:
                 // load byte, memory hints
-                return thumb2_load_byte_hints(d, w, w2);
+                return thumb2_load_byte_hints(d, w, w2, env);
 
             case 3:
                 // load halfword, memory hints
-                return thumb2_load_halfword_hints(d, w, w2);
+                return thumb2_load_halfword_hints(d, w, w2, env);
 
             case 5:
                 // load word
-                return thumb2_load_word(d, w, w2);
+                return thumb2_load_word(d, w, w2, env);
             }
             break;
         }
@@ -137,7 +137,7 @@ darm_instr_t thumb2_decode_instruction(darm_t *d, uint16_t w, uint16_t w2)
     return I_INVLD;
 }
 
-darm_instr_t thumb2_load_store_multiple(darm_t *d, uint16_t w, uint16_t w2)
+darm_instr_t thumb2_load_store_multiple(darm_t *d, uint16_t w, uint16_t w2, CPUState* env)
 {
     (void) w2;
 
@@ -192,7 +192,7 @@ darm_instr_t thumb2_load_store_multiple(darm_t *d, uint16_t w, uint16_t w2)
     return I_INVLD;
 }
 
-darm_instr_t thumb2_load_store_dual(darm_t *d, uint16_t w, uint16_t w2)
+darm_instr_t thumb2_load_store_dual(darm_t *d, uint16_t w, uint16_t w2, CPUState* env)
 {
     uint32_t op1 = (w >> 7) & b11;
     uint32_t op2 = (w >> 4) & b11;
@@ -314,7 +314,7 @@ darm_instr_t thumb2_move_shift(darm_t *d, uint16_t w, uint16_t w2)
     return I_INVLD;
 }
 
-darm_instr_t thumb2_data_shifted_reg(darm_t *d, uint16_t w, uint16_t w2)
+darm_instr_t thumb2_data_shifted_reg(darm_t *d, uint16_t w, uint16_t w2, CPUState* env)
 {
     uint32_t op = (w >> 5) & b1111;
     uint32_t Rn = w & b1111;
@@ -396,7 +396,7 @@ darm_instr_t thumb2_data_shifted_reg(darm_t *d, uint16_t w, uint16_t w2)
     return I_INVLD;
 }
 
-darm_instr_t thumb2_modified_immediate(darm_t *d, uint16_t w, uint16_t w2)
+darm_instr_t thumb2_modified_immediate(darm_t *d, uint16_t w, uint16_t w2, CPUState* env)
 {
     uint32_t op = (w >> 5) & b1111;
     uint32_t Rn = w & b1111;
@@ -475,7 +475,7 @@ darm_instr_t thumb2_modified_immediate(darm_t *d, uint16_t w, uint16_t w2)
     return I_INVLD;
 }
 
-darm_instr_t thumb2_plain_immediate(darm_t *d, uint16_t w, uint16_t w2)
+darm_instr_t thumb2_plain_immediate(darm_t *d, uint16_t w, uint16_t w2, CPUState* env)
 {
     uint32_t op = (w >> 4) & 0x1f;
     uint32_t Rn = w & b1111;
@@ -609,7 +609,7 @@ darm_instr_t thumb2_misc_ctrl(darm_t *d, uint16_t w, uint16_t w2)
     return I_INVLD;
 }
 
-darm_instr_t thumb2_branch_misc_ctrl(darm_t *d, uint16_t w, uint16_t w2)
+darm_instr_t thumb2_branch_misc_ctrl(darm_t *d, uint16_t w, uint16_t w2, CPUState* env)
 {
     uint32_t op = (w >> 4) & 0x7f;
     uint32_t op1 = (w2 >> 12) & b111;
@@ -672,7 +672,7 @@ darm_instr_t thumb2_branch_misc_ctrl(darm_t *d, uint16_t w, uint16_t w2)
     return I_INVLD;
 }
 
-darm_instr_t thumb2_store_single_item(darm_t *d, uint16_t w, uint16_t w2)
+darm_instr_t thumb2_store_single_item(darm_t *d, uint16_t w, uint16_t w2, CPUState* env)
 {
     uint32_t op1 = (w >> 5) & b111;
     uint32_t op2 = (w2 >> 6) & 0x3f;
@@ -753,7 +753,7 @@ darm_instr_t thumb2_store_single_item(darm_t *d, uint16_t w, uint16_t w2)
     return I_INVLD;
 }
 
-darm_instr_t thumb2_load_byte_hints(darm_t *d, uint16_t w, uint16_t w2)
+darm_instr_t thumb2_load_byte_hints(darm_t *d, uint16_t w, uint16_t w2, CPUState* env)
 {
     uint32_t op1 = (w >> 7) & b11;
     uint32_t op2 = (w2 >> 6) & 0x3f;
@@ -866,7 +866,7 @@ darm_instr_t thumb2_load_byte_hints(darm_t *d, uint16_t w, uint16_t w2)
     return I_INVLD;
 }
 
-darm_instr_t thumb2_load_halfword_hints(darm_t *d, uint16_t w, uint16_t w2)
+darm_instr_t thumb2_load_halfword_hints(darm_t *d, uint16_t w, uint16_t w2, CPUState* env)
 {
     uint32_t op1 = (w >> 7) & b11;
     uint32_t op2 = (w2 >> 6) & 0x3f;
@@ -975,7 +975,7 @@ darm_instr_t thumb2_load_halfword_hints(darm_t *d, uint16_t w, uint16_t w2)
     return I_INVLD;
 }
 
-darm_instr_t thumb2_load_word(darm_t *d, uint16_t w, uint16_t w2)
+darm_instr_t thumb2_load_word(darm_t *d, uint16_t w, uint16_t w2, CPUState* env)
 {
     uint32_t op1 = (w >> 7) & b11;
     uint32_t op2 = (w2 >> 6) & 0x3f;
@@ -1239,7 +1239,7 @@ darm_instr_t thumb2_misc_op(darm_t *d, uint16_t w, uint16_t w2)
     return I_INVLD;
 }
 
-darm_instr_t thumb2_data_reg(darm_t *d, uint16_t w, uint16_t w2)
+darm_instr_t thumb2_data_reg(darm_t *d, uint16_t w, uint16_t w2, CPUState* env)
 {
     uint32_t op1 = (w >> 4) & b1111;
     uint32_t op2 = (w2 >> 4) & b1111;
@@ -1356,7 +1356,7 @@ darm_instr_t thumb2_nm_decoder(darm_t *d, uint16_t w, uint16_t w2,
     return I_INVLD;
 }
 
-darm_instr_t thumb2_mult_acc_diff(darm_t *d, uint16_t w, uint16_t w2)
+darm_instr_t thumb2_mult_acc_diff(darm_t *d, uint16_t w, uint16_t w2, CPUState* env)
 {
     uint32_t op1 = (w >> 4) & b111;
     uint32_t op2 = (w2 >> 4) & b11;
@@ -1451,7 +1451,7 @@ darm_instr_t thumb2_mult_acc_diff(darm_t *d, uint16_t w, uint16_t w2)
     return I_INVLD;
 }
 
-darm_instr_t thumb2_long_mult_acc(darm_t *d, uint16_t w, uint16_t w2)
+darm_instr_t thumb2_long_mult_acc(darm_t *d, uint16_t w, uint16_t w2, CPUState* env)
 {
     uint32_t op1 = (w >> 4) & b111;
     uint32_t op2 = (w2 >> 4) & b1111;
@@ -1526,7 +1526,7 @@ darm_instr_t thumb2_long_mult_acc(darm_t *d, uint16_t w, uint16_t w2)
     return I_INVLD;
 }
 
-darm_instr_t thumb2_coproc_simd(darm_t *d, uint16_t w, uint16_t w2)
+darm_instr_t thumb2_coproc_simd(darm_t *d, uint16_t w, uint16_t w2, CPUState* env)
 {
     (void) d; (void) w; (void) w2;
 
