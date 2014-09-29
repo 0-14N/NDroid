@@ -573,7 +573,7 @@ void thumb2_parse_misc(darm_t *d, uint16_t w, uint16_t w2)
     }
 }
 
-static int thumb2_disasm(darm_t *d, uint16_t w, uint16_t w2)
+static int thumb2_disasm(darm_t *d, uint16_t w, uint16_t w2, CPUState* env)
 {
     d->instr = thumb2_decode_instruction(d, w, w2);
     if(d->instr == I_INVLD) {
@@ -645,7 +645,7 @@ int darm_thumb2_disasm(darm_t *d, uint16_t w, uint16_t w2, CPUState* env)
 
     switch (w >> 11) {
     case b11101: case b11110: case b11111:
-        return thumb2_disasm(d, w, w2);
+        return thumb2_disasm(d, w, w2, env);
 
     default:
         return -1;
