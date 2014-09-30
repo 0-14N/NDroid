@@ -1968,20 +1968,42 @@ darm_instr_t thumb2_load_word(darm_t *d, uint16_t w, uint16_t w2, CPUState* env)
     d->instr_type = T_THUMB2_RN_RT_REG;
     d->instr_imm_type = T_THUMB2_IMM8;
     d->instr_flag_type = T_THUMB2_NO_FLAG;
+		/* NDROID START */
+    //d->Rn = w & b1111;
+    //d->Rt = (w2 >> 12) & b1111;
+    //d->imm = w2 & 0xff;
+		/* NDROID END */
 
     if((op1 & 2) == 0 && Rn == b1111) {
         d->instr_type = T_THUMB2_RT_REG;
         d->instr_imm_type = T_THUMB2_IMM12;
         d->instr_flag_type = T_THUMB2_U_FLAG;
+				/* NDROID START */
+        d->Rt = (w2 >> 12) & b1111;
+        d->imm = w2 & 0xfff;
+        d->U = (w >> 7) & 1 ? B_SET : B_UNSET;
+				/* NDROID END */
         return I_LDR; // literal
     }
     else if(op1 == 1 && Rn != b1111) {
         d->instr_imm_type = T_THUMB2_IMM12;
+				/* NDROID START */
+    		d->Rn = w & b1111;
+    		d->Rt = (w2 >> 12) & b1111;
+        d->imm = w2 & 0xfff;
+				/* NDROID END */
         return I_LDR; // immediate
     }
     else if(op1 == 0 && Rn != b1111) {
         if(op2 == 0) { d->instr_type = T_THUMB2_RN_RM_RT_REG;
             d->instr_imm_type = T_THUMB2_IMM2;
+						/* NDROID START */
+    				d->Rn = w & b1111;
+    				d->Rt = (w2 >> 12) & b1111;
+        		d->imm = (w2 >> 4) & b11;
+        		d->shift = d->imm;
+        		d->shift_type = S_LSL;
+						/* NDROID END */
             return I_LDR; // register
         }
         else if((op2 & 0x3c) == 0x30 || (op2 & 0x24) == 0x24) {
@@ -1993,12 +2015,29 @@ darm_instr_t thumb2_load_word(darm_t *d, uint16_t w, uint16_t w2, CPUState* env)
                 d->instr_type = T_THUMB2_RT_REG;
                 d->instr_imm_type = T_THUMB2_NO_IMM;
                 d->instr_flag_type = T_THUMB2_NO_FLAG;
+								/* NDROID START */
+        				d->Rt = (w2 >> 12) & b1111;
+        				d->I = B_UNSET;
+								/* NDROID END */
                 return I_POP;
             }
 
+						/* NDROID START */
+    				d->Rn = w & b1111;
+    				d->Rt = (w2 >> 12) & b1111;
+    				d->imm = w2 & 0xff;
+        		d->W = (w2 >> 8) & 1 ? B_SET : B_UNSET;
+        		d->U = (w2 >> 9) & 1 ? B_SET : B_UNSET;
+        		d->P = (w2 >> 10) & 1 ? B_SET : B_UNSET;
+						/* NDROID END */
             return I_LDR; // immediate
         }
         else if((op2 & 0x3c) == 0x38) {
+						/* NDROID START */
+    				d->Rn = w & b1111;
+    				d->Rt = (w2 >> 12) & b1111;
+    				d->imm = w2 & 0xff;
+						/* NDROID END */
             return I_LDRT;
         }
     }
