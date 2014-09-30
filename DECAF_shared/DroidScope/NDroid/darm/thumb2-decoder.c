@@ -2441,10 +2441,20 @@ darm_instr_t thumb2_long_mult_acc(darm_t *d, uint16_t w, uint16_t w2, CPUState* 
     d->instr_type = T_THUMB2_RN_RM_REG;
     d->instr_imm_type = T_THUMB2_NO_IMM;
     d->instr_flag_type = T_THUMB2_NO_FLAG;
+		/* NDROID START */
+    //d->Rn = w & b1111;
+    //d->Rm = w2 & b1111;
+    //d->I = B_UNSET;
+		/* NDROID END */
 
     switch (op1) {
     case 0:
         if(op2 == 0) {
+						/* NDROID START */
+    				d->Rn = w & b1111;
+    				d->Rm = w2 & b1111;
+    				d->I = B_UNSET;
+						/* NDROID END */
             return I_SMULL;
         }
 
@@ -2453,6 +2463,12 @@ darm_instr_t thumb2_long_mult_acc(darm_t *d, uint16_t w, uint16_t w2, CPUState* 
     case 1:
         if(op2 == b1111) {
             d->instr_type = T_THUMB2_RN_RD_RM_REG;
+						/* NDROID START */
+        		d->Rn = w & b1111;
+        		d->Rm = w2 & b1111;
+        		d->Rd = (w2 >> 8) & b1111;
+    				d->I = B_UNSET;
+						/* NDROID END */
             return I_SDIV;
         }
 
@@ -2460,6 +2476,11 @@ darm_instr_t thumb2_long_mult_acc(darm_t *d, uint16_t w, uint16_t w2, CPUState* 
 
     case 2:
         if(op2 == 0) {
+						/* NDROID START */
+    				d->Rn = w & b1111;
+    				d->Rm = w2 & b1111;
+    				d->I = B_UNSET;
+						/* NDROID END */
             return I_UMULL;
         }
 
@@ -2468,12 +2489,23 @@ darm_instr_t thumb2_long_mult_acc(darm_t *d, uint16_t w, uint16_t w2, CPUState* 
     case 3:
         if(op2 == b1111) {
             d->instr_type = T_THUMB2_RN_RD_RM_REG;
+						/* NDROID START */
+        		d->Rn = w & b1111;
+        		d->Rm = w2 & b1111;
+        		d->Rd = (w2 >> 8) & b1111;
+    				d->I = B_UNSET;
+						/* NDROID END */
             return I_UDIV;
         }
 
         break;
 
     case 4:
+				/* NDROID START */
+    		d->Rn = w & b1111;
+    		d->Rm = w2 & b1111;
+    		d->I = B_UNSET;
+				/* NDROID END */
         if(op2 == 0) {
             return I_SMLAL;
         }
@@ -2488,6 +2520,11 @@ darm_instr_t thumb2_long_mult_acc(darm_t *d, uint16_t w, uint16_t w2, CPUState* 
         break;
 
     case 5:
+				/* NDROID START */
+    		d->Rn = w & b1111;
+    		d->Rm = w2 & b1111;
+    		d->I = B_UNSET;
+				/* NDROID END */
         if((op2 & b1110) == b1100) {
             return I_SMLSLD;
         }
@@ -2495,6 +2532,11 @@ darm_instr_t thumb2_long_mult_acc(darm_t *d, uint16_t w, uint16_t w2, CPUState* 
         break;
 
     case 6:
+				/* NDROID START */
+    		d->Rn = w & b1111;
+    		d->Rm = w2 & b1111;
+    		d->I = B_UNSET;
+				/* NDROID END */
         if(op2 == 0) {
             return I_UMLAL;
         }
