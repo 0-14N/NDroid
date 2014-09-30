@@ -1227,7 +1227,7 @@ darm_instr_t thumb2_branch_misc_ctrl(darm_t *d, uint16_t w, uint16_t w2, CPUStat
     d->instr_imm_type = T_THUMB2_NO_IMM;
     d->instr_flag_type = T_THUMB2_NO_FLAG;
 		/* NDROID START */
-    d->I = B_UNSET;
+    //d->I = B_UNSET;
 		/* NDROID END */
 
     if(op1 == 0 && op == 0xfe) {
@@ -1337,19 +1337,45 @@ darm_instr_t thumb2_store_single_item(darm_t *d, uint16_t w, uint16_t w2, CPUSta
     d->instr_type = T_THUMB2_RN_RT_REG;
     d->instr_imm_type = T_THUMB2_IMM8;
     d->instr_flag_type = T_THUMB2_NO_FLAG;
+		/* NDROID START */
+    //d->Rn = w & b1111;
+    //d->Rt = (w2 >> 12) & b1111;
+    //d->imm = w2 & 0xff;
+		/* NDROID END */
 
     switch (op1) {
     case 0:
         if(op2 == 0) {
             d->instr_type = T_THUMB2_RN_RM_RT_REG;
             d->instr_imm_type = T_THUMB2_IMM2;
+						/* NDROID START */
+        		d->Rn = w & b1111;
+        		d->Rm = w2 & b1111;
+        		d->Rt = (w2 >> 12) & b1111;
+        		d->imm = (w2 >> 4) & b11;
+        		d->shift = d->imm;
+        		d->shift_type = S_LSL;
+						/* NDROID END */
             return I_STRB; // register
         }
         else if((op2 & 0x3c) == 0x38) {
+						/* NDROID START */
+    				d->Rn = w & b1111;
+    				d->Rt = (w2 >> 12) & b1111;
+    				d->imm = w2 & 0xff;
+						/* NDROID END */
             return I_STRBT;
         }
         else if((op2 & 0x3c) == 0x30 || (op2 & 0x24) == 0x24) {
             d->instr_flag_type = T_THUMB2_WUP_FLAG;
+						/* NDROID START */
+    				d->Rn = w & b1111;
+    				d->Rt = (w2 >> 12) & b1111;
+    				d->imm = w2 & 0xff;
+        		d->W = (w2 >> 8) & 1 ? B_SET : B_UNSET;
+        		d->U = (w2 >> 9) & 1 ? B_SET : B_UNSET;
+        		d->P = (w2 >> 10) & 1 ? B_SET : B_UNSET;
+						/* NDROID END */
             return I_STRB; // immediate 8 bit
         }
         break;
@@ -1358,13 +1384,34 @@ darm_instr_t thumb2_store_single_item(darm_t *d, uint16_t w, uint16_t w2, CPUSta
         if(op2 == 0) {
             d->instr_type = T_THUMB2_RN_RM_RT_REG;
             d->instr_imm_type = T_THUMB2_IMM2;
+						/* NDROID START */
+        		d->Rn = w & b1111;
+        		d->Rm = w2 & b1111;
+        		d->Rt = (w2 >> 12) & b1111;
+        		d->imm = (w2 >> 4) & b11;
+        		d->shift = d->imm;
+        		d->shift_type = S_LSL;
+						/* NDROID END */
             return I_STRH; // register
         }
         else if((op2 & 0x3c) == 0x38) {
+						/* NDROID START */
+    				d->Rn = w & b1111;
+    				d->Rt = (w2 >> 12) & b1111;
+    				d->imm = w2 & 0xff;
+						/* NDROID END */
             return I_STRHT;
         }
         else if((op2 & 0x3c) == 0x30 || (op2 & 0x24) == 0x24) {
             d->instr_flag_type = T_THUMB2_WUP_FLAG;
+						/* NDROID START */
+    				d->Rn = w & b1111;
+    				d->Rt = (w2 >> 12) & b1111;
+    				d->imm = w2 & 0xff;
+        		d->W = (w2 >> 8) & 1 ? B_SET : B_UNSET;
+        		d->U = (w2 >> 9) & 1 ? B_SET : B_UNSET;
+        		d->P = (w2 >> 10) & 1 ? B_SET : B_UNSET;
+						/* NDROID END */
             return I_STRH;  // immediate 8 bit
         }
         break;
@@ -1373,9 +1420,22 @@ darm_instr_t thumb2_store_single_item(darm_t *d, uint16_t w, uint16_t w2, CPUSta
         if(op2 == 0) {
             d->instr_type = T_THUMB2_RN_RM_RT_REG;
             d->instr_imm_type = T_THUMB2_IMM2;
+						/* NDROID START */
+        		d->Rn = w & b1111;
+        		d->Rm = w2 & b1111;
+        		d->Rt = (w2 >> 12) & b1111;
+        		d->imm = (w2 >> 4) & b11;
+        		d->shift = d->imm;
+        		d->shift_type = S_LSL;
+						/* NDROID END */
             return I_STR; // register
         }
         else if((op2 & 0x3c) == 0x38) {
+						/* NDROID START */
+    				d->Rn = w & b1111;
+    				d->Rt = (w2 >> 12) & b1111;
+    				d->imm = w2 & 0xff;
+						/* NDROID END */
             return I_STRT;
         }
         else if((op2 & 0x3c) == 0x30 || (op2 & 0x24) == 0x24) {
@@ -1386,24 +1446,51 @@ darm_instr_t thumb2_store_single_item(darm_t *d, uint16_t w, uint16_t w2, CPUSta
                 d->instr_type = T_THUMB2_RT_REG;
                 d->instr_imm_type = T_THUMB2_NO_IMM;
                 d->instr_flag_type = T_THUMB2_NO_FLAG;
+								/* NDROID START */
+        				d->Rt = (w2 >> 12) & b1111;
+        				d->I = B_UNSET;
+								/* NDROID END */
                 return I_PUSH;
             }
 
             d->instr_flag_type = T_THUMB2_WUP_FLAG;
+						/* NDROID START */
+    				d->Rn = w & b1111;
+    				d->Rt = (w2 >> 12) & b1111;
+    				d->imm = w2 & 0xff;
+        		d->W = (w2 >> 8) & 1 ? B_SET : B_UNSET;
+        		d->U = (w2 >> 9) & 1 ? B_SET : B_UNSET;
+        		d->P = (w2 >> 10) & 1 ? B_SET : B_UNSET;
+						/* NDROID END */
             return I_STR; // immediate 8 bit
         }
         break;
 
     case 4:
         d->instr_imm_type = T_THUMB2_IMM12;
+				/* NDROID START */
+    		d->Rn = w & b1111;
+    		d->Rt = (w2 >> 12) & b1111;
+        d->imm = w2 & 0xfff;
+				/* NDROID END */
         return I_STRB; // immediate 12 bit
 
     case 5:
         d->instr_imm_type = T_THUMB2_IMM12;
+				/* NDROID START */
+    		d->Rn = w & b1111;
+    		d->Rt = (w2 >> 12) & b1111;
+        d->imm = w2 & 0xfff;
+				/* NDROID END */
         return I_STRH; // immediate 12 bit
 
     case 6:
         d->instr_imm_type = T_THUMB2_IMM12;
+				/* NDROID START */
+    		d->Rn = w & b1111;
+    		d->Rt = (w2 >> 12) & b1111;
+        d->imm = w2 & 0xfff;
+				/* NDROID END */
         return I_STR; // immediate 12 bit
     }
 
