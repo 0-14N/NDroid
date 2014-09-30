@@ -1774,6 +1774,12 @@ darm_instr_t thumb2_parallel_signed(darm_t *d, uint16_t w, uint16_t w2)
     d->instr_type = T_THUMB2_RN_RD_RM_REG;
     d->instr_imm_type = T_THUMB2_NO_IMM;
     d->instr_flag_type = T_THUMB2_NO_FLAG;
+		/* NDROID START */
+    d->Rn = w & b1111;
+    d->Rm = w2 & b1111;
+    d->Rd = (w2 >> 8) & b1111;
+    d->I = B_UNSET;
+		/* NDROID END */
 
     if(op2 == 0) {
         switch (op1) {
@@ -1850,6 +1856,12 @@ darm_instr_t thumb2_parallel_unsigned(darm_t *d, uint16_t w, uint16_t w2)
     d->instr_type = T_THUMB2_RN_RD_RM_REG;
     d->instr_imm_type = T_THUMB2_NO_IMM;
     d->instr_flag_type = T_THUMB2_NO_FLAG;
+		/* NDROID START */
+    d->Rn = w & b1111;
+    d->Rm = w2 & b1111;
+    d->Rd = (w2 >> 8) & b1111;
+    d->I = B_UNSET;
+		/* NDROID END */
 
     if(op2 == 0) {
         switch (op1) {
@@ -1930,9 +1942,21 @@ darm_instr_t thumb2_misc_op(darm_t *d, uint16_t w, uint16_t w2)
     d->instr_type = T_THUMB2_RN_RD_RM_REG;
     d->instr_imm_type = T_THUMB2_NO_IMM;
     d->instr_flag_type = T_THUMB2_NO_FLAG;
+		/* NDROID START */
+    //d->Rn = w & b1111;
+    //d->Rm = w2 & b1111;
+    //d->Rd = (w2 >> 8) & b1111;
+    //d->I = B_UNSET;
+		/* NDROID END */
 
     switch (op1) {
     case 0:
+				/* NDROID START */
+    		d->Rn = w & b1111;
+    		d->Rm = w2 & b1111;
+    		d->Rd = (w2 >> 8) & b1111;
+    		d->I = B_UNSET;
+				/* NDROID END */
         switch (op2) {
         case 0:
             return I_QADD;
@@ -1949,6 +1973,11 @@ darm_instr_t thumb2_misc_op(darm_t *d, uint16_t w, uint16_t w2)
 
     case 1:
         d->instr_type = T_THUMB2_RD_RM_REG;
+				/* NDROID START */
+        d->Rd = (w2 >> 8) & b1111;
+        d->Rm = w2 & b1111;
+    		d->I = B_UNSET;
+				/* NDROID END */
         switch (op2) {
         case 0:
             return I_REV;
@@ -1967,6 +1996,12 @@ darm_instr_t thumb2_misc_op(darm_t *d, uint16_t w, uint16_t w2)
         }
 
     case 2:
+				/* NDROID START */
+    		d->Rn = w & b1111;
+    		d->Rm = w2 & b1111;
+    		d->Rd = (w2 >> 8) & b1111;
+    		d->I = B_UNSET;
+				/* NDROID END */
         if(op2 == 0) {
             return I_SEL;
         }
@@ -1975,6 +2010,11 @@ darm_instr_t thumb2_misc_op(darm_t *d, uint16_t w, uint16_t w2)
     case 3:
         if(op2 == 0) {
             d->instr_type = T_THUMB2_RD_RM_REG;
+						/* NDROID START */
+        		d->Rd = (w2 >> 8) & b1111;
+        		d->Rm = w2 & b1111;
+    				d->I = B_UNSET;
+						/* NDROID END */
             return I_CLZ;
         }
         break;
@@ -1992,9 +2032,23 @@ darm_instr_t thumb2_data_reg(darm_t *d, uint16_t w, uint16_t w2, CPUState* env)
     d->instr_type = T_THUMB2_RN_RD_RM_REG;
     d->instr_imm_type = T_THUMB2_NO_IMM;
     d->instr_flag_type = T_THUMB2_ROTATE_FLAG;
+		/* NDROID START */
+    //d->Rn = w & b1111;
+    //d->Rm = w2 & b1111;
+    //d->Rd = (w2 >> 8) & b1111;
+    //d->I = B_UNSET;
+    //d->rotate = (w2 >> 1) & b11000;
+		/* NDROID END */
 
     if(op2 == 0 && (op1 & b1000) == 0) {
         d->instr_flag_type = T_THUMB2_S_FLAG;
+				/* NDROID START */
+    		d->Rn = w & b1111;
+    		d->Rm = w2 & b1111;
+    		d->Rd = (w2 >> 8) & b1111;
+    		d->I = B_UNSET;
+        d->S = (w >> 4) & 1 ? B_SET : B_UNSET;
+				/* NDROID END */
         switch (op1 & b1110) {
         case 0:
             return I_LSL; // register
@@ -2015,49 +2069,127 @@ darm_instr_t thumb2_data_reg(darm_t *d, uint16_t w, uint16_t w2, CPUState* env)
         case 0:
             if(Rn == b1111) {
                 d->instr_type = T_THUMB2_RD_RM_REG;
+								/* NDROID START */
+        				d->Rd = (w2 >> 8) & b1111;
+        				d->Rm = w2 & b1111;
+    						d->I = B_UNSET;
+    						d->rotate = (w2 >> 1) & b11000;
+								/* NDROID END */
                 return I_SXTH;
             }
 
+						/* NDROID START */
+    				d->Rn = w & b1111;
+    				d->Rm = w2 & b1111;
+    				d->Rd = (w2 >> 8) & b1111;
+    				d->I = B_UNSET;
+    				d->rotate = (w2 >> 1) & b11000;
+						/* NDROID END */
             return I_SXTAH;
 
         case 1:
             if(Rn == b1111) {
                 d->instr_type = T_THUMB2_RD_RM_REG;
+								/* NDROID START */
+        				d->Rd = (w2 >> 8) & b1111;
+        				d->Rm = w2 & b1111;
+    						d->I = B_UNSET;
+    						d->rotate = (w2 >> 1) & b11000;
+								/* NDROID END */
                 return I_UXTH;
             }
 
+						/* NDROID START */
+    				d->Rn = w & b1111;
+    				d->Rm = w2 & b1111;
+    				d->Rd = (w2 >> 8) & b1111;
+    				d->I = B_UNSET;
+    				d->rotate = (w2 >> 1) & b11000;
+						/* NDROID END */
             return I_UXTAH;
 
         case 2:
             if(Rn == b1111) {
                 d->instr_type = T_THUMB2_RD_RM_REG;
+								/* NDROID START */
+        				d->Rd = (w2 >> 8) & b1111;
+        				d->Rm = w2 & b1111;
+    						d->I = B_UNSET;
+    						d->rotate = (w2 >> 1) & b11000;
+								/* NDROID END */
                 return I_SXTB16;
             }
 
+						/* NDROID START */
+    				d->Rn = w & b1111;
+    				d->Rm = w2 & b1111;
+    				d->Rd = (w2 >> 8) & b1111;
+    				d->I = B_UNSET;
+    				d->rotate = (w2 >> 1) & b11000;
+						/* NDROID END */
             return I_SXTAB16;
 
         case 3:
             if(Rn == b1111) {
                 d->instr_type = T_THUMB2_RD_RM_REG;
+								/* NDROID START */
+        				d->Rd = (w2 >> 8) & b1111;
+        				d->Rm = w2 & b1111;
+    						d->I = B_UNSET;
+    						d->rotate = (w2 >> 1) & b11000;
+								/* NDROID END */
                 return I_UXTB16;
             }
 
+						/* NDROID START */
+    				d->Rn = w & b1111;
+    				d->Rm = w2 & b1111;
+    				d->Rd = (w2 >> 8) & b1111;
+    				d->I = B_UNSET;
+    				d->rotate = (w2 >> 1) & b11000;
+						/* NDROID END */
             return I_UXTAB16;
 
         case 4:
             if(Rn == b1111) {
                 d->instr_type = T_THUMB2_RD_RM_REG;
+								/* NDROID START */
+        				d->Rd = (w2 >> 8) & b1111;
+        				d->Rm = w2 & b1111;
+    						d->I = B_UNSET;
+    						d->rotate = (w2 >> 1) & b11000;
+								/* NDROID END */
                 return I_SXTB;
             }
 
+						/* NDROID START */
+    				d->Rn = w & b1111;
+    				d->Rm = w2 & b1111;
+    				d->Rd = (w2 >> 8) & b1111;
+    				d->I = B_UNSET;
+    				d->rotate = (w2 >> 1) & b11000;
+						/* NDROID END */
             return I_SXTAB;
 
         case 5:
             if(Rn == b1111) {
                 d->instr_type = T_THUMB2_RD_RM_REG;
+								/* NDROID START */
+        				d->Rd = (w2 >> 8) & b1111;
+        				d->Rm = w2 & b1111;
+    						d->I = B_UNSET;
+    						d->rotate = (w2 >> 1) & b11000;
+								/* NDROID END */
                 return I_UXTB;
             }
 
+						/* NDROID START */
+    				d->Rn = w & b1111;
+    				d->Rm = w2 & b1111;
+    				d->Rd = (w2 >> 8) & b1111;
+    				d->I = B_UNSET;
+    				d->rotate = (w2 >> 1) & b11000;
+						/* NDROID END */
             return I_UXTAB;
         }
     }
