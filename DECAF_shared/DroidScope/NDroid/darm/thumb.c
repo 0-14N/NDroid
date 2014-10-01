@@ -42,7 +42,7 @@ static int thumb_disasm(darm_t *d, uint16_t w, CPUState* env)
     d->instr_type = thumb_instr_types[w >> 8];
 
 		/* NDROID START */
-		int offset_addr = 0, address = 0, base = 0;
+		int offset_addr = 0, address = 0, base = 0, i = 0;
 		/* NDROID END */
 
     switch ((uint32_t) d->instr_type) {
@@ -382,6 +382,20 @@ static int thumb_disasm(darm_t *d, uint16_t w, CPUState* env)
         // TODO write-back support for LDM
         d->reglist = w & BITMSK_8;
         d->Rn = (w >> 8) & b111;
+
+				/* NDROID START */
+				address = env->regs[d->Rn];
+				for(i = 0; i < 16; i++){
+					if((d->reglist & (0b1 << i)) == 1){
+						if(d->instr == I_LDM){
+							setMem4ToReg(i, address);
+						}else{
+							setRegToMem4(address, i);
+						}
+						address += 4;	
+					}
+				}
+				/* NDROID END */
         return 0;
 
     case T_THUMB_REV:
@@ -390,6 +404,10 @@ static int thumb_disasm(darm_t *d, uint16_t w, CPUState* env)
 
         d->Rd = (w >> 0) & b111;
         d->Rm = (w >> 3) & b111;
+				
+				/* NDROID START */
+				setRegToReg(d->Rd, d->Rm);
+				/* NDROID END */
         return 0;
 
     case T_THUMB_SETEND:
@@ -402,10 +420,30 @@ static int thumb_disasm(darm_t *d, uint16_t w, CPUState* env)
         // for push we have to set LR
         if(d->instr == I_PUSH) {
             d->reglist |= ((w >> 8) & 1) << LR;
+
+						/* NDROID START */
+						address = env->regs[SP] - 4 * darm_bit_count_16(d->reglist);
+						for(i = 0; i < 16; i++){
+							if((d->reglist & (0b1 << i)) ==1){
+								setRegToMem4(address, i);
+								address += 4;
+							}
+						}
+						/* NDROID END */
         }
         // for pop we have to set PC
         else {
             d->reglist |= ((w >> 8) & 1) << PC;
+
+						/* NDROID START */
+						address = env->regs[SP];
+						for(i = 0; i < 16; i++){
+							if((d->reglist & (0b1 << i)) == 1){
+								setMem4ToReg(i, address);
+								address += 4;
+							}
+						}
+						/* NDROID END */
         }
         return 0;
 
@@ -419,6 +457,10 @@ static int thumb_disasm(darm_t *d, uint16_t w, CPUState* env)
         // a8.8.6 t2 (also implies a8.8.10 t2)
         d->Rd = d->Rn = ((w >> 4) & b1000) | (w & b0111);
         d->Rm = (w >> 3) & b1111;
+				
+				/* NDROID START */
+				setRegToReg(d->Rd, d->Rm);
+				/* NDROID END */
 
         // a8.8.10 t1
         if(d->Rm == SP) {
