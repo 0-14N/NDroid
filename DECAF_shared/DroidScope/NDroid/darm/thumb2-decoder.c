@@ -152,6 +152,7 @@ darm_instr_t thumb2_load_store_multiple(darm_t *d, uint16_t w, uint16_t w2, CPUS
     //d->Rn = w & b1111;
     //d->I = B_UNSET;
     //d->reglist = w2 & 0xffff;
+		int address = 0, i = 0;
 		/* NDROID END */
 
     switch (op) {
@@ -176,6 +177,15 @@ darm_instr_t thumb2_load_store_multiple(darm_t *d, uint16_t w, uint16_t w2, CPUS
         		d->Rn = w & b1111;
         		d->I = B_UNSET;
         		d->reglist = w2 & 0xffff;
+
+						address = env->regs[d->Rn];
+						i = 0;
+						for(; i < 16; i++){
+							if((d->reglist & (0b1 << i)) == 1){
+								setRegToMem4(address, i);
+								address += 4;
+							}
+						}
 						/* NDROID END */
             return I_STM;
         }
@@ -185,6 +195,15 @@ darm_instr_t thumb2_load_store_multiple(darm_t *d, uint16_t w, uint16_t w2, CPUS
 						/* NDROID START */
         		d->I = B_UNSET;
         		d->reglist = w2 & 0xffff;
+
+						address = env->regs[SP];
+						i = 0;
+						for(; i < 16; i++){
+							if((d->reglist & (0b1 << i)) == 1){
+								setMem4ToReg(i, address);
+								address += 4;
+							}
+						}
 						/* NDROID END */
             return I_POP;
         }
@@ -195,6 +214,15 @@ darm_instr_t thumb2_load_store_multiple(darm_t *d, uint16_t w, uint16_t w2, CPUS
     		d->I = B_UNSET;
         d->reglist = w2 & 0xffff;
         d->W = (w >> 5) & 1 ? B_SET : B_UNSET;
+
+				address = env->regs[d->Rn];
+				i = 0;
+				for(; i < 16; i++){
+					if((d->reglist & (0b1 << i)) == 1){
+						setMem4ToReg(i, address);
+						address += 4;
+					}
+				}
 				/* NDROID END */
         return I_LDM;
 
@@ -205,6 +233,15 @@ darm_instr_t thumb2_load_store_multiple(darm_t *d, uint16_t w, uint16_t w2, CPUS
 								/* NDROID START */
         				d->I = B_UNSET;
         				d->reglist = w2 & 0xffff;
+
+								address = env->regs[SP] - (4 * darm_bit_count_16(d->reglist));
+								i = 0;
+								for(; i < 16; i++){
+									if((d->reglist & (0b1 << i)) == 1){
+										setRegToMem4(address, i);
+										address += 4;
+									}
+								}
 								/* NDROID END */
                 return I_PUSH;
             }
@@ -213,6 +250,15 @@ darm_instr_t thumb2_load_store_multiple(darm_t *d, uint16_t w, uint16_t w2, CPUS
         		d->Rn = w & b1111;
         		d->I = B_UNSET;
         		d->reglist = w2 & 0xffff;
+
+						address = env->regs[d->Rn] - (4 * darm_bit_count_16(d->reglist));
+						i = 0;
+						for(; i < 16; i++){
+							if((d->reglist & (0b1 << i)) == 1){
+								setRegToMem4(address, i);
+								address += 4;
+							}
+						}
 						/* NDROID END */
             return I_STMDB;
         }
@@ -223,6 +269,15 @@ darm_instr_t thumb2_load_store_multiple(darm_t *d, uint16_t w, uint16_t w2, CPUS
         d->I = B_UNSET;
         d->reglist = w2 & 0xffff;
         d->W = (w >> 5) & 1 ? B_SET : B_UNSET;
+
+				address = env->regs[d->Rn] - (4 * darm_bit_count_16(d->reglist));
+				i = 0;
+				for(; i < 16; i++){
+					if((d->reglist & (0b1 << i)) == 1){
+						setMem4ToReg(i, address);
+						address += 4;
+					}
+				}
 				/* NDROID END */
         return I_LDMDB;
     }
@@ -243,7 +298,8 @@ darm_instr_t thumb2_load_store_dual(darm_t *d, uint16_t w, uint16_t w2, CPUState
 		/* NDROID START */
     //d->Rn = w & b1111;
     //d->Rt = (w2 >> 12) & b1111;
-    //d->imm = w2 & 0xff;
+    //d->imm = w2 & 0xff
+		int address = 0, offset_addr = 0, base = 0;
 		/* NDROID END */
 
     if(op1 == 0 && op2 == 0) {
@@ -253,6 +309,10 @@ darm_instr_t thumb2_load_store_dual(darm_t *d, uint16_t w, uint16_t w2, CPUState
         d->Rd = (w2 & b1111);
         d->Rt = (w2 >> 12) & b1111;
         d->imm = w2 & 0xff;
+
+				address = env->regs[d->Rn] + d->imm;
+				setRegToMem4(address, d->Rt);
+				clearRegTaint(d->Rd);
 				/* NDROID END */
         return I_STREX;
     }
@@ -261,6 +321,9 @@ darm_instr_t thumb2_load_store_dual(darm_t *d, uint16_t w, uint16_t w2, CPUState
         d->Rn = w & b1111;
         d->Rt = (w2 >> 12) & b1111;
         d->imm = w2 & 0xff;
+
+				address = env->regs[d->Rn] + d->imm;
+				setMem4ToReg(d->Rt, address);
 				/* NDROID END */
         return I_LDREX;
     }
@@ -275,6 +338,12 @@ darm_instr_t thumb2_load_store_dual(darm_t *d, uint16_t w, uint16_t w2, CPUState
         d->W = (w2 >> 8) & 1 ? B_SET : B_UNSET;
         d->U = (w2 >> 9) & 1 ? B_SET : B_UNSET;
         d->P = (w2 >> 10) & 1 ? B_SET : B_UNSET;
+
+				offset_addr = (d->U == 1) ? (env->regs[d->Rn] + d->imm)
+					: (env->regs[d->Rn] - d->imm);
+				address = (d->P == 1) ? offset_addr : env->regs[d->Rn];
+				setRegToMem4(address, d->Rt);
+				setRegToMem4(address + 4, d->Rt2);
 				/* NDROID END */
         return I_STRD; // immediate
     }
@@ -292,6 +361,11 @@ darm_instr_t thumb2_load_store_dual(darm_t *d, uint16_t w, uint16_t w2, CPUState
 						/* NDROID START */
         		d->Rt = (w2 >> 12) & b1111;
         		d->Rt2 = (w2 >> 8) & b1111;
+						
+						base = env->regs[PC] & 0b00;
+						address = (d->U == 1) ? (base + d->imm) : (base - d->imm);
+						setMem4ToReg(d->Rt, address);
+						setMem4ToReg(d->Rt2, address + 4);
 						/* NDROID END */
         }
         else {
@@ -300,6 +374,12 @@ darm_instr_t thumb2_load_store_dual(darm_t *d, uint16_t w, uint16_t w2, CPUState
         		d->Rn = w & b1111;
         		d->Rt = (w2 >> 12) & b1111;
         		d->Rt2 = (w2 >> 8) & b1111;
+
+						offset_addr = (d->U == 1) ? (env->regs[d->Rn] + d->imm)
+							: (env->regs[d->Rn] - d->imm);
+						address = (d->P == 1) ? offset_addr : env->regs[d->Rn];
+						setMem4ToReg(d->Rt, address);
+						setMem4ToReg(d->Rt2, address + 4);
 						/* NDROID END */
         }
         return I_LDRD; // literal and immediate
@@ -315,6 +395,12 @@ darm_instr_t thumb2_load_store_dual(darm_t *d, uint16_t w, uint16_t w2, CPUState
         d->W = (w2 >> 8) & 1 ? B_SET : B_UNSET;
         d->U = (w2 >> 9) & 1 ? B_SET : B_UNSET;
         d->P = (w2 >> 10) & 1 ? B_SET : B_UNSET;
+
+				offset_addr = (d->U == 1) ? (env->regs[d->Rn] + d->imm)
+					: (env->regs[d->Rn] - d->imm);
+				address = (d->P == 1) ? offset_addr : env->regs[d->Rn];
+				setRegToMem4(address, d->Rt);
+				setRegToMem4(address + 4, d->Rt2);
 				/* NDROID END */
         return I_STRD; // immediate
     }
@@ -329,6 +415,10 @@ darm_instr_t thumb2_load_store_dual(darm_t *d, uint16_t w, uint16_t w2, CPUState
         		d->Rd = (w2 & b1111);
         		d->Rt = (w2 >> 12) & b1111;
         		d->I = B_UNSET;
+
+						address = env->regs[d->Rn];
+						setRegToMem(address, d->Rt);
+						clearRegTaint(d->Rd);
 						/* NDROID END */
             return I_STREXB;
 
@@ -338,6 +428,10 @@ darm_instr_t thumb2_load_store_dual(darm_t *d, uint16_t w, uint16_t w2, CPUState
         		d->Rd = (w2 & b1111);
         		d->Rt = (w2 >> 12) & b1111;
         		d->I = B_UNSET;
+
+						address = env->regs[d->Rn];
+						setRegToMem2(address, d->Rt);
+						clearRegTaint(d->Rd);
 						/* NDROID END */
             return I_STREXH;
 
@@ -349,6 +443,13 @@ darm_instr_t thumb2_load_store_dual(darm_t *d, uint16_t w, uint16_t w2, CPUState
         		d->Rt = (w2 >> 12) & b1111;
         		d->Rt2 = (w2 >> 8) & b1111;
         		d->I = B_UNSET;
+
+						address = env->regs[d->Rn];
+						setRegToMem4(address, d->Rt);
+						addRegToMem4(address + 4, d->Rt);
+						setRegToMem4(address, d->Rt2);
+						addRegToMem4(address + 4, d->Rt2);//little/big endian
+						clearRegTaint(d->Rd);
 						/* NDROID END */
             return I_STREXD;
         }
@@ -382,6 +483,9 @@ darm_instr_t thumb2_load_store_dual(darm_t *d, uint16_t w, uint16_t w2, CPUState
         		d->Rn = w & b1111;
         		d->Rt = (w2 >> 12) & b1111;
         		d->I = B_UNSET;
+
+						address = env->regs[d->Rn];
+						setMemToReg(d->Rt, address);
 						/* NDROID END */
             return I_LDREXB;
 
@@ -390,6 +494,9 @@ darm_instr_t thumb2_load_store_dual(darm_t *d, uint16_t w, uint16_t w2, CPUState
         		d->Rn = w & b1111;
         		d->Rt = (w2 >> 12) & b1111;
         		d->I = B_UNSET;
+
+						address = env->regs[d->Rn];
+						setMem2ToReg(d->Rt, address);
 						/* NDROID END */
             return I_LDREXH;
 
@@ -400,6 +507,12 @@ darm_instr_t thumb2_load_store_dual(darm_t *d, uint16_t w, uint16_t w2, CPUState
         		d->Rt = (w2 >> 12) & b1111;
         		d->Rt2 = (w2 >> 8) & b1111;
         		d->I = B_UNSET;
+
+						address = env->regs[d->Rn];
+						setMem4ToReg(d->Rt, address);
+						addMem4ToReg(d->Rt, address + 4);
+						setMem4ToReg(d->Rt2, address);
+						addMem4ToReg(d->Rt2, address + 4);
 						/* NDROID END */
             return I_LDREXD;
         }
@@ -434,6 +547,8 @@ darm_instr_t thumb2_move_shift(darm_t *d, uint16_t w, uint16_t w2)
     				d->Rm = w2 & b1111;
         		d->I = B_UNSET;
     				d->S = (w >> 4) & 1 ? B_SET : B_UNSET;
+
+						setRegToReg(d->Rd, d->Rm);
 						/* NDROID END */
             return I_MOV;
         }
@@ -443,6 +558,8 @@ darm_instr_t thumb2_move_shift(darm_t *d, uint16_t w, uint16_t w2)
     		d->Rm = w2 & b1111;
     		d->imm = ((w2 >> 10) & b11100) | ((w2 >> 6) & b11);
     		d->S = (w >> 4) & 1 ? B_SET : B_UNSET;
+
+				setRegToReg(d->Rd, d->Rm);
 				/* NDROID END */
         return I_LSL;
 
@@ -452,6 +569,8 @@ darm_instr_t thumb2_move_shift(darm_t *d, uint16_t w, uint16_t w2)
     		d->Rm = w2 & b1111;
     		d->imm = ((w2 >> 10) & b11100) | ((w2 >> 6) & b11);
     		d->S = (w >> 4) & 1 ? B_SET : B_UNSET;
+
+				setRegToReg(d->Rd, d->Rm);
 				/* NDROID END */
         return I_LSR;
 
@@ -461,6 +580,8 @@ darm_instr_t thumb2_move_shift(darm_t *d, uint16_t w, uint16_t w2)
     		d->Rm = w2 & b1111;
     		d->imm = ((w2 >> 10) & b11100) | ((w2 >> 6) & b11);
     		d->S = (w >> 4) & 1 ? B_SET : B_UNSET;
+
+				setRegToReg(d->Rd, d->Rm);
 				/* NDROID END */
         return I_ASR;
 
@@ -472,6 +593,8 @@ darm_instr_t thumb2_move_shift(darm_t *d, uint16_t w, uint16_t w2)
     				d->Rm = w2 & b1111;
         		d->I = B_UNSET;
     				d->S = (w >> 4) & 1 ? B_SET : B_UNSET;
+
+						setRegToReg(d->Rd, d->Rm);
 						/* NDROID END */
             return I_RRX;
         }
@@ -481,6 +604,8 @@ darm_instr_t thumb2_move_shift(darm_t *d, uint16_t w, uint16_t w2)
     		d->Rm = w2 & b1111;
     		d->imm = ((w2 >> 10) & b11100) | ((w2 >> 6) & b11);
     		d->S = (w >> 4) & 1 ? B_SET : B_UNSET;
+
+				setRegToReg(d->Rd, d->Rm);
 				/* NDROID END */
         return I_ROR;
     }
@@ -527,6 +652,9 @@ darm_instr_t thumb2_data_shifted_reg(darm_t *d, uint16_t w, uint16_t w2, CPUStat
     		d->imm = ((w2 >> 10) & b11100) | ((w2 >> 6) & b11);
     		d->S = (w >> 4) & 1 ? B_SET : B_UNSET;
     		thumb2_decode_immshift(d, (w2 >> 4) & 3, d->imm);
+
+				setRegToReg(d->Rd, d->Rn);
+				addRegToReg(d->Rd, d->Rm);
 				/* NDROID END */
         return I_AND;
 
@@ -538,6 +666,9 @@ darm_instr_t thumb2_data_shifted_reg(darm_t *d, uint16_t w, uint16_t w2, CPUStat
     		d->imm = ((w2 >> 10) & b11100) | ((w2 >> 6) & b11);
     		d->S = (w >> 4) & 1 ? B_SET : B_UNSET;
     		thumb2_decode_immshift(d, (w2 >> 4) & 3, d->imm);
+
+				setRegToReg(d->Rd, d->Rn);
+				addRegToReg(d->Rd, d->Rm);
 				/* NDROID END */
         return I_BIC;
 
@@ -553,6 +684,9 @@ darm_instr_t thumb2_data_shifted_reg(darm_t *d, uint16_t w, uint16_t w2, CPUStat
     		d->imm = ((w2 >> 10) & b11100) | ((w2 >> 6) & b11);
     		d->S = (w >> 4) & 1 ? B_SET : B_UNSET;
     		thumb2_decode_immshift(d, (w2 >> 4) & 3, d->imm);
+
+				setRegToReg(d->Rd, d->Rn);
+				addRegToReg(d->Rd, d->Rm);
 				/* NDROID END */
         return I_ORR;
 
@@ -565,6 +699,8 @@ darm_instr_t thumb2_data_shifted_reg(darm_t *d, uint16_t w, uint16_t w2, CPUStat
     				d->imm = ((w2 >> 10) & b11100) | ((w2 >> 6) & b11);
     				d->S = (w >> 4) & 1 ? B_SET : B_UNSET;
     				thumb2_decode_immshift(d, (w2 >> 4) & 3, d->imm);
+
+						setRegToReg(d->Rd, d->Rm);
 						/* NDROID END */
             return I_MVN;
         }
@@ -576,6 +712,9 @@ darm_instr_t thumb2_data_shifted_reg(darm_t *d, uint16_t w, uint16_t w2, CPUStat
     		d->imm = ((w2 >> 10) & b11100) | ((w2 >> 6) & b11);
     		d->S = (w >> 4) & 1 ? B_SET : B_UNSET;
     		thumb2_decode_immshift(d, (w2 >> 4) & 3, d->imm);
+
+				setRegToReg(d->Rd, d->Rn);
+				addRegToReg(d->Rd, d->Rm);
 				/* NDROID END */
         return I_ORN;
 
@@ -599,6 +738,9 @@ darm_instr_t thumb2_data_shifted_reg(darm_t *d, uint16_t w, uint16_t w2, CPUStat
     		d->imm = ((w2 >> 10) & b11100) | ((w2 >> 6) & b11);
     		d->S = (w >> 4) & 1 ? B_SET : B_UNSET;
     		thumb2_decode_immshift(d, (w2 >> 4) & 3, d->imm);
+
+				setRegToReg(d->Rd, d->Rn);
+				addRegToReg(d->Rd, d->Rm);
 				/* NDROID END */
         return I_EOR;
 
@@ -610,6 +752,9 @@ darm_instr_t thumb2_data_shifted_reg(darm_t *d, uint16_t w, uint16_t w2, CPUStat
     		d->Rd = (w2 >> 8) & b1111;
     		d->imm = ((w2 >> 10) & b11100) | ((w2 >> 6) & b11);
         d->S = (w >> 4) & 1 ? B_SET : B_UNSET;
+
+				setRegToReg(d->Rd, d->Rn);
+				addRegToReg(d->Rd, d->Rm);
 				/* NDROID END */
         return I_PKH;
 
@@ -633,6 +778,9 @@ darm_instr_t thumb2_data_shifted_reg(darm_t *d, uint16_t w, uint16_t w2, CPUStat
     		d->imm = ((w2 >> 10) & b11100) | ((w2 >> 6) & b11);
     		d->S = (w >> 4) & 1 ? B_SET : B_UNSET;
     		thumb2_decode_immshift(d, (w2 >> 4) & 3, d->imm);
+
+				setRegToReg(d->Rd, d->Rn);
+				addRegToReg(d->Rd, d->Rm);
 				/* NDROID END */
         return I_ADD;
 
@@ -644,6 +792,9 @@ darm_instr_t thumb2_data_shifted_reg(darm_t *d, uint16_t w, uint16_t w2, CPUStat
     		d->imm = ((w2 >> 10) & b11100) | ((w2 >> 6) & b11);
     		d->S = (w >> 4) & 1 ? B_SET : B_UNSET;
     		thumb2_decode_immshift(d, (w2 >> 4) & 3, d->imm);
+
+				setRegToReg(d->Rd, d->Rn);
+				addRegToReg(d->Rd, d->Rm);
 				/* NDROID END */
         return I_ADC;
 
@@ -655,6 +806,9 @@ darm_instr_t thumb2_data_shifted_reg(darm_t *d, uint16_t w, uint16_t w2, CPUStat
     		d->imm = ((w2 >> 10) & b11100) | ((w2 >> 6) & b11);
     		d->S = (w >> 4) & 1 ? B_SET : B_UNSET;
     		thumb2_decode_immshift(d, (w2 >> 4) & 3, d->imm);
+
+				setRegToReg(d->Rd, d->Rn);
+				addRegToReg(d->Rd, d->Rm);
 				/* NDROID END */
         return I_SBC;
 
@@ -678,6 +832,9 @@ darm_instr_t thumb2_data_shifted_reg(darm_t *d, uint16_t w, uint16_t w2, CPUStat
     		d->imm = ((w2 >> 10) & b11100) | ((w2 >> 6) & b11);
     		d->S = (w >> 4) & 1 ? B_SET : B_UNSET;
     		thumb2_decode_immshift(d, (w2 >> 4) & 3, d->imm);
+
+				setRegToReg(d->Rd, d->Rn);
+				addRegToReg(d->Rd, d->Rm);
 				/* NDROID END */
         return I_SUB;
 
@@ -689,6 +846,9 @@ darm_instr_t thumb2_data_shifted_reg(darm_t *d, uint16_t w, uint16_t w2, CPUStat
     		d->imm = ((w2 >> 10) & b11100) | ((w2 >> 6) & b11);
     		d->S = (w >> 4) & 1 ? B_SET : B_UNSET;
     		thumb2_decode_immshift(d, (w2 >> 4) & 3, d->imm);
+
+				setRegToReg(d->Rd, d->Rn);
+				addRegToReg(d->Rd, d->Rm);
 				/* NDROID END */
         return I_RSB;
     }
@@ -749,6 +909,8 @@ darm_instr_t thumb2_modified_immediate(darm_t *d, uint16_t w, uint16_t w2, CPUSt
         		d->imm = thumb_expand_imm(d->imm);
     		}
     		d->S = (w >> 4) & 1 ? B_SET : B_UNSET;
+
+				setRegToReg(d->Rd, d->Rn);
 				/* NDROID END */
         return I_AND;
 
@@ -764,6 +926,8 @@ darm_instr_t thumb2_modified_immediate(darm_t *d, uint16_t w, uint16_t w2, CPUSt
         		d->imm = thumb_expand_imm(d->imm);
     		}
     		d->S = (w >> 4) & 1 ? B_SET : B_UNSET;
+
+				setRegToReg(d->Rd, d->Rn);
 				/* NDROID END */
         return I_BIC;
 
@@ -780,6 +944,8 @@ darm_instr_t thumb2_modified_immediate(darm_t *d, uint16_t w, uint16_t w2, CPUSt
         				d->imm = thumb_expand_imm(d->imm);
     				}
     				d->S = (w >> 4) & 1 ? B_SET : B_UNSET;
+
+						clearRegTaint(d->Rd);
 						/* NDROID END */
             return I_MOV;
         }
@@ -795,6 +961,8 @@ darm_instr_t thumb2_modified_immediate(darm_t *d, uint16_t w, uint16_t w2, CPUSt
         		d->imm = thumb_expand_imm(d->imm);
     		}
     		d->S = (w >> 4) & 1 ? B_SET : B_UNSET;
+
+				setRegToReg(d->Rd, d->Rn);
 				/* NDROID END */
         return I_ORR;
 
@@ -811,6 +979,8 @@ darm_instr_t thumb2_modified_immediate(darm_t *d, uint16_t w, uint16_t w2, CPUSt
         				d->imm = thumb_expand_imm(d->imm);
     				}
     				d->S = (w >> 4) & 1 ? B_SET : B_UNSET;
+
+						clearRegTaint(d->Rd);
 						/* NDROID END */
             return I_MVN;
         }
@@ -826,6 +996,8 @@ darm_instr_t thumb2_modified_immediate(darm_t *d, uint16_t w, uint16_t w2, CPUSt
         		d->imm = thumb_expand_imm(d->imm);
     		}
     		d->S = (w >> 4) & 1 ? B_SET : B_UNSET;
+
+				setRegToReg(d->Rd, d->Rn);
 				/* NDROID END */
         return I_ORN;
 
@@ -857,6 +1029,8 @@ darm_instr_t thumb2_modified_immediate(darm_t *d, uint16_t w, uint16_t w2, CPUSt
         		d->imm = thumb_expand_imm(d->imm);
     		}
     		d->S = (w >> 4) & 1 ? B_SET : B_UNSET;
+
+				setRegToReg(d->Rd, d->Rn);
 				/* NDROID END */
         return I_EOR;
 
@@ -888,6 +1062,8 @@ darm_instr_t thumb2_modified_immediate(darm_t *d, uint16_t w, uint16_t w2, CPUSt
         		d->imm = thumb_expand_imm(d->imm);
     		}
     		d->S = (w >> 4) & 1 ? B_SET : B_UNSET;
+
+				setRegToReg(d->Rd, d->Rn);
 				/* NDROID END */
         return I_ADD;
 
@@ -903,6 +1079,8 @@ darm_instr_t thumb2_modified_immediate(darm_t *d, uint16_t w, uint16_t w2, CPUSt
         		d->imm = thumb_expand_imm(d->imm);
     		}
     		d->S = (w >> 4) & 1 ? B_SET : B_UNSET;
+
+				setRegToReg(d->Rd, d->Rn);
 				/* NDROID END */
         return I_ADC;
 
@@ -918,6 +1096,8 @@ darm_instr_t thumb2_modified_immediate(darm_t *d, uint16_t w, uint16_t w2, CPUSt
         		d->imm = thumb_expand_imm(d->imm);
     		}
     		d->S = (w >> 4) & 1 ? B_SET : B_UNSET;
+
+				setRegToReg(d->Rd, d->Rn);
 				/* NDROID END */
         return I_SBC;
 
@@ -949,6 +1129,8 @@ darm_instr_t thumb2_modified_immediate(darm_t *d, uint16_t w, uint16_t w2, CPUSt
         		d->imm = thumb_expand_imm(d->imm);
     		}
     		d->S = (w >> 4) & 1 ? B_SET : B_UNSET;
+
+				setRegToReg(d->Rd, d->Rn);
 				/* NDROID END */
         return I_SUB;
 
@@ -964,6 +1146,8 @@ darm_instr_t thumb2_modified_immediate(darm_t *d, uint16_t w, uint16_t w2, CPUSt
         		d->imm = thumb_expand_imm(d->imm);
     		}
     		d->S = (w >> 4) & 1 ? B_SET : B_UNSET;
+
+				setRegToReg(d->Rd, d->Rn);
 				/* NDROID END */
         return I_RSB;
     }
@@ -1005,6 +1189,8 @@ darm_instr_t thumb2_plain_immediate(darm_t *d, uint16_t w, uint16_t w2, CPUState
         		d->imm = ((w & 0x400) << 1) | ((w2 & 0x7000) >> 4) | (w2 & 0xff);
         		d->imm = thumb_expand_imm(d->imm);
     		}
+
+				setRegToReg(d->Rd, d->Rn);
 				/* NDROID END */
         return Rn == b1111 ? I_ADR : I_ADDW;
 
@@ -1019,6 +1205,8 @@ darm_instr_t thumb2_plain_immediate(darm_t *d, uint16_t w, uint16_t w2, CPUState
         		d->imm = ((w & 0x400) << 1) | ((w2 & 0x7000) >> 4) | (w2 & 0xff);
         		d->imm = thumb_expand_imm(d->imm);
     		}
+
+				clearRegTaint(d->Rd);
 				/* NDROID END */
         return I_MOVW;
 
@@ -1033,6 +1221,8 @@ darm_instr_t thumb2_plain_immediate(darm_t *d, uint16_t w, uint16_t w2, CPUState
         		d->imm = ((w & 0x400) << 1) | ((w2 & 0x7000) >> 4) | (w2 & 0xff);
         		d->imm = thumb_expand_imm(d->imm);
     		}
+
+				setRegToReg(d->Rd, d->Rn);
 				/* NDROID END */
         return Rn == b1111 ? I_ADR : I_SUBW;
 
@@ -1047,6 +1237,8 @@ darm_instr_t thumb2_plain_immediate(darm_t *d, uint16_t w, uint16_t w2, CPUState
         		d->imm = ((w & 0x400) << 1) | ((w2 & 0x7000) >> 4) | (w2 & 0xff);
         		d->imm = thumb_expand_imm(d->imm);
     		}
+
+				clearRegTaint(d->Rd);
 				/* NDROID END */
         return I_MOVT;
 
@@ -1056,6 +1248,8 @@ darm_instr_t thumb2_plain_immediate(darm_t *d, uint16_t w, uint16_t w2, CPUState
     		d->Rn = w & b1111;
     		d->Rd = (w2 >> 8) & b1111;
     		d->imm = ((w2 >> 10) & b11100) | ((w2 >> 6) & b11);
+
+				setRegToReg(d->Rd, d->Rn);
 				/* NDROID END */
         return I_SSAT;
 
@@ -1066,6 +1260,8 @@ darm_instr_t thumb2_plain_immediate(darm_t *d, uint16_t w, uint16_t w2, CPUState
     				d->Rn = w & b1111;
     				d->Rd = (w2 >> 8) & b1111;
     				d->I = B_UNSET;
+
+						setRegToReg(d->Rd, d->Rn);
 						/* NDROID END */
             return I_SSAT16;
         }
@@ -1075,6 +1271,8 @@ darm_instr_t thumb2_plain_immediate(darm_t *d, uint16_t w, uint16_t w2, CPUState
     		d->Rn = w & b1111;
     		d->Rd = (w2 >> 8) & b1111;
     		d->imm = ((w2 >> 10) & b11100) | ((w2 >> 6) & b11);
+
+				setRegToReg(d->Rd, d->Rn);
 				/* NDROID END */
         return I_SSAT;
 
@@ -1084,6 +1282,8 @@ darm_instr_t thumb2_plain_immediate(darm_t *d, uint16_t w, uint16_t w2, CPUState
     		d->Rn = w & b1111;
     		d->Rd = (w2 >> 8) & b1111;
     		d->imm = ((w2 >> 10) & b11100) | ((w2 >> 6) & b11);
+
+				setRegToReg(d->Rd, d->Rn);
 				/* NDROID END */
         return I_SBFX;
 
@@ -1094,6 +1294,8 @@ darm_instr_t thumb2_plain_immediate(darm_t *d, uint16_t w, uint16_t w2, CPUState
 						/* NDROID START */
     				d->Rd = (w2 >> 8) & b1111;
     				d->imm = ((w2 >> 10) & b11100) | ((w2 >> 6) & b11);
+
+						clearRegTaint(d->Rd);
 						/* NDROID END */
             return I_BFC;
         }
@@ -1102,6 +1304,8 @@ darm_instr_t thumb2_plain_immediate(darm_t *d, uint16_t w, uint16_t w2, CPUState
     		d->Rn = w & b1111;
     		d->Rd = (w2 >> 8) & b1111;
     		d->imm = ((w2 >> 10) & b11100) | ((w2 >> 6) & b11);
+
+				setRegToReg(d->Rd, d->Rn);
 				/* NDROID END */
         return I_BFI;
 
@@ -1111,6 +1315,8 @@ darm_instr_t thumb2_plain_immediate(darm_t *d, uint16_t w, uint16_t w2, CPUState
     		d->Rn = w & b1111;
     		d->Rd = (w2 >> 8) & b1111;
     		d->imm = ((w2 >> 10) & b11100) | ((w2 >> 6) & b11);
+
+				setRegToReg(d->Rd, d->Rn);
 				/* NDROID END */
         return I_USAT;
 
@@ -1121,6 +1327,8 @@ darm_instr_t thumb2_plain_immediate(darm_t *d, uint16_t w, uint16_t w2, CPUState
     				d->Rn = w & b1111;
     				d->Rd = (w2 >> 8) & b1111;
     				d->I = B_UNSET;
+
+						setRegToReg(d->Rd, d->Rn);
 						/* NDROID END */
             return I_USAT16;
         }
@@ -1130,6 +1338,8 @@ darm_instr_t thumb2_plain_immediate(darm_t *d, uint16_t w, uint16_t w2, CPUState
     		d->Rn = w & b1111;
     		d->Rd = (w2 >> 8) & b1111;
     		d->imm = ((w2 >> 10) & b11100) | ((w2 >> 6) & b11);
+
+				setRegToReg(d->Rd, d->Rn);
 				/* NDROID END */
         return I_USAT;
 
@@ -1139,6 +1349,8 @@ darm_instr_t thumb2_plain_immediate(darm_t *d, uint16_t w, uint16_t w2, CPUState
     		d->Rn = w & b1111;
     		d->Rd = (w2 >> 8) & b1111;
     		d->imm = ((w2 >> 10) & b11100) | ((w2 >> 6) & b11);
+
+				setRegToReg(d->Rd, d->Rn);
 				/* NDROID END */
         return I_UBFX;
     }
@@ -1333,6 +1545,7 @@ darm_instr_t thumb2_store_single_item(darm_t *d, uint16_t w, uint16_t w2, CPUSta
     //d->Rn = w & b1111;
     //d->Rt = (w2 >> 12) & b1111;
     //d->imm = w2 & 0xff;
+		int offset = 0, offset_addr = 0, address = 0;
 		/* NDROID END */
 
     switch (op1) {
@@ -1347,6 +1560,11 @@ darm_instr_t thumb2_store_single_item(darm_t *d, uint16_t w, uint16_t w2, CPUSta
         		d->imm = (w2 >> 4) & b11;
         		d->shift = d->imm;
         		d->shift_type = S_LSL;
+						
+						offset = darm_shift(env->regs[d->Rm], d->shift_type, d->shift, env->CF);
+						offset_addr = env->regs[d->Rn] + offset;
+						address = offset_addr;
+						setRegToMem(address, d->Rt);
 						/* NDROID END */
             return I_STRB; // register
         }
@@ -1355,6 +1573,11 @@ darm_instr_t thumb2_store_single_item(darm_t *d, uint16_t w, uint16_t w2, CPUSta
     				d->Rn = w & b1111;
     				d->Rt = (w2 >> 12) & b1111;
     				d->imm = w2 & 0xff;
+
+						offset = d->imm;
+						offset_addr = env->regs[d->Rn] + offset;
+						address = offset_addr;
+						setRegToMem(address, d->Rt);
 						/* NDROID END */
             return I_STRBT;
         }
@@ -1367,6 +1590,11 @@ darm_instr_t thumb2_store_single_item(darm_t *d, uint16_t w, uint16_t w2, CPUSta
         		d->W = (w2 >> 8) & 1 ? B_SET : B_UNSET;
         		d->U = (w2 >> 9) & 1 ? B_SET : B_UNSET;
         		d->P = (w2 >> 10) & 1 ? B_SET : B_UNSET;
+
+						offset_addr = (d->U == 1) ? (env->regs[d->Rn] + d->imm)
+							: (env->regs[d->Rn] - d->imm);
+						address = (d->P == 1) ? offset_addr : env->regs[d->Rn];
+						setRegToMem(address, d->Rt);
 						/* NDROID END */
             return I_STRB; // immediate 8 bit
         }
@@ -1383,6 +1611,11 @@ darm_instr_t thumb2_store_single_item(darm_t *d, uint16_t w, uint16_t w2, CPUSta
         		d->imm = (w2 >> 4) & b11;
         		d->shift = d->imm;
         		d->shift_type = S_LSL;
+
+						offset = darm_shift(env->regs[d->Rm], d->shift_type, d->shift, env->CF);
+						offset_addr = env->regs[d->Rn] + offset;
+						address = offset_addr;
+						setRegToMem2(address, d->Rt);
 						/* NDROID END */
             return I_STRH; // register
         }
@@ -1391,6 +1624,11 @@ darm_instr_t thumb2_store_single_item(darm_t *d, uint16_t w, uint16_t w2, CPUSta
     				d->Rn = w & b1111;
     				d->Rt = (w2 >> 12) & b1111;
     				d->imm = w2 & 0xff;
+
+						offset = d->imm;
+						offset_addr = env->regs[d->Rn] + offset;
+						address = offset_addr;
+						setRegToMem2(address, d->Rt);
 						/* NDROID END */
             return I_STRHT;
         }
@@ -1403,6 +1641,11 @@ darm_instr_t thumb2_store_single_item(darm_t *d, uint16_t w, uint16_t w2, CPUSta
         		d->W = (w2 >> 8) & 1 ? B_SET : B_UNSET;
         		d->U = (w2 >> 9) & 1 ? B_SET : B_UNSET;
         		d->P = (w2 >> 10) & 1 ? B_SET : B_UNSET;
+
+						offset_addr = (d->U == 1) ? (env->regs[d->Rn] + d->imm)
+							: (env->regs[d->Rn] - d->imm);
+						address = (d->P == 1) ? offset_addr : env->regs[d->Rn];
+						setRegToMem2(address, d->Rt);
 						/* NDROID END */
             return I_STRH;  // immediate 8 bit
         }
@@ -1419,6 +1662,11 @@ darm_instr_t thumb2_store_single_item(darm_t *d, uint16_t w, uint16_t w2, CPUSta
         		d->imm = (w2 >> 4) & b11;
         		d->shift = d->imm;
         		d->shift_type = S_LSL;
+
+						offset = darm_shift(env->regs[d->Rm], d->shift_type, d->shift, env->CF);
+						offset_addr = env->regs[d->Rn] + offset;
+						address = offset_addr;
+						setRegToMem4(address, d->Rt);
 						/* NDROID END */
             return I_STR; // register
         }
@@ -1427,6 +1675,11 @@ darm_instr_t thumb2_store_single_item(darm_t *d, uint16_t w, uint16_t w2, CPUSta
     				d->Rn = w & b1111;
     				d->Rt = (w2 >> 12) & b1111;
     				d->imm = w2 & 0xff;
+
+						offset = d->imm;
+						offset_addr = env->regs[d->Rn] + offset;
+						address = offset_addr;
+						setRegToMem4(address, d->Rt);
 						/* NDROID END */
             return I_STRT;
         }
@@ -1441,6 +1694,9 @@ darm_instr_t thumb2_store_single_item(darm_t *d, uint16_t w, uint16_t w2, CPUSta
 								/* NDROID START */
         				d->Rt = (w2 >> 12) & b1111;
         				d->I = B_UNSET;
+
+								address = env->regs[SP] - 4;
+								setRegToMem4(address, d->Rt);
 								/* NDROID END */
                 return I_PUSH;
             }
@@ -1453,6 +1709,11 @@ darm_instr_t thumb2_store_single_item(darm_t *d, uint16_t w, uint16_t w2, CPUSta
         		d->W = (w2 >> 8) & 1 ? B_SET : B_UNSET;
         		d->U = (w2 >> 9) & 1 ? B_SET : B_UNSET;
         		d->P = (w2 >> 10) & 1 ? B_SET : B_UNSET;
+
+						offset_addr = (d->U == 1) ? (env->regs[d->Rn] + d->imm)
+							: (env->regs[d->Rn] - d->imm);
+						address = (d->P == 1) ? offset_addr : env->regs[d->Rn];
+						setRegToMem4(address, d->Rt);
 						/* NDROID END */
             return I_STR; // immediate 8 bit
         }
@@ -1464,6 +1725,10 @@ darm_instr_t thumb2_store_single_item(darm_t *d, uint16_t w, uint16_t w2, CPUSta
     		d->Rn = w & b1111;
     		d->Rt = (w2 >> 12) & b1111;
         d->imm = w2 & 0xfff;
+
+				offset_addr = env->regs[d->Rn] + d->imm;
+				address = offset_addr;
+				setRegToMem(address, d->Rt);
 				/* NDROID END */
         return I_STRB; // immediate 12 bit
 
@@ -1473,6 +1738,10 @@ darm_instr_t thumb2_store_single_item(darm_t *d, uint16_t w, uint16_t w2, CPUSta
     		d->Rn = w & b1111;
     		d->Rt = (w2 >> 12) & b1111;
         d->imm = w2 & 0xfff;
+
+				offset_addr = env->regs[d->Rn] + d->imm;
+				address = offset_addr;
+				setRegToMem2(address, d->Rt);
 				/* NDROID END */
         return I_STRH; // immediate 12 bit
 
@@ -1482,6 +1751,10 @@ darm_instr_t thumb2_store_single_item(darm_t *d, uint16_t w, uint16_t w2, CPUSta
     		d->Rn = w & b1111;
     		d->Rt = (w2 >> 12) & b1111;
         d->imm = w2 & 0xfff;
+
+				offset_addr = env->regs[d->Rn] + d->imm;
+				address = offset_addr;
+				setRegToMem4(address, d->Rt);
 				/* NDROID END */
         return I_STR; // immediate 12 bit
     }
@@ -1503,6 +1776,7 @@ darm_instr_t thumb2_load_byte_hints(darm_t *d, uint16_t w, uint16_t w2, CPUState
     //d->Rn = w & b1111;
     //d->Rt = (w2 >> 12) & b1111;
     //d->imm = w2 & 0xfff;
+		int base = 0, address = 0, offset = 0, offset_addr = 0;
 		/* NDROID END */
 
     if((op1 & 2) == 0 && Rn == b1111) {
@@ -1521,6 +1795,10 @@ darm_instr_t thumb2_load_byte_hints(darm_t *d, uint16_t w, uint16_t w2, CPUState
         d->Rt = (w2 >> 12) & b1111;
     		d->imm = w2 & 0xfff;
         d->U = (w >> 7) & 1 ? B_SET : B_UNSET;
+
+				base = env->regs[PC] & 0b00;
+				address = (d->U == 1) ? (base + d->imm) : (base - d->imm);
+				setMemToReg(d->Rt, address);
 				/* NDROID END */
         return I_LDRB; // literal
     }
@@ -1540,6 +1818,10 @@ darm_instr_t thumb2_load_byte_hints(darm_t *d, uint16_t w, uint16_t w2, CPUState
         d->Rt = (w2 >> 12) & b1111;
     		d->imm = w2 & 0xfff;
         d->U = (w >> 7) & 1 ? B_SET : B_UNSET;
+
+				base = env->regs[PC] & 0b00;
+				address = (d->U == 1) ? (base + d->imm) : (base - d->imm);
+				setMemToReg(d->Rt, address);
 				/* NDROID END */
         return I_LDRSB; // literal
     }
@@ -1566,6 +1848,11 @@ darm_instr_t thumb2_load_byte_hints(darm_t *d, uint16_t w, uint16_t w2, CPUState
         		d->imm = (w2 >> 4) & b11;
         		d->shift = d->imm;
         		d->shift_type = S_LSL;
+
+						offset = darm_shift(env->regs[d->Rm], d->shift_type, d->shift, env->CF);
+						offset_addr = env->regs[d->Rn] + offset;
+						address = offset_addr;
+						setMemToReg(d->Rt, address);
 						/* NDROID END */
             return I_LDRB; // register
         }
@@ -1579,6 +1866,11 @@ darm_instr_t thumb2_load_byte_hints(darm_t *d, uint16_t w, uint16_t w2, CPUState
         		d->W = (w2 >> 8) & 1 ? B_SET : B_UNSET;
         		d->U = (w2 >> 9) & 1 ? B_SET : B_UNSET;
         		d->P = (w2 >> 10) & 1 ? B_SET : B_UNSET;
+
+						offset_addr = (d->U == 1) ? env->regs[d->Rn] + d->imm
+							: env->regs[d->Rn] - d->imm;
+						address = (d->P == 1) ? offset_addr : env->regs[d->Rn];
+						setMemToReg(d->Rt, address);
 						/* NDROID END */
             return I_LDRB; // immediate
         }
@@ -1601,6 +1893,12 @@ darm_instr_t thumb2_load_byte_hints(darm_t *d, uint16_t w, uint16_t w2, CPUState
         		d->W = (w2 >> 8) & 1 ? B_SET : B_UNSET;
         		d->U = (w2 >> 9) & 1 ? B_SET : B_UNSET;
         		d->P = (w2 >> 10) & 1 ? B_SET : B_UNSET;
+
+
+						offset_addr = (d->U == 1) ? env->regs[d->Rn] + d->imm
+							: env->regs[d->Rn] - d->imm;
+						address = (d->P == 1) ? offset_addr : env->regs[d->Rn];
+						setMemToReg(d->Rt, address);
 						/* NDROID END */
             return I_LDRB; // immediate
         }
@@ -1610,6 +1908,11 @@ darm_instr_t thumb2_load_byte_hints(darm_t *d, uint16_t w, uint16_t w2, CPUState
     				d->Rn = w & b1111;
     				d->Rt = (w2 >> 12) & b1111;
         		d->imm = w2 & 0xff;
+
+						offset = d->imm;
+						offset_addr = env->regs[d->Rn] + offset;
+						address = offset_addr;
+						setMemToReg(d->Rt, address);
 						/* NDROID END */
             return I_LDRBT;
         }
@@ -1628,6 +1931,10 @@ darm_instr_t thumb2_load_byte_hints(darm_t *d, uint16_t w, uint16_t w2, CPUState
     		d->Rn = w & b1111;
     		d->Rt = (w2 >> 12) & b1111;
     		d->imm = w2 & 0xfff;
+				
+				offset_addr = env->regs[d->Rn] + d->imm;
+				address = offset_addr;
+				setMemToReg(d->Rt, address);
 				/* NDROID END */
         return I_LDRB; // immediate 12
     }
@@ -1654,6 +1961,11 @@ darm_instr_t thumb2_load_byte_hints(darm_t *d, uint16_t w, uint16_t w2, CPUState
         		d->imm = (w2 >> 4) & b11;
         		d->shift = d->imm;
         		d->shift_type = S_LSL;
+
+						offset = darm_shift(env->regs[d->Rm], d->shift_type, d->shift, env->CF);
+						offset_addr = env->regs[d->Rn] + offset;
+						address = offset_addr;
+						setMemToReg(d->Rt, address);
 						/* NDROID END */
             return I_LDRSB; // register
         }
@@ -1667,6 +1979,11 @@ darm_instr_t thumb2_load_byte_hints(darm_t *d, uint16_t w, uint16_t w2, CPUState
         		d->W = (w2 >> 8) & 1 ? B_SET : B_UNSET;
         		d->U = (w2 >> 9) & 1 ? B_SET : B_UNSET;
         		d->P = (w2 >> 10) & 1 ? B_SET : B_UNSET;
+
+						offset_addr = (d->U == 1) ? env->regs[d->Rn] + d->imm
+							: env->regs[d->Rn] - d->imm;
+						address = (d->P ==1 ) ? offset_addr : env->regs[d->Rn];
+						setMemToReg(d->Rt, address);
 						/* NDROID END */
             return I_LDRSB; // immediate 8
         }
@@ -1689,6 +2006,11 @@ darm_instr_t thumb2_load_byte_hints(darm_t *d, uint16_t w, uint16_t w2, CPUState
         		d->W = (w2 >> 8) & 1 ? B_SET : B_UNSET;
         		d->U = (w2 >> 9) & 1 ? B_SET : B_UNSET;
         		d->P = (w2 >> 10) & 1 ? B_SET : B_UNSET;
+
+						offset_addr = (d->U == 1) ? env->regs[d->Rn] + d->imm
+							: env->regs[d->Rn] - d->imm;
+						address = (d->P ==1 ) ? offset_addr : env->regs[d->Rn];
+						setMemToReg(d->Rt, address);
 						/* NDROID END */
             return I_LDRSB; // immediate 8
         }
@@ -1698,6 +2020,11 @@ darm_instr_t thumb2_load_byte_hints(darm_t *d, uint16_t w, uint16_t w2, CPUState
     				d->Rn = w & b1111;
     				d->Rt = (w2 >> 12) & b1111;
         		d->imm = w2 & 0xff;
+						
+						offset = d->imm;
+						offset_addr = env->regs[d->Rn] + offset;
+						address = offset_addr;
+						setMemToReg(d->Rt, address);
 						/* NDROID END */
             return I_LDRSBT;
         }
@@ -1716,6 +2043,10 @@ darm_instr_t thumb2_load_byte_hints(darm_t *d, uint16_t w, uint16_t w2, CPUState
     		d->Rn = w & b1111;
     		d->Rt = (w2 >> 12) & b1111;
     		d->imm = w2 & 0xfff;
+
+				offset_addr = env->regs[d->Rn] + d->imm;
+				address = offset_addr;
+				setMemToReg(d->Rt, address);
 				/* NDROID END */
         return I_LDRSB; // immediate 12
     }
@@ -1737,6 +2068,7 @@ darm_instr_t thumb2_load_halfword_hints(darm_t *d, uint16_t w, uint16_t w2, CPUS
     //d->Rn = w & b1111;
     //d->Rt = (w2 >> 12) & b1111;
     //d->imm = w2 & 0xfff;
+		int base = 0, offset = 0, offset_addr = 0, address = 0;
 		/* NDROID END */
 
     if((op1 & 2) == 0 && Rn == b1111) {
@@ -1756,6 +2088,10 @@ darm_instr_t thumb2_load_halfword_hints(darm_t *d, uint16_t w, uint16_t w2, CPUS
         d->Rt = (w2 >> 12) & b1111;
     		d->imm = w2 & 0xfff;
         d->U = (w >> 7) & 1 ? B_SET : B_UNSET;
+
+				base = env->regs[PC] & 0b00;
+				address = (d->U == 1) ? base + d->imm : base - d->imm;
+				setMem2ToReg(d->Rt, address);
 				/* NDROID END */
         return I_LDRH; // literal
     }
@@ -1775,6 +2111,10 @@ darm_instr_t thumb2_load_halfword_hints(darm_t *d, uint16_t w, uint16_t w2, CPUS
         d->Rt = (w2 >> 12) & b1111;
     		d->imm = w2 & 0xfff;
         d->U = (w >> 7) & 1 ? B_SET : B_UNSET;
+
+				base = env->regs[PC] & 0b00;
+				address = (d->U == 1) ? base + d->imm : base - d->imm;
+				setMem2ToReg(d->Rt, address);
 				/* NDROID END */
         return I_LDRSH; // literal
     }
@@ -1801,6 +2141,11 @@ darm_instr_t thumb2_load_halfword_hints(darm_t *d, uint16_t w, uint16_t w2, CPUS
         		d->imm = (w2 >> 4) & b11;
         		d->shift = d->imm;
         		d->shift_type = S_LSL;
+
+						offset = darm_shift(env->regs[d->Rm], d->shift_type, d->shift, env->CF);
+						offset_addr = env->regs[d->Rn] + offset;
+						address = offset_addr;
+						setMem2ToReg(d->Rt, address);
 						/* NDROID END */
             return I_LDRH; // register
         }
@@ -1814,6 +2159,11 @@ darm_instr_t thumb2_load_halfword_hints(darm_t *d, uint16_t w, uint16_t w2, CPUS
         		d->W = (w2 >> 8) & 1 ? B_SET : B_UNSET;
         		d->U = (w2 >> 9) & 1 ? B_SET : B_UNSET;
         		d->P = (w2 >> 10) & 1 ? B_SET : B_UNSET;
+
+						offset_addr = (d->U == 1) ? env->regs[d->Rn] + d->imm
+							: env->regs[d->Rn] - d->imm;
+						address = (d->P == 1) ? offset_addr : env->regs[d->Rn];
+						setMem2ToReg(d->Rt, address);
 						/* NDROID END */
             return I_LDRH; // immediate 8 bit
         }
@@ -1837,6 +2187,11 @@ darm_instr_t thumb2_load_halfword_hints(darm_t *d, uint16_t w, uint16_t w2, CPUS
         		d->W = (w2 >> 8) & 1 ? B_SET : B_UNSET;
         		d->U = (w2 >> 9) & 1 ? B_SET : B_UNSET;
         		d->P = (w2 >> 10) & 1 ? B_SET : B_UNSET;
+
+						offset_addr = (d->U == 1) ? env->regs[d->Rn] + d->imm
+							: env->regs[d->Rn] - d->imm;
+						address = (d->P == 1) ? offset_addr : env->regs[d->Rn];
+						setMem2ToReg(d->Rt, address);
 						/* NDROID END */
             return I_LDRH; // immediate 8 bit
         }
@@ -1846,6 +2201,11 @@ darm_instr_t thumb2_load_halfword_hints(darm_t *d, uint16_t w, uint16_t w2, CPUS
     				d->Rn = w & b1111;
     				d->Rt = (w2 >> 12) & b1111;
         		d->imm = w2 & 0xff;
+
+						offset = d->imm;
+						offset_addr = env->regs[d->Rn] + offset;
+						address = offset_addr;
+						setMem2ToReg(d->Rt, address);
 						/* NDROID END */
             return I_LDRHT;
         }
@@ -1864,6 +2224,10 @@ darm_instr_t thumb2_load_halfword_hints(darm_t *d, uint16_t w, uint16_t w2, CPUS
     		d->Rn = w & b1111;
     		d->Rt = (w2 >> 12) & b1111;
     		d->imm = w2 & 0xfff;
+
+				offset_addr = env->regs[d->Rn] + d->imm;
+				address = offset_addr;
+				setMem2ToReg(d->Rt, address);
 				/* NDROID END */
         return I_LDRH; // immediate 12 bit
     }
@@ -1887,6 +2251,11 @@ darm_instr_t thumb2_load_halfword_hints(darm_t *d, uint16_t w, uint16_t w2, CPUS
         		d->imm = (w2 >> 4) & b11;
         		d->shift = d->imm;
         		d->shift_type = S_LSL;
+
+						offset = darm_shift(env->regs[d->Rm], d->shift_type, d->shift, env->CF);
+						offset_addr = env->regs[d->Rn] + offset;
+						address = offset_addr;
+						setMem2ToReg(d->Rt, address);
 						/* NDROID END */
             return I_LDRSH; // register
         }
@@ -1900,6 +2269,11 @@ darm_instr_t thumb2_load_halfword_hints(darm_t *d, uint16_t w, uint16_t w2, CPUS
         		d->W = (w2 >> 8) & 1 ? B_SET : B_UNSET;
         		d->U = (w2 >> 9) & 1 ? B_SET : B_UNSET;
         		d->P = (w2 >> 10) & 1 ? B_SET : B_UNSET;
+
+						offset_addr = (d->U == 1) ? env->regs[d->Rn] + d->imm
+							: env->regs[d->Rn] - d->imm;
+						address = (d->P == 1) ? offset_addr : env->regs[d->Rn];
+						setMem2ToReg(d->Rt, address);
 						/* NDROID END */
             return I_LDRSH; // immediate 8 bit
         }
@@ -1922,6 +2296,11 @@ darm_instr_t thumb2_load_halfword_hints(darm_t *d, uint16_t w, uint16_t w2, CPUS
         		d->W = (w2 >> 8) & 1 ? B_SET : B_UNSET;
         		d->U = (w2 >> 9) & 1 ? B_SET : B_UNSET;
         		d->P = (w2 >> 10) & 1 ? B_SET : B_UNSET;
+
+						offset_addr = (d->U == 1) ? env->regs[d->Rn] + d->imm
+							: env->regs[d->Rn] - d->imm;
+						address = (d->P == 1) ? offset_addr : env->regs[d->Rn];
+						setMem2ToReg(d->Rt, address);
 						/* NDROID END */
             return I_LDRSH; // immediate 8 bit
         }
@@ -1931,6 +2310,11 @@ darm_instr_t thumb2_load_halfword_hints(darm_t *d, uint16_t w, uint16_t w2, CPUS
     				d->Rn = w & b1111;
     				d->Rt = (w2 >> 12) & b1111;
         		d->imm = w2 & 0xff;
+
+						offset = d->imm;
+						offset_addr = env->regs[d->Rn] + offset;
+						address = offset_addr;
+						setMem2ToReg(d->Rt, address);
 						/* NDROID END */
             return I_LDRSHT;
         }
@@ -1945,6 +2329,9 @@ darm_instr_t thumb2_load_halfword_hints(darm_t *d, uint16_t w, uint16_t w2, CPUS
             return I_NOP;
         }
 
+				offset_addr = env->regs[d->Rn] + d->imm;
+				address = offset_addr;
+				setMem2ToReg(d->Rt, address);
         return I_LDRSH; // immediate 12 bit
     }
 
@@ -1964,6 +2351,7 @@ darm_instr_t thumb2_load_word(darm_t *d, uint16_t w, uint16_t w2, CPUState* env)
     //d->Rn = w & b1111;
     //d->Rt = (w2 >> 12) & b1111;
     //d->imm = w2 & 0xff;
+		int base = 0, offset = 0, offset_addr = 0, address = 0;
 		/* NDROID END */
 
     if((op1 & 2) == 0 && Rn == b1111) {
@@ -1974,6 +2362,10 @@ darm_instr_t thumb2_load_word(darm_t *d, uint16_t w, uint16_t w2, CPUState* env)
         d->Rt = (w2 >> 12) & b1111;
         d->imm = w2 & 0xfff;
         d->U = (w >> 7) & 1 ? B_SET : B_UNSET;
+
+				base = env->regs[PC] & 0b00;
+				address = (d->U == 1) ? base + d->imm : base - d->imm;
+				setMem4ToReg(d->Rt, address);
 				/* NDROID END */
         return I_LDR; // literal
     }
@@ -1983,6 +2375,10 @@ darm_instr_t thumb2_load_word(darm_t *d, uint16_t w, uint16_t w2, CPUState* env)
     		d->Rn = w & b1111;
     		d->Rt = (w2 >> 12) & b1111;
         d->imm = w2 & 0xfff;
+
+				offset_addr = env->regs[d->Rn] + d->imm;
+				address = offset_addr;
+				setMem4ToReg(d->Rt, address);
 				/* NDROID END */
         return I_LDR; // immediate
     }
@@ -1997,6 +2393,11 @@ darm_instr_t thumb2_load_word(darm_t *d, uint16_t w, uint16_t w2, CPUState* env)
         		d->imm = (w2 >> 4) & b11;
         		d->shift = d->imm;
         		d->shift_type = S_LSL;
+
+						offset = darm_shift(env->regs[d->Rm], d->shift_type, d->shift, env->CF);
+						offset_addr = env->regs[d->Rn] + offset;
+						address = offset_addr;
+						setMem4ToReg(d->Rt, address);
 						/* NDROID END */
             return I_LDR; // register
         }
@@ -2012,6 +2413,9 @@ darm_instr_t thumb2_load_word(darm_t *d, uint16_t w, uint16_t w2, CPUState* env)
 								/* NDROID START */
         				d->Rt = (w2 >> 12) & b1111;
         				d->I = B_UNSET;
+
+								address = env->regs[SP];
+								setMem4ToReg(d->Rt, address);
 								/* NDROID END */
                 return I_POP;
             }
@@ -2023,6 +2427,11 @@ darm_instr_t thumb2_load_word(darm_t *d, uint16_t w, uint16_t w2, CPUState* env)
         		d->W = (w2 >> 8) & 1 ? B_SET : B_UNSET;
         		d->U = (w2 >> 9) & 1 ? B_SET : B_UNSET;
         		d->P = (w2 >> 10) & 1 ? B_SET : B_UNSET;
+
+						offset_addr = (d->U == 1) ? env->regs[d->Rn] + d->imm
+							: env->regs[d->Rn] - d->imm;
+						address = (d->P == 1) ? offset_addr : env->regs[d->Rn];
+						setMem4ToReg(d->Rt, address);
 						/* NDROID END */
             return I_LDR; // immediate
         }
@@ -2031,6 +2440,11 @@ darm_instr_t thumb2_load_word(darm_t *d, uint16_t w, uint16_t w2, CPUState* env)
     				d->Rn = w & b1111;
     				d->Rt = (w2 >> 12) & b1111;
     				d->imm = w2 & 0xff;
+
+						offset = d->imm;
+						offset_addr = env->regs[d->Rn] + offset;
+						address = offset_addr;
+						setMem4ToReg(d->Rt, address);
 						/* NDROID END */
             return I_LDRT;
         }
@@ -2052,6 +2466,9 @@ darm_instr_t thumb2_parallel_signed(darm_t *d, uint16_t w, uint16_t w2)
     d->Rm = w2 & b1111;
     d->Rd = (w2 >> 8) & b1111;
     d->I = B_UNSET;
+
+		setRegToReg(d->Rd, d->Rn);
+		addRegToReg(d->Rd, d->Rm);
 		/* NDROID END */
 
     if(op2 == 0) {
@@ -2134,6 +2551,9 @@ darm_instr_t thumb2_parallel_unsigned(darm_t *d, uint16_t w, uint16_t w2)
     d->Rm = w2 & b1111;
     d->Rd = (w2 >> 8) & b1111;
     d->I = B_UNSET;
+
+		setRegToReg(d->Rd, d->Rn);
+		addRegToReg(d->Rd, d->Rm);
 		/* NDROID END */
 
     if(op2 == 0) {
@@ -2229,6 +2649,9 @@ darm_instr_t thumb2_misc_op(darm_t *d, uint16_t w, uint16_t w2)
     		d->Rm = w2 & b1111;
     		d->Rd = (w2 >> 8) & b1111;
     		d->I = B_UNSET;
+
+				setRegToReg(d->Rd, d->Rn);
+				addRegToReg(d->Rd, d->Rm);
 				/* NDROID END */
         switch (op2) {
         case 0:
@@ -2250,6 +2673,8 @@ darm_instr_t thumb2_misc_op(darm_t *d, uint16_t w, uint16_t w2)
         d->Rd = (w2 >> 8) & b1111;
         d->Rm = w2 & b1111;
     		d->I = B_UNSET;
+
+				setRegToReg(d->Rd, d->Rm);
 				/* NDROID END */
         switch (op2) {
         case 0:
@@ -2274,6 +2699,9 @@ darm_instr_t thumb2_misc_op(darm_t *d, uint16_t w, uint16_t w2)
     		d->Rm = w2 & b1111;
     		d->Rd = (w2 >> 8) & b1111;
     		d->I = B_UNSET;
+
+				setRegToReg(d->Rd, d->Rn);
+				addRegToReg(d->Rd, d->Rm);
 				/* NDROID END */
         if(op2 == 0) {
             return I_SEL;
@@ -2287,6 +2715,8 @@ darm_instr_t thumb2_misc_op(darm_t *d, uint16_t w, uint16_t w2)
         		d->Rd = (w2 >> 8) & b1111;
         		d->Rm = w2 & b1111;
     				d->I = B_UNSET;
+
+						setRegToReg(d->Rd, d->Rm);
 						/* NDROID END */
             return I_CLZ;
         }
@@ -2321,6 +2751,9 @@ darm_instr_t thumb2_data_reg(darm_t *d, uint16_t w, uint16_t w2, CPUState* env)
     		d->Rd = (w2 >> 8) & b1111;
     		d->I = B_UNSET;
         d->S = (w >> 4) & 1 ? B_SET : B_UNSET;
+
+				setRegToReg(d->Rd, d->Rn);
+				addRegToReg(d->Rd, d->Rm);
 				/* NDROID END */
         switch (op1 & b1110) {
         case 0:
@@ -2347,6 +2780,8 @@ darm_instr_t thumb2_data_reg(darm_t *d, uint16_t w, uint16_t w2, CPUState* env)
         				d->Rm = w2 & b1111;
     						d->I = B_UNSET;
     						d->rotate = (w2 >> 1) & b11000;
+
+								setRegToReg(d->Rd, d->Rm);
 								/* NDROID END */
                 return I_SXTH;
             }
@@ -2357,6 +2792,9 @@ darm_instr_t thumb2_data_reg(darm_t *d, uint16_t w, uint16_t w2, CPUState* env)
     				d->Rd = (w2 >> 8) & b1111;
     				d->I = B_UNSET;
     				d->rotate = (w2 >> 1) & b11000;
+
+						setRegToReg(d->Rd, d->Rn);
+						addRegToReg(d->Rd, d->Rm);
 						/* NDROID END */
             return I_SXTAH;
 
@@ -2368,6 +2806,8 @@ darm_instr_t thumb2_data_reg(darm_t *d, uint16_t w, uint16_t w2, CPUState* env)
         				d->Rm = w2 & b1111;
     						d->I = B_UNSET;
     						d->rotate = (w2 >> 1) & b11000;
+
+								setRegToReg(d->Rd, d->Rm);
 								/* NDROID END */
                 return I_UXTH;
             }
@@ -2378,6 +2818,9 @@ darm_instr_t thumb2_data_reg(darm_t *d, uint16_t w, uint16_t w2, CPUState* env)
     				d->Rd = (w2 >> 8) & b1111;
     				d->I = B_UNSET;
     				d->rotate = (w2 >> 1) & b11000;
+
+						setRegToReg(d->Rd, d->Rn);
+						addRegToReg(d->Rd, d->Rm);
 						/* NDROID END */
             return I_UXTAH;
 
@@ -2389,6 +2832,8 @@ darm_instr_t thumb2_data_reg(darm_t *d, uint16_t w, uint16_t w2, CPUState* env)
         				d->Rm = w2 & b1111;
     						d->I = B_UNSET;
     						d->rotate = (w2 >> 1) & b11000;
+
+								setRegToReg(d->Rd, d->Rm);
 								/* NDROID END */
                 return I_SXTB16;
             }
@@ -2399,6 +2844,9 @@ darm_instr_t thumb2_data_reg(darm_t *d, uint16_t w, uint16_t w2, CPUState* env)
     				d->Rd = (w2 >> 8) & b1111;
     				d->I = B_UNSET;
     				d->rotate = (w2 >> 1) & b11000;
+
+						setRegToReg(d->Rd, d->Rn);
+						addRegToReg(d->Rd, d->Rm);
 						/* NDROID END */
             return I_SXTAB16;
 
@@ -2410,6 +2858,8 @@ darm_instr_t thumb2_data_reg(darm_t *d, uint16_t w, uint16_t w2, CPUState* env)
         				d->Rm = w2 & b1111;
     						d->I = B_UNSET;
     						d->rotate = (w2 >> 1) & b11000;
+
+								setRegToReg(d->Rd, d->Rm);
 								/* NDROID END */
                 return I_UXTB16;
             }
@@ -2420,6 +2870,9 @@ darm_instr_t thumb2_data_reg(darm_t *d, uint16_t w, uint16_t w2, CPUState* env)
     				d->Rd = (w2 >> 8) & b1111;
     				d->I = B_UNSET;
     				d->rotate = (w2 >> 1) & b11000;
+
+						setRegToReg(d->Rd, d->Rn);
+						addRegToReg(d->Rd, d->Rm);
 						/* NDROID END */
             return I_UXTAB16;
 
@@ -2431,6 +2884,8 @@ darm_instr_t thumb2_data_reg(darm_t *d, uint16_t w, uint16_t w2, CPUState* env)
         				d->Rm = w2 & b1111;
     						d->I = B_UNSET;
     						d->rotate = (w2 >> 1) & b11000;
+
+								setRegToReg(d->Rd, d->Rm);
 								/* NDROID END */
                 return I_SXTB;
             }
@@ -2441,6 +2896,9 @@ darm_instr_t thumb2_data_reg(darm_t *d, uint16_t w, uint16_t w2, CPUState* env)
     				d->Rd = (w2 >> 8) & b1111;
     				d->I = B_UNSET;
     				d->rotate = (w2 >> 1) & b11000;
+
+						setRegToReg(d->Rd, d->Rn);
+						addRegToReg(d->Rd, d->Rm);
 						/* NDROID END */
             return I_SXTAB;
 
@@ -2452,6 +2910,8 @@ darm_instr_t thumb2_data_reg(darm_t *d, uint16_t w, uint16_t w2, CPUState* env)
         				d->Rm = w2 & b1111;
     						d->I = B_UNSET;
     						d->rotate = (w2 >> 1) & b11000;
+
+								setRegToReg(d->Rd, d->Rm);
 								/* NDROID END */
                 return I_UXTB;
             }
@@ -2462,6 +2922,9 @@ darm_instr_t thumb2_data_reg(darm_t *d, uint16_t w, uint16_t w2, CPUState* env)
     				d->Rd = (w2 >> 8) & b1111;
     				d->I = B_UNSET;
     				d->rotate = (w2 >> 1) & b11000;
+
+						setRegToReg(d->Rd, d->Rn);
+						addRegToReg(d->Rd, d->Rm);
 						/* NDROID END */
             return I_UXTAB;
         }
@@ -2533,6 +2996,10 @@ darm_instr_t thumb2_mult_acc_diff(darm_t *d, uint16_t w, uint16_t w2, CPUState* 
     		d->Rd = (w2 >> 8) & b1111;
     		d->Ra = (w2 >> 12) & b1111;
     		d->I = B_UNSET;
+
+				setRegToReg(d->Rd, d->Rn);
+				addRegToReg(d->Rd, d->Rm);
+				addRegToReg(d->Rd, d->Ra);
 				/* NDROID END */
         if(Ra == b1111) {
             return thumb2_nm_decoder(d, w, w2,
@@ -2556,6 +3023,9 @@ darm_instr_t thumb2_mult_acc_diff(darm_t *d, uint16_t w, uint16_t w2, CPUState* 
         		d->Rm = w2 & b1111;
         		d->Rd = (w2 >> 8) & b1111;
     				d->I = B_UNSET;
+
+						setRegToReg(d->Rd, d->Rn);
+						addRegToReg(d->Rd, d->Rm);
 						/* NDROID END */
             return I_MUL;
         }
@@ -2566,6 +3036,10 @@ darm_instr_t thumb2_mult_acc_diff(darm_t *d, uint16_t w, uint16_t w2, CPUState* 
     				d->Rd = (w2 >> 8) & b1111;
     				d->Ra = (w2 >> 12) & b1111;
     				d->I = B_UNSET;
+
+						setRegToReg(d->Rd, d->Rn);
+						addRegToReg(d->Rd, d->Rm);
+						addRegToReg(d->Rd, d->Ra);
 						/* NDROID END */
             return I_MLA;
         }
@@ -2576,6 +3050,10 @@ darm_instr_t thumb2_mult_acc_diff(darm_t *d, uint16_t w, uint16_t w2, CPUState* 
     				d->Rd = (w2 >> 8) & b1111;
     				d->Ra = (w2 >> 12) & b1111;
     				d->I = B_UNSET;
+
+						setRegToReg(d->Rd, d->Rn);
+						addRegToReg(d->Rd, d->Rm);
+						addRegToReg(d->Rd, d->Ra);
 						/* NDROID END */
             return I_MLS;
         }
@@ -2590,6 +3068,9 @@ darm_instr_t thumb2_mult_acc_diff(darm_t *d, uint16_t w, uint16_t w2, CPUState* 
         		d->Rm = w2 & b1111;
         		d->Rd = (w2 >> 8) & b1111;
     				d->I = B_UNSET;
+
+						setRegToReg(d->Rd, d->Rn);
+						addRegToReg(d->Rd, d->Rm);
 						/* NDROID END */
             return I_SMUAD;
         }
@@ -2600,6 +3081,10 @@ darm_instr_t thumb2_mult_acc_diff(darm_t *d, uint16_t w, uint16_t w2, CPUState* 
     		d->Rd = (w2 >> 8) & b1111;
     		d->Ra = (w2 >> 12) & b1111;
     		d->I = B_UNSET;
+
+				setRegToReg(d->Rd, d->Rn);
+				addRegToReg(d->Rd, d->Rm);
+				addRegToReg(d->Rd, d->Ra);
 				/* NDROID END */
         return I_SMLAD;
 
@@ -2613,6 +3098,9 @@ darm_instr_t thumb2_mult_acc_diff(darm_t *d, uint16_t w, uint16_t w2, CPUState* 
         		d->Rm = w2 & b1111;
         		d->Rd = (w2 >> 8) & b1111;
     				d->I = B_UNSET;
+
+						setRegToReg(d->Rd, d->Rn);
+						addRegToReg(d->Rd, d->Rm);
 						/* NDROID END */
             return I_SMULW;
         }
@@ -2623,6 +3111,10 @@ darm_instr_t thumb2_mult_acc_diff(darm_t *d, uint16_t w, uint16_t w2, CPUState* 
     		d->Rd = (w2 >> 8) & b1111;
     		d->Ra = (w2 >> 12) & b1111;
     		d->I = B_UNSET;
+
+				setRegToReg(d->Rd, d->Rn);
+				addRegToReg(d->Rd, d->Rm);
+				addRegToReg(d->Rd, d->Ra);
 				/* NDROID END */
         return I_SMLAW;
 
@@ -2634,6 +3126,9 @@ darm_instr_t thumb2_mult_acc_diff(darm_t *d, uint16_t w, uint16_t w2, CPUState* 
         		d->Rm = w2 & b1111;
         		d->Rd = (w2 >> 8) & b1111;
     				d->I = B_UNSET;
+
+						setRegToReg(d->Rd, d->Rn);
+						addRegToReg(d->Rd, d->Rm);
 						/* NDROID END */
             return I_SMUSD;
         }
@@ -2644,6 +3139,10 @@ darm_instr_t thumb2_mult_acc_diff(darm_t *d, uint16_t w, uint16_t w2, CPUState* 
     		d->Rd = (w2 >> 8) & b1111;
     		d->Ra = (w2 >> 12) & b1111;
     		d->I = B_UNSET;
+
+				setRegToReg(d->Rd, d->Rn);
+				addRegToReg(d->Rd, d->Rm);
+				addRegToReg(d->Rd, d->Ra);
 				/* NDROID END */
         return I_SMLSD;
 
@@ -2655,6 +3154,9 @@ darm_instr_t thumb2_mult_acc_diff(darm_t *d, uint16_t w, uint16_t w2, CPUState* 
         		d->Rm = w2 & b1111;
         		d->Rd = (w2 >> 8) & b1111;
     				d->I = B_UNSET;
+
+						setRegToReg(d->Rd, d->Rn);
+						addRegToReg(d->Rd, d->Rm);
 						/* NDROID END */
             return I_SMMUL;
         }
@@ -2665,6 +3167,10 @@ darm_instr_t thumb2_mult_acc_diff(darm_t *d, uint16_t w, uint16_t w2, CPUState* 
     		d->Rd = (w2 >> 8) & b1111;
     		d->Ra = (w2 >> 12) & b1111;
     		d->I = B_UNSET;
+
+				setRegToReg(d->Rd, d->Rn);
+				addRegToReg(d->Rd, d->Rm);
+				addRegToReg(d->Rd, d->Ra);
 				/* NDROID END */
         return I_SMMLA;
 
@@ -2675,6 +3181,10 @@ darm_instr_t thumb2_mult_acc_diff(darm_t *d, uint16_t w, uint16_t w2, CPUState* 
     		d->Rd = (w2 >> 8) & b1111;
     		d->Ra = (w2 >> 12) & b1111;
     		d->I = B_UNSET;
+
+				setRegToReg(d->Rd, d->Rn);
+				addRegToReg(d->Rd, d->Rm);
+				addRegToReg(d->Rd, d->Ra);
 				/* NDROID END */
         return I_SMMLS;
 
@@ -2686,6 +3196,9 @@ darm_instr_t thumb2_mult_acc_diff(darm_t *d, uint16_t w, uint16_t w2, CPUState* 
         		d->Rm = w2 & b1111;
         		d->Rd = (w2 >> 8) & b1111;
     				d->I = B_UNSET;
+
+						setRegToReg(d->Rd, d->Rn);
+						addRegToReg(d->Rd, d->Rm);
 						/* NDROID END */
             return I_USAD8;
         }
@@ -2696,6 +3209,10 @@ darm_instr_t thumb2_mult_acc_diff(darm_t *d, uint16_t w, uint16_t w2, CPUState* 
     				d->Rd = (w2 >> 8) & b1111;
     				d->Ra = (w2 >> 12) & b1111;
     				d->I = B_UNSET;
+
+						setRegToReg(d->Rd, d->Rn);
+						addRegToReg(d->Rd, d->Rm);
+						addRegToReg(d->Rd, d->Ra);
 						/* NDROID END */
             return I_USADA8;
         }
@@ -2727,6 +3244,11 @@ darm_instr_t thumb2_long_mult_acc(darm_t *d, uint16_t w, uint16_t w2, CPUState* 
     				d->Rn = w & b1111;
     				d->Rm = w2 & b1111;
     				d->I = B_UNSET;
+
+						setRegToReg((w2 >> 8) & b1111, d->Rn);
+						addRegToReg((w2 >> 8) & b1111, d->Rm);
+						setRegToReg((w2 >> 12) & b1111, d->Rn);
+						addRegToReg((w2 >> 12) & b1111, d->Rm);
 						/* NDROID END */
             return I_SMULL;
         }
@@ -2741,6 +3263,9 @@ darm_instr_t thumb2_long_mult_acc(darm_t *d, uint16_t w, uint16_t w2, CPUState* 
         		d->Rm = w2 & b1111;
         		d->Rd = (w2 >> 8) & b1111;
     				d->I = B_UNSET;
+
+						setRegToReg(d->Rd, d->Rn);
+						addRegToReg(d->Rd, d->Rm);
 						/* NDROID END */
             return I_SDIV;
         }
@@ -2753,6 +3278,11 @@ darm_instr_t thumb2_long_mult_acc(darm_t *d, uint16_t w, uint16_t w2, CPUState* 
     				d->Rn = w & b1111;
     				d->Rm = w2 & b1111;
     				d->I = B_UNSET;
+
+						setRegToReg((w2 >> 8) & b1111, d->Rn);
+						addRegToReg((w2 >> 8) & b1111, d->Rm);
+						setRegToReg((w2 >> 12) & b1111, d->Rn);
+						addRegToReg((w2 >> 12) & b1111, d->Rm);
 						/* NDROID END */
             return I_UMULL;
         }
@@ -2767,6 +3297,9 @@ darm_instr_t thumb2_long_mult_acc(darm_t *d, uint16_t w, uint16_t w2, CPUState* 
         		d->Rm = w2 & b1111;
         		d->Rd = (w2 >> 8) & b1111;
     				d->I = B_UNSET;
+
+						setRegToReg(d->Rd, d->Rn);
+						addRegToReg(d->Rd, d->Rm);
 						/* NDROID END */
             return I_UDIV;
         }
@@ -2778,6 +3311,13 @@ darm_instr_t thumb2_long_mult_acc(darm_t *d, uint16_t w, uint16_t w2, CPUState* 
     		d->Rn = w & b1111;
     		d->Rm = w2 & b1111;
     		d->I = B_UNSET;
+				
+				addRegToReg((w2 >> 8) & b1111, (w2 >> 12) & b1111);
+				addRegToReg((w2 >> 8) & b1111, d->Rn);
+				addRegToReg((w2 >> 8) & b1111, d->Rm);
+				addRegToReg((w2 >> 12) & b1111, d->Rn);
+				addRegToReg((w2 >> 12) & b1111, d->Rm);
+				addRegToReg((w2 >> 12) & b1111, (w2 >> 8) & b1111);
 				/* NDROID END */
         if(op2 == 0) {
             return I_SMLAL;
@@ -2797,6 +3337,13 @@ darm_instr_t thumb2_long_mult_acc(darm_t *d, uint16_t w, uint16_t w2, CPUState* 
     		d->Rn = w & b1111;
     		d->Rm = w2 & b1111;
     		d->I = B_UNSET;
+
+				addRegToReg((w2 >> 8) & b1111, (w2 >> 12) & b1111);
+				addRegToReg((w2 >> 8) & b1111, d->Rn);
+				addRegToReg((w2 >> 8) & b1111, d->Rm);
+				addRegToReg((w2 >> 12) & b1111, d->Rn);
+				addRegToReg((w2 >> 12) & b1111, d->Rm);
+				addRegToReg((w2 >> 12) & b1111, (w2 >> 8) & b1111);
 				/* NDROID END */
         if((op2 & b1110) == b1100) {
             return I_SMLSLD;
@@ -2809,6 +3356,13 @@ darm_instr_t thumb2_long_mult_acc(darm_t *d, uint16_t w, uint16_t w2, CPUState* 
     		d->Rn = w & b1111;
     		d->Rm = w2 & b1111;
     		d->I = B_UNSET;
+
+				addRegToReg((w2 >> 8) & b1111, (w2 >> 12) & b1111);
+				addRegToReg((w2 >> 8) & b1111, d->Rn);
+				addRegToReg((w2 >> 8) & b1111, d->Rm);
+				addRegToReg((w2 >> 12) & b1111, d->Rn);
+				addRegToReg((w2 >> 12) & b1111, d->Rm);
+				addRegToReg((w2 >> 12) & b1111, (w2 >> 8) & b1111);
 				/* NDROID END */
         if(op2 == 0) {
             return I_UMLAL;

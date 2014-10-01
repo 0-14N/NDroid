@@ -33,8 +33,10 @@ extern "C" {
 	void setRegToReg(int destReg, int srcReg);
 
 	int setMem4ToReg(int regIdx, int startAddr);
+	int addMem4ToReg(int regIdx, int startAddr);
 	int setMem2ToReg(int regIdx, int startAddr);
 	void setRegToMem4(int startAddr, int regIdx);
+	void addRegToMem4(int startAddr, int regIdx);
 	void setRegToMem2(int startAddr, int regIdx);
 
 #ifdef __cplusplus

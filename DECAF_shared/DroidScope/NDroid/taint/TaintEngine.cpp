@@ -197,6 +197,20 @@ int setMem4ToReg(int regIdx, int startAddr){
 	}
 }
 
+int addMem4ToReg(int regIdx, int startAddr){
+	int addr;
+	int tValue = 0;
+	for(addr = startAddr; addr < startAddr + 4; addr++){
+		tValue |= getTaint(addr);
+	}
+	if(tValue > 0){
+		addTaintToReg(regIdx, tValue);
+		return (1);
+	}else{
+		return (0);
+	}
+}
+
 int setMem2ToReg(int regIdx, int startAddr){
 	int addr;
 	int tValue = 0;
@@ -218,6 +232,17 @@ void setRegToMem4(int startAddr, int regIdx){
 		int addr;
 		for(addr = startAddr; addr < startAddr + 4; addr++){
 			setTaint(addr, tValue);
+		}
+	}
+}
+
+void addRegToMem4(int startAddr, int regIdx){
+	assert((regIdx >= 0) && (regIdx <= 15));
+	int tValue = getRegTaint(regIdx);
+	if(tValue > 0){
+		int addr;
+		for(addr = startAddr; addr < startAddr + 4; addr++){
+			addTaint(addr, tValue);
 		}
 	}
 }

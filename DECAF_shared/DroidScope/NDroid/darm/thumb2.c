@@ -580,9 +580,9 @@ static int thumb2_disasm(darm_t *d, uint16_t w, uint16_t w2, CPUState* env)
         return -1;
     }
 
-    thumb2_parse_reg(d, w, w2);
-    thumb2_parse_imm(d, w, w2);
-    thumb2_parse_flag(d, w, w2);
+    //thumb2_parse_reg(d, w, w2);
+    //thumb2_parse_imm(d, w, w2);
+    //thumb2_parse_flag(d, w, w2);
     thumb2_parse_misc(d, w, w2);
     d->instr_type = T_INVLD;
     return 0;
