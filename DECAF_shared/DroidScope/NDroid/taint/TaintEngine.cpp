@@ -78,19 +78,22 @@ void clearBlockTaint(int startAddr, int endAddr){
 
 void addTaintToReg(int regIdx, int tValue){
 	DEFENSIVE_CHECK_TAINT_NO_RET(tValue);
-	assert((regIdx >= 0) && (regIdx <= 15));
-	taintRegs[regIdx] |= tValue;
+	if((regIdx >= 0) && (regIdx <= 15)){
+		taintRegs[regIdx] |= tValue;
+	}
 }
 
 void setRegTaint(int regIdx, int tValue){
 	DEFENSIVE_CHECK_TAINT_NO_RET(tValue);
-	assert((regIdx >= 0) && (regIdx <= 15));
-	taintRegs[regIdx] = tValue;
+	if((regIdx >= 0) && (regIdx <= 15)){
+		taintRegs[regIdx] = tValue;
+	}
 }
 
 void clearRegTaint(int regIdx){
-	assert((regIdx >= 0) && (regIdx <= 15));
-	taintRegs[regIdx] = 0;
+	if((regIdx >= 0) && (regIdx <= 15)){
+		taintRegs[regIdx] = 0;
+	}
 }
 
 int getTaint(int addr){
@@ -103,8 +106,10 @@ int getTaint(int addr){
 }
 
 int getRegTaint(int regIdx){
-	assert((regIdx >= 0) && (regIdx <= 15));
-	return taintRegs[regIdx];
+	if((regIdx >= 0) && (regIdx <= 15)){
+		return taintRegs[regIdx];
+	}
+	return (0);
 }
 
 
@@ -226,34 +231,37 @@ int setMem2ToReg(int regIdx, int startAddr){
 }
 
 void setRegToMem4(int startAddr, int regIdx){
-	assert((regIdx >= 0) && (regIdx <= 15));
-	int tValue = getRegTaint(regIdx);
-	if(tValue > 0){
-		int addr;
-		for(addr = startAddr; addr < startAddr + 4; addr++){
-			setTaint(addr, tValue);
+	if((regIdx >= 0) && (regIdx <= 15)){
+		int tValue = getRegTaint(regIdx);
+		if(tValue > 0){
+			int addr;
+			for(addr = startAddr; addr < startAddr + 4; addr++){
+				setTaint(addr, tValue);
+			}
 		}
 	}
 }
 
 void addRegToMem4(int startAddr, int regIdx){
-	assert((regIdx >= 0) && (regIdx <= 15));
-	int tValue = getRegTaint(regIdx);
-	if(tValue > 0){
-		int addr;
-		for(addr = startAddr; addr < startAddr + 4; addr++){
-			addTaint(addr, tValue);
+	if((regIdx >= 0) && (regIdx <= 15)){
+		int tValue = getRegTaint(regIdx);
+		if(tValue > 0){
+			int addr;
+			for(addr = startAddr; addr < startAddr + 4; addr++){
+				addTaint(addr, tValue);
+			}
 		}
 	}
 }
 
 void setRegToMem2(int startAddr, int regIdx){
-	assert((regIdx >= 0) && (regIdx <= 15));
-	int tValue = getRegTaint(regIdx);
-	if(tValue > 0){
-		int addr;
-		for(addr = startAddr; addr < startAddr + 2; addr++){
-			setTaint(addr, tValue);
+	if((regIdx >= 0) && (regIdx <= 15)){
+		int tValue = getRegTaint(regIdx);
+		if(tValue > 0){
+			int addr;
+			for(addr = startAddr; addr < startAddr + 2; addr++){
+				setTaint(addr, tValue);
+			}
 		}
 	}
 }
