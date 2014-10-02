@@ -153,9 +153,9 @@ void nd_instruction_begin_callback(DECAF_Callback_Params* params){
 			darm_t d;
 			darm_str_t str;
 			if(darm_armv7_disasm(&d, tmpARMInsn.insn, env) == 0){
-				//if(darm_str(&d, &str, env) == 0){
-					//DECAF_printf("A   %x: %s\n", cur_pc, str.total);
-				//}
+				if(darm_str(&d, &str, env) == 0){
+					DECAF_printf("A   %x: %s\n", cur_pc, str.total);
+				}
 			}
 		}
 	}
