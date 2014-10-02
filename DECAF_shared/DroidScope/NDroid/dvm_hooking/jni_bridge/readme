@@ -1,1 +1,4 @@
-Please refer to http://docs.oracle.com/javase/6/docs/technotes/guides/jni/spec/jniTOC.html.
+For JNI APIs details, please refer to http://docs.oracle.com/javase/6/docs/technotes/guides/jni/spec/jniTOC.html.
+
+-JNIAPIS_ADDRS.log: log relevant to the addresses of JNI APIs.
+-generate.py: script to generate "JNI_APIS_OFFSETS.h"
