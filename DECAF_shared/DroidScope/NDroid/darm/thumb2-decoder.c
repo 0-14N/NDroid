@@ -181,7 +181,7 @@ darm_instr_t thumb2_load_store_multiple(darm_t *d, uint16_t w, uint16_t w2, CPUS
 						address = env->regs[d->Rn];
 						i = 0;
 						for(; i < 16; i++){
-							if((d->reglist & (0b1 << i)) == 1){
+							if((d->reglist & (0b1 << i)) != 0){
 								setRegToMem4(address, i);
 								address += 4;
 							}
@@ -199,7 +199,7 @@ darm_instr_t thumb2_load_store_multiple(darm_t *d, uint16_t w, uint16_t w2, CPUS
 						address = env->regs[SP];
 						i = 0;
 						for(; i < 16; i++){
-							if((d->reglist & (0b1 << i)) == 1){
+							if((d->reglist & (0b1 << i)) != 0){
 								setMem4ToReg(i, address);
 								address += 4;
 							}
@@ -218,7 +218,7 @@ darm_instr_t thumb2_load_store_multiple(darm_t *d, uint16_t w, uint16_t w2, CPUS
 				address = env->regs[d->Rn];
 				i = 0;
 				for(; i < 16; i++){
-					if((d->reglist & (0b1 << i)) == 1){
+					if((d->reglist & (0b1 << i)) != 0){
 						setMem4ToReg(i, address);
 						address += 4;
 					}
@@ -237,7 +237,7 @@ darm_instr_t thumb2_load_store_multiple(darm_t *d, uint16_t w, uint16_t w2, CPUS
 								address = env->regs[SP] - (4 * darm_bit_count_16(d->reglist));
 								i = 0;
 								for(; i < 16; i++){
-									if((d->reglist & (0b1 << i)) == 1){
+									if((d->reglist & (0b1 << i)) != 0){
 										setRegToMem4(address, i);
 										address += 4;
 									}
@@ -254,7 +254,7 @@ darm_instr_t thumb2_load_store_multiple(darm_t *d, uint16_t w, uint16_t w2, CPUS
 						address = env->regs[d->Rn] - (4 * darm_bit_count_16(d->reglist));
 						i = 0;
 						for(; i < 16; i++){
-							if((d->reglist & (0b1 << i)) == 1){
+							if((d->reglist & (0b1 << i)) != 0){
 								setRegToMem4(address, i);
 								address += 4;
 							}
@@ -273,7 +273,7 @@ darm_instr_t thumb2_load_store_multiple(darm_t *d, uint16_t w, uint16_t w2, CPUS
 				address = env->regs[d->Rn] - (4 * darm_bit_count_16(d->reglist));
 				i = 0;
 				for(; i < 16; i++){
-					if((d->reglist & (0b1 << i)) == 1){
+					if((d->reglist & (0b1 << i)) != 0){
 						setMem4ToReg(i, address);
 						address += 4;
 					}
@@ -362,7 +362,7 @@ darm_instr_t thumb2_load_store_dual(darm_t *d, uint16_t w, uint16_t w2, CPUState
         		d->Rt = (w2 >> 12) & b1111;
         		d->Rt2 = (w2 >> 8) & b1111;
 						
-						base = env->regs[PC] & 0b00;
+						base = env->regs[PC] & 0xfffffffc;
 						address = (d->U == 1) ? (base + d->imm) : (base - d->imm);
 						setMem4ToReg(d->Rt, address);
 						setMem4ToReg(d->Rt2, address + 4);
@@ -1796,7 +1796,7 @@ darm_instr_t thumb2_load_byte_hints(darm_t *d, uint16_t w, uint16_t w2, CPUState
     		d->imm = w2 & 0xfff;
         d->U = (w >> 7) & 1 ? B_SET : B_UNSET;
 
-				base = env->regs[PC] & 0b00;
+				base = env->regs[PC] & 0xfffffffc;
 				address = (d->U == 1) ? (base + d->imm) : (base - d->imm);
 				setMemToReg(d->Rt, address);
 				/* NDROID END */
@@ -1819,7 +1819,7 @@ darm_instr_t thumb2_load_byte_hints(darm_t *d, uint16_t w, uint16_t w2, CPUState
     		d->imm = w2 & 0xfff;
         d->U = (w >> 7) & 1 ? B_SET : B_UNSET;
 
-				base = env->regs[PC] & 0b00;
+				base = env->regs[PC] & 0xfffffffc;
 				address = (d->U == 1) ? (base + d->imm) : (base - d->imm);
 				setMemToReg(d->Rt, address);
 				/* NDROID END */
@@ -2089,7 +2089,7 @@ darm_instr_t thumb2_load_halfword_hints(darm_t *d, uint16_t w, uint16_t w2, CPUS
     		d->imm = w2 & 0xfff;
         d->U = (w >> 7) & 1 ? B_SET : B_UNSET;
 
-				base = env->regs[PC] & 0b00;
+				base = env->regs[PC] & 0xfffffffc;
 				address = (d->U == 1) ? base + d->imm : base - d->imm;
 				setMem2ToReg(d->Rt, address);
 				/* NDROID END */
@@ -2112,7 +2112,7 @@ darm_instr_t thumb2_load_halfword_hints(darm_t *d, uint16_t w, uint16_t w2, CPUS
     		d->imm = w2 & 0xfff;
         d->U = (w >> 7) & 1 ? B_SET : B_UNSET;
 
-				base = env->regs[PC] & 0b00;
+				base = env->regs[PC] & 0xfffffffc;
 				address = (d->U == 1) ? base + d->imm : base - d->imm;
 				setMem2ToReg(d->Rt, address);
 				/* NDROID END */
@@ -2363,7 +2363,7 @@ darm_instr_t thumb2_load_word(darm_t *d, uint16_t w, uint16_t w2, CPUState* env)
         d->imm = w2 & 0xfff;
         d->U = (w >> 7) & 1 ? B_SET : B_UNSET;
 
-				base = env->regs[PC] & 0b00;
+				base = env->regs[PC] & 0xffffffc;
 				address = (d->U == 1) ? base + d->imm : base - d->imm;
 				setMem4ToReg(d->Rt, address);
 				/* NDROID END */

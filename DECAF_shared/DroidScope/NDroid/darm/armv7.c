@@ -364,7 +364,7 @@ static int armv7_disas_cond(darm_t *d, uint32_t w, CPUState* env)
 							if((d->instr == I_LDRH) || (d->instr == I_LDRD) 
 									|| (d->instr == I_LDRSB) || (d->instr == I_LDRSH)){
 								if(d->Rn == 15){
-									base = base & 0b00;
+									base = base & 0xfffffffc;
 								}
 							}
 							offset_addr = (d->U == 1) ? (base + d->imm)
@@ -505,7 +505,7 @@ static int armv7_disas_cond(darm_t *d, uint32_t w, CPUState* env)
 								int base = env->regs[d->Rn];
 								if((d->instr == I_LDR) || (d->instr == I_LDRB)){
 									if(d->Rn == 15){
-										base = base & 0b00;
+										base = base & 0xfffffffc;
 									}
 								}
 								offset_addr = (d->U == 1) ? (base + d->imm)
@@ -932,7 +932,7 @@ static int armv7_disas_cond(darm_t *d, uint32_t w, CPUState* env)
 						int address = env->regs[SP];
 						int i = 0;
 						for(; i < 16; i++){
-							if((d->reglist & (0b1 << i)) == 1){
+							if((d->reglist & (0b1 << i)) != 0){
 								setMem4ToReg(i, address);
 								address += 4;
 							}
@@ -949,7 +949,7 @@ static int armv7_disas_cond(darm_t *d, uint32_t w, CPUState* env)
 						int address = env->regs[SP] - 4 * darm_bit_count_16(d->reglist);
 						int i = 0;
 						for(; i < 16; i++){
-							if((d->reglist & (0b1 << i)) == 1){
+							if((d->reglist & (0b1 << i)) != 0){
 								setRegToMem4(address, i);
 								address += 4;
 							}

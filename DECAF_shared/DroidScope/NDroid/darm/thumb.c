@@ -133,7 +133,7 @@ static int thumb_disasm(darm_t *d, uint16_t w, CPUState* env)
         d->P = B_SET;
 
 				/* NDROID START */
-				base = env->regs[PC] & 0b00;
+				base = env->regs[PC] & 0xfffffffc;
 				address = base + d->imm;
 				setMem4ToReg(d->Rt, address);
 				/* NDROID END */
@@ -386,7 +386,7 @@ static int thumb_disasm(darm_t *d, uint16_t w, CPUState* env)
 				/* NDROID START */
 				address = env->regs[d->Rn];
 				for(i = 0; i < 16; i++){
-					if((d->reglist & (0b1 << i)) == 1){
+					if((d->reglist & (0b1 << i)) != 0){
 						if(d->instr == I_LDM){
 							setMem4ToReg(i, address);
 						}else{
@@ -424,7 +424,7 @@ static int thumb_disasm(darm_t *d, uint16_t w, CPUState* env)
 						/* NDROID START */
 						address = env->regs[SP] - 4 * darm_bit_count_16(d->reglist);
 						for(i = 0; i < 16; i++){
-							if((d->reglist & (0b1 << i)) ==1){
+							if((d->reglist & (0b1 << i)) != 0){
 								setRegToMem4(address, i);
 								address += 4;
 							}
@@ -438,7 +438,7 @@ static int thumb_disasm(darm_t *d, uint16_t w, CPUState* env)
 						/* NDROID START */
 						address = env->regs[SP];
 						for(i = 0; i < 16; i++){
-							if((d->reglist & (0b1 << i)) == 1){
+							if((d->reglist & (0b1 << i)) != 0){
 								setMem4ToReg(i, address);
 								address += 4;
 							}
