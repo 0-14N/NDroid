@@ -178,11 +178,17 @@ int nd_block_end_callback_cond(DECAF_callback_type_t cbType, gva_t curPC, gva_t 
 	if(tmpNextPC == (DVM_START_ADDR + OFFSET_JNI_CALL_METHOD)){
 		return (1);
 	}
+	
+	if(nd_in_blacklist(curPC)){
+		DECAF_printf("cur: %x next: %x\n", curPC, nextPC);
+	}
+
+	//DECAF_printf("NEXT: %x\n", tmpNextPC);
 
 	//string operations
-	if(tmpNextPC == (DVM_START_ADDR + GetStringUTFChars)){
-		return (1);
-	}
+	//if(tmpNextPC == (DVM_START_ADDR + GetStringUTFChars)){
+		//return (1);
+	//}
 
 	return (0);
 }
@@ -205,9 +211,9 @@ void nd_block_end_callback(DECAF_Callback_Params* params){
 	}
 
 	//string operations
-	if(next_pc == DVM_START_ADDR + GetStringUTFChars){
-		jniGetStringUTFChars(env);
-	}
+	//if(next_pc == DVM_START_ADDR + GetStringUTFChars){
+		//jniGetStringUTFChars(env);
+	//}
 }
 
 int is_empty(const char* str){
