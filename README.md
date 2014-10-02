@@ -1,6 +1,6 @@
 NDroid
 =========
-NDroid is a dynamic taint analysis system on Android, which focus on tracing information flow through JNI with low performance overhead. More details about NDroid can be found in our publicated paper [here]( http://www4.comp.polyu.edu.hk/~csxluo/NDroid.pdf).
+NDroid is a dynamic taint analysis system on Android, which focus on tracing information flow through JNI with low performance overhead. More details about NDroid can be found in our published paper [here]( http://www4.comp.polyu.edu.hk/~csxluo/NDroid.pdf).
 
 ####NDroid uses following open source projects:
 * [TaintDroid](http://appanalysis.org)
