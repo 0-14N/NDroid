@@ -8,14 +8,21 @@ import sys
 
 def generate_head_file(filename, dvmStartAddr):
     with open(filename, 'r') as log, open("JNI_APIS_OFFSETS.h", 'w') as headFile:
-        defLine = "#define DVM_START_ADDR %s\n\n" % hex(dvmStartAddr)
+        defLine = "#ifndef _JNI_APIS_OFFSETS_H\n#define _JNI_APIS_OFFSETS_H\n\n"
         headFile.write(defLine)
+
+        defLine = "#ifdef __cplusplus\n\nextern\"C\"\n{\n#endif\n\n"
+        headFile.write(defLine)
+
         for line in log:
             tokens = line.split(":")
             funcAddr = int(tokens[2].strip(), 0)
             defLine = "#define %s %s\n" % (tokens[1].strip(), 
                     hex((funcAddr - dvmStartAddr) & 0xfffffffe))
             headFile.write(defLine)
+
+        defLine = "\n#ifdef __cplusplus\n}\n#endif\n\n#endif"
+        headFile.write(defLine)
 
 
 def main():

@@ -12,6 +12,7 @@
 #include "NativeLibraryWhitelist.h"
 #include "dvm_hooking/dvm_hook.h"
 #include "dvm_hooking/SourcePolicy.h"
+#include "dvm_hooking/jni_bridge/string_operations.h"
 
 DECAF_Handle nd_ib_handle = DECAF_NULL_HANDLE;
 DECAF_Handle nd_be_handle = DECAF_NULL_HANDLE;
@@ -178,6 +179,11 @@ int nd_block_end_callback_cond(DECAF_callback_type_t cbType, gva_t curPC, gva_t 
 		return (1);
 	}
 
+	//string operations
+	if(tmpNextPC == (DVM_START_ADDR + GetStringUTFChars)){
+		return (1);
+	}
+
 	return (0);
 }
 
@@ -189,10 +195,18 @@ void nd_block_end_callback(DECAF_Callback_Params* params){
 	//gva_t cur_pc = params->be.cur_pc & 0xfffffffe;
 	gva_t next_pc = params->be.next_pc & 0xfffffffe;
 
+	if(getCurrentPID() != ND_GLOBAL_TRACING_PID){
+		return;
+	}
+
 	//dvmCallJNIMethod
-	if((getCurrentPID() == ND_GLOBAL_TRACING_PID) 
-			&& (next_pc == DVM_START_ADDR + OFFSET_JNI_CALL_METHOD)){
+	if(next_pc == DVM_START_ADDR + OFFSET_JNI_CALL_METHOD){
 		dvmCallJNIMethodCallback(env);
+	}
+
+	//string operations
+	if(next_pc == DVM_START_ADDR + GetStringUTFChars){
+		jniGetStringUTFChars(env);
 	}
 }
 

@@ -1,4 +1,12 @@
-#define DVM_START_ADDR 0x406f2000
+#ifndef _JNI_APIS_OFFSETS_H
+#define _JNI_APIS_OFFSETS_H
+
+#ifdef __cplusplus
+
+extern"C"
+{
+#endif
+
 #define GetVersion 0x45d1c
 #define DefineClass 0x45c90
 #define FindClass 0x45c1c
@@ -216,3 +224,9 @@
 #define SetDoubleArrayRegion 0x3edd0
 #define GetPrimitiveArrayCritical 0x3ea64
 #define ReleasePrimitiveArrayCritical 0x3e9d4
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
