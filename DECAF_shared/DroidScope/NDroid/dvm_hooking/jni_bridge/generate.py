@@ -17,7 +17,7 @@ def generate_head_file(filename, dvmStartAddr):
         for line in log:
             tokens = line.split(":")
             funcAddr = int(tokens[2].strip(), 0)
-            defLine = "#define %s %s\n" % (tokens[1].strip(), 
+            defLine = "#define %s_OFFSET %s\n" % (tokens[1].strip(), 
                     hex((funcAddr - dvmStartAddr) & 0xfffffffe))
             headFile.write(defLine)
 

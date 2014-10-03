@@ -16,6 +16,7 @@
 
 DECAF_Handle nd_ib_handle = DECAF_NULL_HANDLE;
 DECAF_Handle nd_be_handle = DECAF_NULL_HANDLE;
+DECAF_Handle nd_bb_handle = DECAF_NULL_HANDLE;
 
 /*
  * we maintain 'whitelistLibs' referring to the system libraries (e.g., libc.so, libm.so)
@@ -27,6 +28,9 @@ StringHashtable* blacklistLibs = NULL;
 //"libdvm.so" start address and end address
 gva_t DVM_START_ADDR = -1;
 gva_t DVM_END_ADDR = -1;
+
+//flag for indicating whethern execution jumps out third party libraries
+int JUMP_OUT = 0;
 
 /*
  * Since we cannot get process id at translation phase, in order to reduce the performance
@@ -178,18 +182,12 @@ int nd_block_end_callback_cond(DECAF_callback_type_t cbType, gva_t curPC, gva_t 
 	if(tmpNextPC == (DVM_START_ADDR + OFFSET_JNI_CALL_METHOD)){
 		return (1);
 	}
-	
-	if(nd_in_blacklist(curPC)){
-		DECAF_printf("cur: %x next: %x\n", curPC, nextPC);
+
+	//call JNI APIs or system library calls
+	if(nd_in_blacklist(curPC) && !nd_in_blacklist(tmpNextPC)){
+		return (1);
 	}
-
-	//DECAF_printf("NEXT: %x\n", tmpNextPC);
-
-	//string operations
-	//if(tmpNextPC == (DVM_START_ADDR + GetStringUTFChars)){
-		//return (1);
-	//}
-
+	
 	return (0);
 }
 
@@ -198,7 +196,7 @@ int nd_block_end_callback_cond(DECAF_callback_type_t cbType, gva_t curPC, gva_t 
  */
 void nd_block_end_callback(DECAF_Callback_Params* params){
 	CPUState* env = params->be.env;
-	//gva_t cur_pc = params->be.cur_pc & 0xfffffffe;
+	gva_t cur_pc = params->be.cur_pc & 0xfffffffe;
 	gva_t next_pc = params->be.next_pc & 0xfffffffe;
 
 	if(getCurrentPID() != ND_GLOBAL_TRACING_PID){
@@ -210,10 +208,47 @@ void nd_block_end_callback(DECAF_Callback_Params* params){
 		dvmCallJNIMethodCallback(env);
 	}
 
-	//string operations
-	//if(next_pc == DVM_START_ADDR + GetStringUTFChars){
-		//jniGetStringUTFChars(env);
-	//}
+	//call JNI APIs or system library calls
+	if(nd_in_blacklist(cur_pc) && !nd_in_blacklist(next_pc)){
+		DECAF_printf("Jump out\n");
+		JUMP_OUT = 1;
+	}
+}
+
+/**
+ * block begin callback cond
+ */
+int nd_block_begin_callback_cond(DECAF_callback_type_t cbType, gva_t curPC, gva_t nextPC){
+	DEFENSIVE_CHECK1(ND_GLOBAL_TRACING_PID == -1, 0);
+	DEFENSIVE_CHECK1(ND_GLOBAL_TRACING_PROCESS == NULL, 0);
+	DEFENSIVE_CHECK1(curPC < 0 || curPC >= 0xC0000000, 0);
+
+	gva_t tmpCurPC = curPC & 0xfffffffe;
+	
+	if(nd_in_blacklist(tmpCurPC)){
+		return (1);
+	}
+
+	return (0);
+}
+
+/**
+ * block end callback
+ */
+void nd_block_begin_callback(DECAF_Callback_Params* params){
+	CPUState* env = params->be.env;
+	gva_t cur_pc = params->be.cur_pc & 0xfffffffe;
+	gva_t next_pc = params->be.next_pc & 0xfffffffe;
+
+	if(getCurrentPID() != ND_GLOBAL_TRACING_PID){
+		return;
+	}
+
+	if(nd_in_blacklist(cur_pc) && JUMP_OUT){
+		DECAF_printf("Jump in\n");
+		JUMP_OUT = 0;
+	}
+
 }
 
 int is_empty(const char* str){
@@ -228,12 +263,20 @@ int is_empty(const char* str){
 }
 
 void nd_instrument_init(){
+	//register instruction begin
 	nd_ib_handle = DECAF_register_callback(DECAF_INSN_BEGIN_CB, 
 																				&nd_instruction_begin_callback, 
 																				&nd_instruction_begin_callback_cond);
+
+	//register block end
 	nd_be_handle = DECAF_register_callback(DECAF_BLOCK_END_CB,
 																				&nd_block_end_callback,
 																				&nd_block_end_callback_cond);
+
+	//register block begin
+	nd_bb_handle = DECAF_register_callback(DECAF_BLOCK_BEGIN_CB,
+																				&nd_block_begin_callback,
+																				&nd_block_begin_callback_cond);
 	
 	whitelistLibs = NativeLibraryWhitelist_new();
 
@@ -273,4 +316,22 @@ void nd_instrument_stop(){
 	NativeLibraryWhitelist_free(whitelistLibs);
 
 	StringHashtable_free(blacklistLibs);
+
+	//unregister instruction begin callback
+	if(nd_ib_handle != DECAF_NULL_HANDLE){
+		DECAF_unregister_callback(DECAF_INSN_BEGIN_CB, nd_ib_handle);
+		nd_ib_handle = DECAF_NULL_HANDLE;
+	}
+
+	//unregister block begin callback
+	if(nd_bb_handle != DECAF_NULL_HANDLE){
+		DECAF_unregister_callback(DECAF_BLOCK_BEGIN_CB, nd_bb_handle);
+		nd_bb_handle = DECAF_NULL_HANDLE;
+	}
+
+	//unregister block end callback
+	if(nd_be_handle != DECAF_NULL_HANDLE){
+		DECAF_unregister_callback(DECAF_BLOCK_END_CB, nd_be_handle);
+		nd_be_handle = DECAF_NULL_HANDLE;
+	}
 }
