@@ -14,6 +14,6 @@ int startOfJniApis(int curPC, int dvmStartAddr){
 	return (0);
 }
 
-int hookJniApis(int curPC, int dvmStartAddr, CPUState* env){
-	hookStringOperations(curPC, dvmStartAddr, env);
+jniHookHandler hookJniApis(int curPC, int dvmStartAddr, CPUState* env){
+	return hookStringOperations(curPC, dvmStartAddr, env);
 }

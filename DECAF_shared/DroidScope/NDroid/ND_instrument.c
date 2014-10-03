@@ -122,7 +122,6 @@ void nd_instruction_begin_callback(DECAF_Callback_Params* params){
 	//the first instruction of target native method
 	SourcePolicy* sourcePolicy = findSourcePolicy(cur_pc_even);
 	if(sourcePolicy != NULL){
-		JNI_CALL_METHOD_RETURN = cur_pc_even;
 		DECAF_printf("Step into Native\n");
 		sourcePolicy->handler(sourcePolicy, env);
 	}
@@ -186,6 +185,8 @@ int nd_block_end_callback_cond(DECAF_callback_type_t cbType, gva_t curPC, gva_t 
 
 	//dvmCallJNIMethod
 	if(tmpNextPC == (DVM_START_ADDR + OFFSET_JNI_CALL_METHOD)){
+		JNI_CALL_METHOD_RETURN = curPC & 0xfffffffe;
+		//DECAF_printf("JNI_CALL_METHOD_RETURN: %x\n", JNI_CALL_METHOD_RETURN);
 		return (1);
 	}
 
@@ -252,6 +253,7 @@ int nd_block_begin_callback_cond(DECAF_callback_type_t cbType, gva_t curPC, gva_
 /**
  * block end callback
  */
+jniHookHandler currJniHandler = NULL;
 void nd_block_begin_callback(DECAF_Callback_Params* params){
 	CPUState* env = params->be.env;
 	gva_t cur_pc = params->be.cur_pc & 0xfffffffe;
@@ -262,23 +264,33 @@ void nd_block_begin_callback(DECAF_Callback_Params* params){
 	}
 
 	//return from JNI invocation
-	if((cur_pc == JNI_CALL_METHOD_RETURN + 2)
-			|| (cur_pc == JNI_CALL_METHOD_RETURN + 4)){
-		JNI_CALL_METHOD_RETURN = -1;
+	if(EXECUTION_STATE != -1 && 
+			((cur_pc == JNI_CALL_METHOD_RETURN + 2)
+			|| (cur_pc == JNI_CALL_METHOD_RETURN + 4))){
+		//JNI_CALL_METHOD_RETURN = -1;
 		EXECUTION_STATE = -1;
-		DECAF_printf("Return to Java\n");
+		currJniHandler = NULL;
+		//DECAF_printf("Return to Java\n");
 	}
 
-	if(nd_in_blacklist(cur_pc) && EXECUTION_STATE >= 1){
+	//get back into 3rd party native code
+	if(nd_in_blacklist(cur_pc) && EXECUTION_STATE != 0){
 		DECAF_printf("Jump in\n");
 		EXECUTION_STATE = 0;
+
+		//hook after invocation
+		if(currJniHandler != NULL){
+			currJniHandler(env, 0);
+			currJniHandler = NULL;
+		}
 	}
-	
+
+	//in block end callback, EXECUTION_STATE is set to 1	
 	if(EXECUTION_STATE == 1){
 		//in native libraries or JNI APIs
 		if(startOfJniApis(cur_pc, DVM_START_ADDR)){
 			//hook JNI APIs
-			hookJniApis(cur_pc, DVM_START_ADDR, env);
+			currJniHandler = hookJniApis(cur_pc, DVM_START_ADDR, env);
 			EXECUTION_STATE++;
 		}
 	}
@@ -334,13 +346,6 @@ void nd_instrument_init(){
 	}else{
 		DECAF_printf("Cannot get start address and end address of libdvm.so\n");
 	}
-	/*	
-	if(getModuleInfoByName(ND_GLOBAL_TRACING_PID, &DVM_START_ADDR, &DVM_END_ADDR, "/lib/libdvm.so") != 0){
-		DECAF_printf("Cannot get start address and end address of libdvm.so\n");
-	}else{
-		DECAF_printf("libdvm.so: [%x, %x]\n", DVM_START_ADDR, DVM_END_ADDR);
-	}
-	*/
 }
 
 

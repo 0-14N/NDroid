@@ -38,93 +38,93 @@ int isStringOperations(int curPC, int dvmStartAddr){
  * NewStringUTF, GetStringUTFLength, GetStringUTFChars, ReleaseStringUTFChars
  * GetStringRegion, GetStringUTFRegion, GetStringCritical, ReleaseStringCritical
  */
-int hookStringOperations(int curPC, int dvmStartAddr, CPUState* env){
+jniHookHandler hookStringOperations(int curPC, int dvmStartAddr, CPUState* env){
 	switch(curPC - dvmStartAddr){
 		case NewString_OFFSET:
-			jniNewString(env);
-			break;
+			jniNewString(env, 1);
+			return jniNewString;
 		case GetStringLength_OFFSET:
-			jniGetStringLength(env);
-			break;
+			jniGetStringLength(env, 1);
+			return jniGetStringLength;
 		case GetStringChars_OFFSET:
-			jniGetStringChars(env);
-			break;
+			jniGetStringChars(env, 1);
+			return jniGetStringChars;
 		case ReleaseStringChars_OFFSET:
-			jniReleaseStringChars(env);
-			break;
+			jniReleaseStringChars(env, 1);
+			return jniReleaseStringChars;
 		case NewStringUTF_OFFSET:
-			jniNewStringUTF(env);
-			break;
+			jniNewStringUTF(env, 1);
+			return jniNewStringUTF;
 		case GetStringUTFLength_OFFSET:
-			jniGetStringUTFLength(env);
-			break;
+			jniGetStringUTFLength(env, 1);
+			return jniGetStringUTFLength;
 		case GetStringUTFChars_OFFSET:
-			jniGetStringUTFChars(env);
-			break;
+			jniGetStringUTFChars(env, 1);
+			return jniGetStringUTFChars;
 		case ReleaseStringUTFChars_OFFSET:
-			jniReleaseStringUTFChars(env);
-			break;
+			jniReleaseStringUTFChars(env, 1);
+			return jniReleaseStringUTFChars;
 		case GetStringRegion_OFFSET:
-			jniGetStringRegion(env);
-			break;
+			jniGetStringRegion(env, 1);
+			return jniGetStringRegion;
 		case GetStringUTFRegion_OFFSET:
-			jniGetStringUTFRegion(env);
-			break;
+			jniGetStringUTFRegion(env, 1);
+			return jniGetStringUTFRegion;
 		case GetStringCritical_OFFSET:
-			jniGetStringCritical(env);
-			break;
+			jniGetStringCritical(env, 1);
+			return jniGetStringCritical;
 		case ReleaseStringCritical_OFFSET:
-			jniReleaseStringCritical(env);
-			break;
+			jniReleaseStringCritical(env, 1);
+			return jniReleaseStringCritical;
 	}
-	return (0);
+	return NULL;
 }
 
 
-void jniNewString(CPUState* env){
+void jniNewString(CPUState* env, int isStart){
 	DECAF_printf("NewString\n");
 }
 
-void jniGetStringLength(CPUState* env){
+void jniGetStringLength(CPUState* env, int isStart){
 	DECAF_printf("GetStringLength\n");
 }
 
-void jniGetStringChars(CPUState* env){
+void jniGetStringChars(CPUState* env, int isStart){
 	DECAF_printf("GetStringChars\n");
 }
 
-void jniReleaseStringChars(CPUState* env){
+void jniReleaseStringChars(CPUState* env, int isStart){
 	DECAF_printf("ReleaseStringChars\n");
 }
 
-void jniNewStringUTF(CPUState* env){
+void jniNewStringUTF(CPUState* env, int isStart){
 	DECAF_printf("NewStringUTF\n");
 }
 
-void jniGetStringUTFLength(CPUState* env){
+void jniGetStringUTFLength(CPUState* env, int isStart){
 	DECAF_printf("GetStringUTFLength\n");
 }
 
-void jniGetStringUTFChars(CPUState* env){
-	DECAF_printf("GetStringUTFChars\n");
+void jniGetStringUTFChars(CPUState* env, int isStart){
+	DECAF_printf("GetStringUTFChars %d\n", isStart);
 }
 
-void jniReleaseStringUTFChars(CPUState* env){
+void jniReleaseStringUTFChars(CPUState* env, int isStart){
 	DECAF_printf("ReleaseStringUTFChars\n");
 }
 
-void jniGetStringRegion(CPUState* env){
+void jniGetStringRegion(CPUState* env, int isStart){
 	DECAF_printf("GetStringRegion\n");
 }
 
-void jniGetStringUTFRegion(CPUState* env){
+void jniGetStringUTFRegion(CPUState* env, int isStart){
 	DECAF_printf("GetStringUTFRegion\n");
 }
 
-void jniGetStringCritical(CPUState* env){
+void jniGetStringCritical(CPUState* env, int isStart){
 	DECAF_printf("GetStringCritical\n");
 }
 
-void jniReleaseStringCritical(CPUState* env){
+void jniReleaseStringCritical(CPUState* env, int isStart){
 	DECAF_printf("ReleaseStringCritical\n");
 }

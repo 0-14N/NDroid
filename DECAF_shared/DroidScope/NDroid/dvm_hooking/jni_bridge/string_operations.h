@@ -13,28 +13,29 @@ extern "C"
 
 #include "JNI_APIS_OFFSETS.h"
 #include "cpu.h"
+#include "jni_api_hook.h"
 
 	int isStringOperations(int curPC, int dvmStartAddr);
 
-	int hookStringOperations(int curPC, int dvmStartAddr, CPUState* env);
+	jniHookHandler hookStringOperations(int curPC, int dvmStartAddr, CPUState* env);
 
   /**
    * NewString, GetStringLength, GetStringChars, ReleaseStringChars
    * NewStringUTF, GetStringUTFLength, GetStringUTFChars, ReleaseStringUTFChars
    * GetStringRegion, GetStringUTFRegion, GetStringCritical, ReleaseStringCritical
    */
-	void jniNewString(CPUState* env);
-	void jniGetStringLength(CPUState* env);
-	void jniGetStringChars(CPUState* env);
-	void jniReleaseStringChars(CPUState* env);
-	void jniNewStringUTF(CPUState* env);
-	void jniGetStringUTFLength(CPUState* env);
-	void jniGetStringUTFChars(CPUState* env);
-	void jniReleaseStringUTFChars(CPUState* env);
-	void jniGetStringRegion(CPUState* env);
-	void jniGetStringUTFRegion(CPUState* env);
-	void jniGetStringCritical(CPUState* env);
-	void jniReleaseStringCritical(CPUState* env);
+	void jniNewString(CPUState* env, int isStart);
+	void jniGetStringLength(CPUState* env, int isStart);
+	void jniGetStringChars(CPUState* env, int isStart);
+	void jniReleaseStringChars(CPUState* env, int isStart);
+	void jniNewStringUTF(CPUState* env, int isStart);
+	void jniGetStringUTFLength(CPUState* env, int isStart);
+	void jniGetStringUTFChars(CPUState* env, int isStart);
+	void jniReleaseStringUTFChars(CPUState* env, int isStart);
+	void jniGetStringRegion(CPUState* env, int isStart);
+	void jniGetStringUTFRegion(CPUState* env, int isStart);
+	void jniGetStringCritical(CPUState* env, int isStart);
+	void jniReleaseStringCritical(CPUState* env, int isStart);
 
 #ifdef __cplusplus
 }

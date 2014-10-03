@@ -12,9 +12,11 @@ extern "C"
 #endif
 	#include "cpu.h"
 
+	typedef void (*jniHookHandler)(CPUState*, int);
+
 	int startOfJniApis(int curPC, int dvmStartAddr);
 
-	int hookJniApis(int curPC, int dvmStartAddr, CPUState* env);
+	jniHookHandler hookJniApis(int curPC, int dvmStartAddr, CPUState* env);
 
 #ifdef __cplusplus
 }
