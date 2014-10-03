@@ -1,0 +1,23 @@
+/**
+ * author: Chenxiong (R0r5ch4ch) Qian
+ * date: 2014-10-3
+ */
+#ifndef _JNI_API_HOOK_H
+#define _JNI_API_HOOK_H
+
+#ifdef __cplusplus
+
+extern "C"
+{
+#endif
+	#include "cpu.h"
+
+	int startOfJniApis(int curPC, int dvmStartAddr);
+
+	int hookJniApis(int curPC, int dvmStartAddr, CPUState* env);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

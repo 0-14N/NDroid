@@ -12,7 +12,7 @@
 #include "NativeLibraryWhitelist.h"
 #include "dvm_hooking/dvm_hook.h"
 #include "dvm_hooking/SourcePolicy.h"
-#include "dvm_hooking/jni_bridge/string_operations.h"
+#include "dvm_hooking/jni_bridge/jni_api_hook.h"
 
 DECAF_Handle nd_ib_handle = DECAF_NULL_HANDLE;
 DECAF_Handle nd_be_handle = DECAF_NULL_HANDLE;
@@ -29,8 +29,12 @@ StringHashtable* blacklistLibs = NULL;
 gva_t DVM_START_ADDR = -1;
 gva_t DVM_END_ADDR = -1;
 
+gva_t JNI_CALL_METHOD_RETURN = -1;
+
 //flag for indicating whethern execution jumps out third party libraries
-int JUMP_OUT = 0;
+//-1 -- java; 0 -- third party native library;
+//>=1 -- jump out from third party native library
+int EXECUTION_STATE = -1;
 
 /*
  * Since we cannot get process id at translation phase, in order to reduce the performance
@@ -118,6 +122,8 @@ void nd_instruction_begin_callback(DECAF_Callback_Params* params){
 	//the first instruction of target native method
 	SourcePolicy* sourcePolicy = findSourcePolicy(cur_pc_even);
 	if(sourcePolicy != NULL){
+		JNI_CALL_METHOD_RETURN = cur_pc_even;
+		DECAF_printf("Step into Native\n");
 		sourcePolicy->handler(sourcePolicy, env);
 	}
 	
@@ -154,12 +160,12 @@ void nd_instruction_begin_callback(DECAF_Callback_Params* params){
 		}
 	}else{
 		//ARM instruction
-		if(DECAF_read_mem(env, cur_pc, tmpARMInsn.chars, 4) != -1){
+		if(DECAF_read_mem(env, cur_pc_even, tmpARMInsn.chars, 4) != -1){
 			darm_t d;
 			darm_str_t str;
 			if(darm_armv7_disasm(&d, tmpARMInsn.insn, env) == 0){
 				if(darm_str(&d, &str, env) == 0){
-					DECAF_printf("A   %x: %s\n", cur_pc, str.total);
+					DECAF_printf("A   %x: %s\n", cur_pc_even, str.total);
 				}
 			}
 		}
@@ -211,7 +217,7 @@ void nd_block_end_callback(DECAF_Callback_Params* params){
 	//call JNI APIs or system library calls
 	if(nd_in_blacklist(cur_pc) && !nd_in_blacklist(next_pc)){
 		DECAF_printf("Jump out\n");
-		JUMP_OUT = 1;
+		EXECUTION_STATE = 1;
 	}
 }
 
@@ -224,8 +230,19 @@ int nd_block_begin_callback_cond(DECAF_callback_type_t cbType, gva_t curPC, gva_
 	DEFENSIVE_CHECK1(curPC < 0 || curPC >= 0xC0000000, 0);
 
 	gva_t tmpCurPC = curPC & 0xfffffffe;
+
+	//return from JNI
+	if((tmpCurPC == JNI_CALL_METHOD_RETURN + 2)
+			|| (tmpCurPC == JNI_CALL_METHOD_RETURN + 4)){
+		return (1);
+	}
 	
 	if(nd_in_blacklist(tmpCurPC)){
+		return (1);
+	}
+
+	//if start addresses of JNI APIs	
+	if(startOfJniApis(tmpCurPC, DVM_START_ADDR)){
 		return (1);
 	}
 
@@ -244,11 +261,27 @@ void nd_block_begin_callback(DECAF_Callback_Params* params){
 		return;
 	}
 
-	if(nd_in_blacklist(cur_pc) && JUMP_OUT){
-		DECAF_printf("Jump in\n");
-		JUMP_OUT = 0;
+	//return from JNI invocation
+	if((cur_pc == JNI_CALL_METHOD_RETURN + 2)
+			|| (cur_pc == JNI_CALL_METHOD_RETURN + 4)){
+		JNI_CALL_METHOD_RETURN = -1;
+		EXECUTION_STATE = -1;
+		DECAF_printf("Return to Java\n");
 	}
 
+	if(nd_in_blacklist(cur_pc) && EXECUTION_STATE >= 1){
+		DECAF_printf("Jump in\n");
+		EXECUTION_STATE = 0;
+	}
+	
+	if(EXECUTION_STATE == 1){
+		//in native libraries or JNI APIs
+		if(startOfJniApis(cur_pc, DVM_START_ADDR)){
+			//hook JNI APIs
+			hookJniApis(cur_pc, DVM_START_ADDR, env);
+			EXECUTION_STATE++;
+		}
+	}
 }
 
 int is_empty(const char* str){

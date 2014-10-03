@@ -185,6 +185,7 @@ DECAF_SRC_FILES += \
 		DroidScope/NDroid/darm/thumb-tbl.c\
 		DroidScope/NDroid/darm/ndroid_darm_utils.c\
 		DroidScope/NDroid/dvm_hooking/jni_bridge/string_operations.c\
+		DroidScope/NDroid/dvm_hooking/jni_bridge/jni_api_hook.c\
 # END NDROID SRC FILES
 
 DECAF_CFLAGS := -I$(LOCAL_PATH)/DECAF_shared
