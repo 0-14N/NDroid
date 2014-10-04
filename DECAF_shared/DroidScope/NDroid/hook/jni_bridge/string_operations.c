@@ -105,8 +105,23 @@ void jniGetStringUTFLength(CPUState* env, int isStart){
 	DECAF_printf("GetStringUTFLength\n");
 }
 
+/**
+ * const char * GetStringUTFChars(JNIEnv *env, jstring string,
+ * jboolean *isCopy);
+ */
+int taintGetStringUTFChars = 0;
 void jniGetStringUTFChars(CPUState* env, int isStart){
 	DECAF_printf("GetStringUTFChars %d\n", isStart);
+	if(isStart){
+		taintGetStringUTFChars = getTaint(env->regs[1]);
+		DECAF_printf("gTaint[%x]: %x\n", env->regs[1], taintGetStringUTFChars);
+	}else{
+		if(taintGetStringUTFChars != 0){
+			addTaint(env->regs[0], taintGetStringUTFChars);
+			DECAF_printf("sTaint[%x]: %x\n", env->regs[0], taintGetStringUTFChars);
+			taintGetStringUTFChars = 0;
+		}
+	}
 }
 
 void jniReleaseStringUTFChars(CPUState* env, int isStart){

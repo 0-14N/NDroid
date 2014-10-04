@@ -171,8 +171,8 @@ DECAF_SRC_FILES += \
 DECAF_SRC_FILES += \
 		DroidScope/NDroid/ND_manager.c\
 		DroidScope/NDroid/ND_instrument.c\
-		DroidScope/NDroid/dvm_hooking/dvm_hook.c\
-		DroidScope/NDroid/dvm_hooking/SourcePolicy.cpp\
+		DroidScope/NDroid/hook/dvm_hook.c\
+		DroidScope/NDroid/hook/SourcePolicy.cpp\
 		DroidScope/NDroid/taint/TaintEngine.cpp\
 		DroidScope/NDroid/darm/armv7.c\
 		DroidScope/NDroid/darm/armv7-tbl.c\
@@ -184,8 +184,8 @@ DECAF_SRC_FILES += \
 		DroidScope/NDroid/darm/thumb.c\
 		DroidScope/NDroid/darm/thumb-tbl.c\
 		DroidScope/NDroid/darm/ndroid_darm_utils.c\
-		DroidScope/NDroid/dvm_hooking/jni_bridge/string_operations.c\
-		DroidScope/NDroid/dvm_hooking/jni_bridge/jni_api_hook.c\
+		DroidScope/NDroid/hook/jni_bridge/string_operations.c\
+		DroidScope/NDroid/hook/jni_bridge/jni_api_hook.c\
 # END NDROID SRC FILES
 
 DECAF_CFLAGS := -I$(LOCAL_PATH)/DECAF_shared
@@ -194,9 +194,9 @@ DECAF_CFLAGS += -I$(LOCAL_PATH)/DECAF_shared/DroidScope/NDroid
 DECAF_CFLAGS += -I$(LOCAL_PATH)/DECAF_shared/DroidScope/linuxAPI
 DECAF_CFLAGS += -I$(LOCAL_PATH)/DECAF_shared/DroidScope/DS_utils
 DECAF_CFLAGS += -I$(LOCAL_PATH)/DECAF_shared/DroidScope/NDroid/darm
-DECAF_CFLAGS += -I$(LOCAL_PATH)/DECAF_shared/DroidScope/NDroid/dvm_hooking
+DECAF_CFLAGS += -I$(LOCAL_PATH)/DECAF_shared/DroidScope/NDroid/hook
 DECAF_CFLAGS += -I$(LOCAL_PATH)/DECAF_shared/DroidScope/NDroid/taint
-DECAF_CFLAGS += -I$(LOCAL_PATH)/DECAF_shared/DroidScope/NDroid/dvm_hooking/jni_bridge
+DECAF_CFLAGS += -I$(LOCAL_PATH)/DECAF_shared/DroidScope/NDroid/hook/jni_bridge
 DECAF_LDLIBS := -lstdc++
 
 # END DECAF SRC FILES

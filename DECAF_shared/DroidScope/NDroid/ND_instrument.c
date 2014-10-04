@@ -10,9 +10,9 @@
 #include "DECAF_shared/DroidScope/NDroid/darm/darm.h"
 #include "DECAF_shared/DroidScope/linuxAPI/ProcessInfo.h"
 #include "NativeLibraryWhitelist.h"
-#include "dvm_hooking/dvm_hook.h"
-#include "dvm_hooking/SourcePolicy.h"
-#include "dvm_hooking/jni_bridge/jni_api_hook.h"
+#include "hook/dvm_hook.h"
+#include "hook/SourcePolicy.h"
+#include "hook/jni_bridge/jni_api_hook.h"
 
 DECAF_Handle nd_ib_handle = DECAF_NULL_HANDLE;
 DECAF_Handle nd_be_handle = DECAF_NULL_HANDLE;
