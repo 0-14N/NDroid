@@ -81,27 +81,27 @@ jniHookHandler hookStringOperations(int curPC, int dvmStartAddr, CPUState* env){
 }
 
 
-void jniNewString(CPUState* env, int isStart){
+void jniNewString(CPUState* env, int isBefore){
 	DECAF_printf("NewString\n");
 }
 
-void jniGetStringLength(CPUState* env, int isStart){
+void jniGetStringLength(CPUState* env, int isBefore){
 	DECAF_printf("GetStringLength\n");
 }
 
-void jniGetStringChars(CPUState* env, int isStart){
+void jniGetStringChars(CPUState* env, int isBefore){
 	DECAF_printf("GetStringChars\n");
 }
 
-void jniReleaseStringChars(CPUState* env, int isStart){
+void jniReleaseStringChars(CPUState* env, int isBefore){
 	DECAF_printf("ReleaseStringChars\n");
 }
 
-void jniNewStringUTF(CPUState* env, int isStart){
+void jniNewStringUTF(CPUState* env, int isBefore){
 	DECAF_printf("NewStringUTF\n");
 }
 
-void jniGetStringUTFLength(CPUState* env, int isStart){
+void jniGetStringUTFLength(CPUState* env, int isBefore){
 	DECAF_printf("GetStringUTFLength\n");
 }
 
@@ -110,9 +110,9 @@ void jniGetStringUTFLength(CPUState* env, int isStart){
  * jboolean *isCopy);
  */
 int taintGetStringUTFChars = 0;
-void jniGetStringUTFChars(CPUState* env, int isStart){
-	DECAF_printf("GetStringUTFChars %d\n", isStart);
-	if(isStart){
+void jniGetStringUTFChars(CPUState* env, int isBefore){
+	DECAF_printf("GetStringUTFChars %d\n", isBefore);
+	if(isBefore){
 		taintGetStringUTFChars = getTaint(env->regs[1]);
 		DECAF_printf("gTaint[%x]: %x\n", env->regs[1], taintGetStringUTFChars);
 	}else{
@@ -124,22 +124,22 @@ void jniGetStringUTFChars(CPUState* env, int isStart){
 	}
 }
 
-void jniReleaseStringUTFChars(CPUState* env, int isStart){
+void jniReleaseStringUTFChars(CPUState* env, int isBefore){
 	DECAF_printf("ReleaseStringUTFChars\n");
 }
 
-void jniGetStringRegion(CPUState* env, int isStart){
+void jniGetStringRegion(CPUState* env, int isBefore){
 	DECAF_printf("GetStringRegion\n");
 }
 
-void jniGetStringUTFRegion(CPUState* env, int isStart){
+void jniGetStringUTFRegion(CPUState* env, int isBefore){
 	DECAF_printf("GetStringUTFRegion\n");
 }
 
-void jniGetStringCritical(CPUState* env, int isStart){
+void jniGetStringCritical(CPUState* env, int isBefore){
 	DECAF_printf("GetStringCritical\n");
 }
 
-void jniReleaseStringCritical(CPUState* env, int isStart){
+void jniReleaseStringCritical(CPUState* env, int isBefore){
 	DECAF_printf("ReleaseStringCritical\n");
 }

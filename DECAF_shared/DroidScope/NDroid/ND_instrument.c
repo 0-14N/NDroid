@@ -13,6 +13,7 @@
 #include "hook/dvm_hook.h"
 #include "hook/SourcePolicy.h"
 #include "hook/jni_bridge/jni_api_hook.h"
+#include "hook/sys_libraries/sys_lib_hook.h"
 
 DECAF_Handle nd_ib_handle = DECAF_NULL_HANDLE;
 DECAF_Handle nd_be_handle = DECAF_NULL_HANDLE;
@@ -25,10 +26,11 @@ DECAF_Handle nd_bb_handle = DECAF_NULL_HANDLE;
 StringHashtable* whitelistLibs = NULL;
 StringHashtable* blacklistLibs = NULL;
 
-//"libdvm.so" start address and end address
+//modules' start addresses and end addresses
 gva_t DVM_START_ADDR = -1;
 gva_t DVM_END_ADDR = -1;
 
+//a variable to indicate return address of jni calls
 gva_t JNI_CALL_METHOD_RETURN = -1;
 
 //flag for indicating whethern execution jumps out third party libraries
@@ -143,17 +145,17 @@ void nd_instruction_begin_callback(DECAF_Callback_Params* params){
 				if(DECAF_read_mem(env, cur_pc_even, tmpThumb2Insn.chars, 4) != -1){
 					if(darm_thumb2_disasm(&d, tmpThumb2Insn.insn >> 16, 
 								tmpThumb2Insn.insn & 0x0000ffff, env) == 0){
-						//if(darm_str(&d, &str, env) == 0){
-							//DECAF_printf("T2  %x: %s\n", cur_pc, str.total);
-						//}
+						if(darm_str(&d, &str, env) == 0){
+							DECAF_printf("T2  %x: %s\n", cur_pc, str.total);
+						}
 					}
 				}
 			}else{
 				//Thumb instruction
 				if(darm_thumb_disasm(&d, tmpThumbInsn.insn, env) == 0){
-					//if(darm_str(&d, &str, env) == 0){
-						//DECAF_printf("T   %x: %s\n", cur_pc, str.total);
-					//}
+					if(darm_str(&d, &str, env) == 0){
+						DECAF_printf("T   %x: %s\n", cur_pc, str.total);
+					}
 				}
 			}
 		}
@@ -191,6 +193,11 @@ int nd_block_end_callback_cond(DECAF_callback_type_t cbType, gva_t curPC, gva_t 
 	}
 
 	//call JNI APIs or system library calls
+	//we handle JNI APIs and system library calls hooking at 
+	//block_begin_callback, because it may jump from ARM/Thumb
+	//state to Thumb/ARM state --> "BLX" relevant instrucitons 
+	//are not handled correctly in instrumentation phase. (the
+	//next_pc is not correct!!!)
 	if(nd_in_blacklist(curPC) && !nd_in_blacklist(tmpNextPC)){
 		return (1);
 	}
@@ -247,6 +254,11 @@ int nd_block_begin_callback_cond(DECAF_callback_type_t cbType, gva_t curPC, gva_
 		return (1);
 	}
 
+	//if start addresses of system libraries calls
+	if(startOfSysLibCalls(tmpCurPC)){
+		return (1);
+	}
+
 	return (0);
 }
 
@@ -254,6 +266,7 @@ int nd_block_begin_callback_cond(DECAF_callback_type_t cbType, gva_t curPC, gva_
  * block end callback
  */
 jniHookHandler currJniHandler = NULL;
+sysLibHookHandler currSysLibHandler = NULL;
 void nd_block_begin_callback(DECAF_Callback_Params* params){
 	CPUState* env = params->be.env;
 	gva_t cur_pc = params->be.cur_pc & 0xfffffffe;
@@ -270,6 +283,7 @@ void nd_block_begin_callback(DECAF_Callback_Params* params){
 		//JNI_CALL_METHOD_RETURN = -1;
 		EXECUTION_STATE = -1;
 		currJniHandler = NULL;
+		currSysLibHandler = NULL;
 		//DECAF_printf("Return to Java\n");
 	}
 
@@ -278,19 +292,32 @@ void nd_block_begin_callback(DECAF_Callback_Params* params){
 		DECAF_printf("Jump in\n");
 		EXECUTION_STATE = 0;
 
-		//hook after invocation
+		//hook after JNI invocation
 		if(currJniHandler != NULL){
 			currJniHandler(env, 0);
 			currJniHandler = NULL;
+		}
+
+		//hook after system library invocation
+		if(currSysLibHandler != NULL){
+			currSysLibHandler(env, 0);
+			currSysLibHandler = NULL;
 		}
 	}
 
 	//in block end callback, EXECUTION_STATE is set to 1	
 	if(EXECUTION_STATE == 1){
 		//in native libraries or JNI APIs
+
 		if(startOfJniApis(cur_pc, DVM_START_ADDR)){
 			//hook JNI APIs
 			currJniHandler = hookJniApis(cur_pc, DVM_START_ADDR, env);
+			EXECUTION_STATE++;
+		}
+
+		if(startOfSysLibCalls(cur_pc)){
+			//hook system library calls
+			currSysLibHandler = hookSysLibCalls(cur_pc, env);
 			EXECUTION_STATE++;
 		}
 	}
@@ -305,6 +332,28 @@ int is_empty(const char* str){
 		}
 	}
 	return (1);
+}
+
+void getModuleBoundry(const char* moduleName, gva_t* startAddr, gva_t* endAddr){
+	ModuleNode* node = getModulesByName(ND_GLOBAL_TRACING_PID, moduleName);
+	if(node != NULL){
+		ModuleNode* i = node;
+		DECAF_printf("%s's address space: \n", moduleName);
+		for(; i != NULL; i = i->next){
+			const char* tmpModuleName = getModuleNodeName(i);
+			if((!is_empty(tmpModuleName)) && (strcmp(tmpModuleName, moduleName) != 0)){
+				break;
+			}else{
+				if(i->flags & 0x04){
+					*startAddr = i->startAddr;
+					*endAddr = i->endAddr;
+					DECAF_printf("%s: [%x, %x]\n", moduleName, *startAddr, *endAddr);
+				}
+			}
+		}
+	}else{
+		DECAF_printf("Cannot get start address and end address of %s\n", moduleName);
+	}
 }
 
 void nd_instrument_init(){
@@ -327,25 +376,12 @@ void nd_instrument_init(){
 
   blacklistLibs = StringHashtable_new();
 
-	ModuleNode* node = getModulesByName(ND_GLOBAL_TRACING_PID, "/lib/libdvm.so");
-	if(node != NULL){
-		ModuleNode* i = node;
-		DECAF_printf("libdvm.so's address space: \n");
-		for(; i != NULL; i = i->next){
-			const char* moduleName = getModuleNodeName(i);
-			if((!is_empty(moduleName)) && (strcmp(moduleName, "/lib/libdvm.so") != 0)){
-				break;
-			}else{
-				if(i->flags & 0x04){
-					DVM_START_ADDR = i->startAddr;
-					DVM_END_ADDR = i->endAddr;
-					DECAF_printf("libdvm.so: [%x, %x]\n", DVM_START_ADDR, DVM_END_ADDR);
-				}
-			}
-		}
-	}else{
-		DECAF_printf("Cannot get start address and end address of libdvm.so\n");
-	}
+	getModuleBoundry("/lib/libdvm.so", &DVM_START_ADDR, &DVM_END_ADDR);
+
+	getModuleBoundry("/lib/libc.so", &LIBC_START_ADDR, &LIBC_END_ADDR);
+
+	getModuleBoundry("/lib/libm.so", &LIBM_START_ADDR, &LIBM_END_ADDR);
+
 }
 
 
