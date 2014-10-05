@@ -769,9 +769,45 @@ void sysLibCAbortHookHandler(CPUState* env, int isBefore){
 
 }
 
-
+/**
+ * int  fprintf(FILE *, const char *, ...)
+ */
 void sysLibCFprintfHookHandler(CPUState* env, int isBefore){
-
+	DECAF_printf("fprintf: %d\n", isBefore);
+	if(isBefore){
+		char fmt[256];	
+		fmt[0] = '\0';
+		if(DECAF_read_mem_until(env, env->regs[1], &fmt, 356) > 0){
+			DECAF_printf("fmt: %s\n", fmt);
+			char* p;
+			int isOnStack = 0;
+			int regIdx = 2;
+			int stackIdx = 0;
+			int strAddr = 0;
+			int taintValue = 0;
+			int tmpTaint = 0;
+			for(p = fmt; *p; p++){
+				if(*p != '%'){
+					continue;
+				}
+				switch(*++p){
+					case 's':
+						if(isOnStack){
+							//tmpTaint = getTaintOfSt
+							//DECAF_read_mem(env, env->regs[13]
+						}else{
+						}
+						break;
+					case 'l':
+					case 'L':
+						break;
+					default:
+						break;
+				}
+			}
+		}
+	}else{
+	}
 }
 
 
@@ -3374,9 +3410,24 @@ void sysLibCDlvallocHookHandler(CPUState* env, int isBefore){
 
 }
 
-
+/**
+ * FILE  *fopen(const char *, const char *)
+ */
 void sysLibCFopenHookHandler(CPUState* env, int isBefore){
 	DECAF_printf("fopen: %d\n", isBefore);
+	if(isBefore){
+		char buf[128];
+		buf[0] = '\0';
+		if(DECAF_read_mem_until(env, env->regs[0], &buf, 128) > 0){
+			DECAF_printf("fileName:%s\n", buf);
+		}else{
+			DECAF_read_mem_until(env, env->regs[0], &buf, 128);
+			DECAF_printf("fileName:%s\n", buf);
+		}
+
+	}else{
+		DECAF_printf("FILE@%x\n", env->regs[0]);
+	}
 }
 
 

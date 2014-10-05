@@ -13,6 +13,8 @@ extern "C"
 
 	#include "cpu.h"
 	#include "DECAF_types.h"
+	#include "DECAF_main.h"
+	#include "DECAF_shared/utils/OutputWrapper.h"
 
 	//modules' start addresses and end addresses
 	extern gva_t LIBC_START_ADDR;
