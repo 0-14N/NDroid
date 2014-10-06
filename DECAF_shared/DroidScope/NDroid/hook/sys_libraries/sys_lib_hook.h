@@ -15,6 +15,7 @@ extern "C"
 	#include "DECAF_types.h"
 	#include "DECAF_main.h"
 	#include "DECAF_shared/utils/OutputWrapper.h"
+	#include "TaintEngine.h"
 
 	//modules' start addresses and end addresses
 	extern gva_t LIBC_START_ADDR;

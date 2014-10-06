@@ -1,0 +1,5 @@
+-- Currently, offsets relevant to dvm hooking are manually set.
+	 We would write scripts to generate them automatically.
+
+-- dvm_offset.h: define offsets relevant dvm hooking. 
+								 (Should be generated automatically!).

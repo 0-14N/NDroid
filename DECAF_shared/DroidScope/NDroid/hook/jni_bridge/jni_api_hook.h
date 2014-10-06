@@ -11,6 +11,7 @@ extern "C"
 {
 #endif
 	#include "cpu.h"
+	#include "TaintEngine.h"
 
 	typedef void (*jniHookHandler)(CPUState*, int);
 

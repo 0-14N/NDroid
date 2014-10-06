@@ -83,6 +83,13 @@ int nd_instruction_begin_callback_cond(DECAF_callback_type_t cbType, gva_t curPC
 		if(nd_in_blacklist(curPC)){
 			return (1);
 		}
+
+		//return from JNI
+		int tmpCurPC = curPC & 0xfffffffe;
+		if((tmpCurPC == JNI_CALL_METHOD_RETURN + 2)
+				|| (tmpCurPC == JNI_CALL_METHOD_RETURN + 4)){
+			return (1);
+		}
 	}
 	
 	return (0);
@@ -99,6 +106,19 @@ void nd_instruction_begin_callback(DECAF_Callback_Params* params){
 	gva_t cur_pc = params->ib.cur_pc;
 	//since for thumb instruction, the last bit is '1'	
 	gva_t cur_pc_even = cur_pc & 0xfffffffe;
+
+	//if this is the return of JNI
+	if((EXECUTION_STATE == 1) && 
+			((cur_pc_even == JNI_CALL_METHOD_RETURN + 2)
+			   || (cur_pc_even == JNI_CALL_METHOD_RETURN + 4))){
+		EXECUTION_STATE = -1;
+		DECAF_printf("Return to Java\n");
+		return;
+	}
+
+	if(!nd_in_blacklist(cur_pc_even)){
+		return;
+	}
 
 	//ARM Instruction
 	union _tmpARMInsn{
@@ -186,9 +206,9 @@ int nd_block_end_callback_cond(DECAF_callback_type_t cbType, gva_t curPC, gva_t 
 	gva_t tmpNextPC = nextPC & 0xfffffffe;
 
 	//dvmCallJNIMethod
-	if(tmpNextPC == (DVM_START_ADDR + OFFSET_JNI_CALL_METHOD)){
+	if(tmpNextPC == (DVM_START_ADDR + OFFSET_DVM_CALL_JNI_METHOD)){
 		JNI_CALL_METHOD_RETURN = curPC & 0xfffffffe;
-		//DECAF_printf("JNI_CALL_METHOD_RETURN: %x\n", JNI_CALL_METHOD_RETURN);
+		DECAF_printf("JNI_CALL_METHOD_RETURN: %x\n", JNI_CALL_METHOD_RETURN);
 		return (1);
 	}
 
@@ -198,9 +218,9 @@ int nd_block_end_callback_cond(DECAF_callback_type_t cbType, gva_t curPC, gva_t 
 	//state to Thumb/ARM state --> "BLX" relevant instrucitons 
 	//are not handled correctly in instrumentation phase. (the
 	//next_pc is not correct!!!)
-	if(nd_in_blacklist(curPC) && !nd_in_blacklist(tmpNextPC)){
-		return (1);
-	}
+	//if(nd_in_blacklist(curPC) && !nd_in_blacklist(tmpNextPC)){
+		//return (1);
+	//}
 	
 	return (0);
 }
@@ -210,7 +230,7 @@ int nd_block_end_callback_cond(DECAF_callback_type_t cbType, gva_t curPC, gva_t 
  */
 void nd_block_end_callback(DECAF_Callback_Params* params){
 	CPUState* env = params->be.env;
-	gva_t cur_pc = params->be.cur_pc & 0xfffffffe;
+	//gva_t cur_pc = params->be.cur_pc & 0xfffffffe;
 	gva_t next_pc = params->be.next_pc & 0xfffffffe;
 
 	if(getCurrentPID() != ND_GLOBAL_TRACING_PID){
@@ -218,14 +238,8 @@ void nd_block_end_callback(DECAF_Callback_Params* params){
 	}
 
 	//dvmCallJNIMethod
-	if(next_pc == DVM_START_ADDR + OFFSET_JNI_CALL_METHOD){
+	if(next_pc == DVM_START_ADDR + OFFSET_DVM_CALL_JNI_METHOD){
 		dvmCallJNIMethodCallback(env);
-	}
-
-	//call JNI APIs or system library calls
-	if(nd_in_blacklist(cur_pc) && !nd_in_blacklist(next_pc)){
-		DECAF_printf("Jump out\n");
-		EXECUTION_STATE = 1;
 	}
 }
 
@@ -239,11 +253,6 @@ int nd_block_begin_callback_cond(DECAF_callback_type_t cbType, gva_t curPC, gva_
 
 	gva_t tmpCurPC = curPC & 0xfffffffe;
 
-	//return from JNI
-	if((tmpCurPC == JNI_CALL_METHOD_RETURN + 2)
-			|| (tmpCurPC == JNI_CALL_METHOD_RETURN + 4)){
-		return (1);
-	}
 	
 	if(nd_in_blacklist(tmpCurPC)){
 		return (1);
@@ -270,21 +279,9 @@ sysLibHookHandler currSysLibHandler = NULL;
 void nd_block_begin_callback(DECAF_Callback_Params* params){
 	CPUState* env = params->be.env;
 	gva_t cur_pc = params->be.cur_pc & 0xfffffffe;
-	gva_t next_pc = params->be.next_pc & 0xfffffffe;
 
 	if(getCurrentPID() != ND_GLOBAL_TRACING_PID){
 		return;
-	}
-
-	//return from JNI invocation
-	if(EXECUTION_STATE != -1 && 
-			((cur_pc == JNI_CALL_METHOD_RETURN + 2)
-			|| (cur_pc == JNI_CALL_METHOD_RETURN + 4))){
-		//JNI_CALL_METHOD_RETURN = -1;
-		EXECUTION_STATE = -1;
-		currJniHandler = NULL;
-		currSysLibHandler = NULL;
-		//DECAF_printf("Return to Java\n");
 	}
 
 	//get back into 3rd party native code
@@ -303,23 +300,26 @@ void nd_block_begin_callback(DECAF_Callback_Params* params){
 			currSysLibHandler(env, 0);
 			currSysLibHandler = NULL;
 		}
+		return;
 	}
 
-	//in block end callback, EXECUTION_STATE is set to 1	
-	if(EXECUTION_STATE == 1){
+	if(EXECUTION_STATE == 0 && !nd_in_blacklist(cur_pc)){
 		//in native libraries or JNI APIs
 
+		DECAF_printf("Jump out --> %x\n", cur_pc);
 		if(startOfJniApis(cur_pc, DVM_START_ADDR)){
 			//hook JNI APIs
 			currJniHandler = hookJniApis(cur_pc, DVM_START_ADDR, env);
-			EXECUTION_STATE++;
 		}
 
 		if(startOfSysLibCalls(cur_pc)){
 			//hook system library calls
 			currSysLibHandler = hookSysLibCalls(cur_pc, env);
-			EXECUTION_STATE++;
 		}
+
+		EXECUTION_STATE = 1;
+
+		return;
 	}
 }
 

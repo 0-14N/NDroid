@@ -4,7 +4,6 @@
  */
 
 #include "DECAF_shared/utils/OutputWrapper.h"
-#include "DECAF_shared/DroidScope/NDroid/ND_instrument.h"
 #include "string_operations.h"
 
 /**
@@ -82,27 +81,43 @@ jniHookHandler hookStringOperations(int curPC, int dvmStartAddr, CPUState* env){
 
 
 void jniNewString(CPUState* env, int isBefore){
-	DECAF_printf("NewString\n");
+	DECAF_printf("NewString[%d]\n", isBefore);
 }
 
 void jniGetStringLength(CPUState* env, int isBefore){
-	DECAF_printf("GetStringLength\n");
+	DECAF_printf("GetStringLength[%d]\n", isBefore);
 }
 
 void jniGetStringChars(CPUState* env, int isBefore){
-	DECAF_printf("GetStringChars\n");
+	DECAF_printf("GetStringChars[%d]\n", isBefore);
 }
 
 void jniReleaseStringChars(CPUState* env, int isBefore){
-	DECAF_printf("ReleaseStringChars\n");
+	DECAF_printf("ReleaseStringChars[%d]\n", isBefore);
 }
 
+/**
+ * jstring NewStringUTF(JNIEnv *env, const char *bytes)
+ */
+int taintNewStringUTF = 0;
 void jniNewStringUTF(CPUState* env, int isBefore){
-	DECAF_printf("NewStringUTF\n");
+	DECAF_printf("NewStringUTF[%d]\n", isBefore);
+	if(isBefore){
+		taintNewStringUTF = getTaint(env->regs[1]);
+		if(taintNewStringUTF > 0){
+			DECAF_printf("gTaint[%x]: %x\n", env->regs[1], taintNewStringUTF);
+		}
+	}else{
+		if(taintNewStringUTF > 0){
+			addTaint(env->regs[0], taintNewStringUTF);
+			DECAF_printf("sTaint[%x]: %x\n", env->regs[0], taintNewStringUTF);
+			taintNewStringUTF = 0;
+		}
+	}
 }
 
 void jniGetStringUTFLength(CPUState* env, int isBefore){
-	DECAF_printf("GetStringUTFLength\n");
+	DECAF_printf("GetStringUTFLength[%d]\n", isBefore);
 }
 
 /**
@@ -111,12 +126,14 @@ void jniGetStringUTFLength(CPUState* env, int isBefore){
  */
 int taintGetStringUTFChars = 0;
 void jniGetStringUTFChars(CPUState* env, int isBefore){
-	DECAF_printf("GetStringUTFChars %d\n", isBefore);
+	DECAF_printf("GetStringUTFChars[%d]\n", isBefore);
 	if(isBefore){
 		taintGetStringUTFChars = getTaint(env->regs[1]);
-		DECAF_printf("gTaint[%x]: %x\n", env->regs[1], taintGetStringUTFChars);
+		if(taintGetStringUTFChars > 0){
+			DECAF_printf("gTaint[%x]: %x\n", env->regs[1], taintGetStringUTFChars);
+		}
 	}else{
-		if(taintGetStringUTFChars != 0){
+		if(taintGetStringUTFChars > 0){
 			addTaint(env->regs[0], taintGetStringUTFChars);
 			DECAF_printf("sTaint[%x]: %x\n", env->regs[0], taintGetStringUTFChars);
 			taintGetStringUTFChars = 0;
@@ -125,21 +142,21 @@ void jniGetStringUTFChars(CPUState* env, int isBefore){
 }
 
 void jniReleaseStringUTFChars(CPUState* env, int isBefore){
-	DECAF_printf("ReleaseStringUTFChars\n");
+	DECAF_printf("ReleaseStringUTFChars[%d]\n", isBefore);
 }
 
 void jniGetStringRegion(CPUState* env, int isBefore){
-	DECAF_printf("GetStringRegion\n");
+	DECAF_printf("GetStringRegion[%d]\n", isBefore);
 }
 
 void jniGetStringUTFRegion(CPUState* env, int isBefore){
-	DECAF_printf("GetStringUTFRegion\n");
+	DECAF_printf("GetStringUTFRegion[%d]\n", isBefore);
 }
 
 void jniGetStringCritical(CPUState* env, int isBefore){
-	DECAF_printf("GetStringCritical\n");
+	DECAF_printf("GetStringCritical[%d]\n", isBefore);
 }
 
 void jniReleaseStringCritical(CPUState* env, int isBefore){
-	DECAF_printf("ReleaseStringCritical\n");
+	DECAF_printf("ReleaseStringCritical[%d]\n", isBefore);
 }

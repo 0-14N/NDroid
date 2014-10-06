@@ -14,9 +14,14 @@ void sysLibCFreedtoaHookHandler(CPUState* env, int isBefore){
 
 }
 
-
+/**
+ * int fclose(FILE *fp)
+ */
 void sysLibCFcloseHookHandler(CPUState* env, int isBefore){
-
+	DECAF_printf("fclose[%d]\n", isBefore);
+	if(isBefore){
+		DECAF_printf("close FILE@%x\n", env->regs[0]);
+	}
 }
 
 
@@ -773,7 +778,7 @@ void sysLibCAbortHookHandler(CPUState* env, int isBefore){
  * int  fprintf(FILE *, const char *, ...)
  */
 void sysLibCFprintfHookHandler(CPUState* env, int isBefore){
-	DECAF_printf("fprintf: %d\n", isBefore);
+	DECAF_printf("fprintf[%d]\n", isBefore);
 	if(isBefore){
 		char fmt[256];	
 		fmt[0] = '\0';
@@ -782,7 +787,7 @@ void sysLibCFprintfHookHandler(CPUState* env, int isBefore){
 			char* p;
 			int isOnStack = 0;
 			int regIdx = 2;
-			int stackIdx = 0;
+			int stackIdx = env->regs[13];
 			int strAddr = 0;
 			int taintValue = 0;
 			int tmpTaint = 0;
@@ -791,22 +796,87 @@ void sysLibCFprintfHookHandler(CPUState* env, int isBefore){
 					continue;
 				}
 				switch(*++p){
-					case 's':
-						if(isOnStack){
-							//tmpTaint = getTaintOfSt
-							//DECAF_read_mem(env, env->regs[13]
-						}else{
-						}
-						break;
 					case 'l':
 					case 'L':
+						if(regIdx == 3 || isOnStack){
+							tmpTaint = getTaint(stackIdx);
+							if(tmpTaint > 0){
+								taintValue |= tmpTaint;
+								DECAF_printf("gTaint[%x]: %x\n", stackIdx, tmpTaint);
+							}
+							tmpTaint = getTaint(stackIdx + 4);
+							if(tmpTaint > 0){
+								taintValue |= tmpTaint;
+								DECAF_printf("gTaint[%x]: %x\n", stackIdx + 4, tmpTaint);
+							}
+							stackIdx += 8;
+							if(++regIdx == 4){
+								isOnStack = 1;
+							}
+						}else if(regIdx == 2){
+							tmpTaint = getRegTaint(2);
+							if(tmpTaint > 0){
+								taintValue |= tmpTaint;
+								DECAF_printf("gR[2]: %x\n", tmpTaint);
+							}
+							tmpTaint = getRegTaint(3);
+							if(tmpTaint > 0){
+								taintValue |= tmpTaint;
+								DECAF_printf("gR[3]: %x\n", tmpTaint);
+							}
+							isOnStack = 1;
+							regIdx = 4;
+						}
 						break;
 					default:
+						if(isOnStack){
+							tmpTaint = getTaint(stackIdx);
+							if(tmpTaint > 0){
+								taintValue |= tmpTaint;
+								DECAF_printf("gTaint[%x]: %x\n", stackIdx, tmpTaint);
+							}
+							if(*p == 's' && DECAF_read_mem(env, stackIdx, &strAddr, 4) != -1){
+								tmpTaint = getTaint(strAddr);
+								if(tmpTaint > 0){
+									taintValue |= tmpTaint;
+									DECAF_printf("gTaint[%x]: %x\n", strAddr, tmpTaint);
+									char taintedStr[256];
+									if(DECAF_read_mem_until(env, strAddr, &taintedStr, 256) > 0){
+										DECAF_printf("@%x %s\n", strAddr, taintedStr);
+									}
+								}
+							}
+							stackIdx += 4;
+						}else{
+							tmpTaint = getRegTaint(regIdx);
+							if(tmpTaint > 0){
+								taintValue |= tmpTaint;
+								DECAF_printf("gR[%d]: %x\n", regIdx, tmpTaint);
+							}
+							if(*p == 's'){
+								strAddr = env->regs[regIdx];
+								tmpTaint = getTaint(strAddr);
+								if(tmpTaint > 0){
+									taintValue |= tmpTaint;
+									DECAF_printf("gTaint[%x]: %x\n", strAddr, tmpTaint);
+									char taintedStr[256];
+									if(DECAF_read_mem_until(env, strAddr, &taintedStr, 256) > 0){
+										DECAF_printf("@%x %s\n", strAddr, taintedStr);
+									}
+								}
+							}
+							if(++regIdx == 4){
+								isOnStack = 1;
+							}
+						}
 						break;
 				}
 			}
+			
+			if(taintValue > 0){
+				DECAF_printf("Write data with taint %x to FILE@%x\n", taintValue, env->regs[0]);
+			}	
 		}
-	}else{
 	}
 }
 
@@ -3414,7 +3484,7 @@ void sysLibCDlvallocHookHandler(CPUState* env, int isBefore){
  * FILE  *fopen(const char *, const char *)
  */
 void sysLibCFopenHookHandler(CPUState* env, int isBefore){
-	DECAF_printf("fopen: %d\n", isBefore);
+	DECAF_printf("fopen[%d]\n", isBefore);
 	if(isBefore){
 		char buf[128];
 		buf[0] = '\0';

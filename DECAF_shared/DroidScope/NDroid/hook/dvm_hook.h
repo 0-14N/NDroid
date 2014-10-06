@@ -11,9 +11,7 @@ extern "C"
 {
 #endif
 
-#define OFFSET_JNI_CALL_METHOD 0x00050f84
-#define OFFSET_PLATFORM_INVOKE 0x0001f040
-#define OFFSET_JNICALLMETHOD_INVOKE_PLATFORM_INVOKE 0x00051120
+#include "dvm_offsets.h"
 
 //===========method info begin========
 /*

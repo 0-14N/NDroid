@@ -5,9 +5,14 @@
 
 #include "jni_api_hook.h"
 #include "string_operations.h"
+#include "instance_method_calling.h"
 
 int startOfJniApis(int curPC, int dvmStartAddr){
 	if(isStringOperations(curPC, dvmStartAddr)){
+		return (1);
+	}
+
+	if(isInstanceMethodCalling(curPC, dvmStartAddr)){
 		return (1);
 	}
 
@@ -15,5 +20,14 @@ int startOfJniApis(int curPC, int dvmStartAddr){
 }
 
 jniHookHandler hookJniApis(int curPC, int dvmStartAddr, CPUState* env){
-	return hookStringOperations(curPC, dvmStartAddr, env);
+	jniHookHandler handler = hookStringOperations(curPC, dvmStartAddr, env);
+	if(handler != NULL){
+		return handler;
+	}
+
+	handler = hookInstanceMethodCalling(curPC, dvmStartAddr, env);
+	if(handler != NULL){
+		return handler;
+	}
+	return NULL;
 }
