@@ -7,6 +7,7 @@
 #include "DECAF_shared/DroidScope/NDroid/ND_instrument.h"
 #include "dvm_hook.h"
 #include "SourcePolicy.h"
+#include "instance_method_calling.h"
 
 /**
  * mem[addr] stores an object reference, get its type
@@ -951,3 +952,36 @@ void dvmCallJNIMethodCallback(CPUState* env){
 	}
 }
 
+int isStartOfDvmHooks(int curPC, int dvmStartAddr){
+	switch(curPC - dvmStartAddr){
+		case OFFSET_DVM_GET_VIRTULIZED_METHOD_BEGIN:
+			return (1);
+		case OFFSET_DVM_INTERPRET_BEGIN:
+			return (1);
+	}
+	return (0);
+}
+
+void dvmHooksBegin(CPUState* env, int curPC, int dvmStartAddr){
+	switch(curPC - dvmStartAddr){
+		case OFFSET_DVM_GET_VIRTULIZED_METHOD_BEGIN:
+			dvmGetVirtulizedMethod(env, 1);
+		case OFFSET_DVM_INTERPRET_BEGIN:
+			dvmInterpret(env, 1);
+	}
+}
+
+int isEndOfDvmHooks(int curPC, int dvmStartAddr){
+	switch(curPC - dvmStartAddr){
+		case OFFSET_DVM_GET_VIRTULIZED_METHOD_END:
+			return (1);
+	}
+	return (0);
+}
+
+void dvmHooksEnd(CPUState* env, int curPC, int dvmStartAddr){
+	switch(curPC - dvmStartAddr){
+		case OFFSET_DVM_GET_VIRTULIZED_METHOD_END:
+			dvmGetVirtulizedMethod(env, 0);
+	}
+}

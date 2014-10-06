@@ -90,6 +90,14 @@ extern "C"
 
 	void dvmCallJNIMethodCallback(CPUState* env);
 
+	int isStartOfDvmHooks(int curPC, int dvmStartAddr);
+
+	void dvmHooksBegin(CPUState* env, int curPC, int dvmStartAddr);
+
+	int isEndOfDvmHooks(int curPC, int dvmStartAddr);
+
+	void dvmHooksEnd(CPUState* env, int curPC, int dvmStartAddr);
+
 #ifdef __cplusplus
 }
 #endif

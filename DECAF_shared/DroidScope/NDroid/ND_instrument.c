@@ -190,12 +190,18 @@ int nd_block_end_callback_cond(DECAF_callback_type_t cbType, gva_t curPC, gva_t 
 	DEFENSIVE_CHECK1(curPC < 0 || curPC >= 0xC0000000, 0);
 
 	gva_t tmpNextPC = nextPC & 0xfffffffe;
+	gva_t tmpCurPC = curPC & 0xfffffffe;
 
 	//dvmCallJNIMethod
 	if(tmpNextPC == (DVM_START_ADDR + OFFSET_DVM_CALL_JNI_METHOD)){
-		JNI_CALL_METHOD_RETURN = curPC & 0xfffffffe;
+		JNI_CALL_METHOD_RETURN = tmpCurPC;
 		DECAF_printf("JNI_CALL_METHOD_RETURN: %x\n", JNI_CALL_METHOD_RETURN);
 		return (1);
+	}
+
+	//end of dvm hooks (e.g. dvmGetVirtulizedMethod, ...)
+	if(isEndOfDvmHooks(tmpCurPC, DVM_START_ADDR)){
+		return(1);
 	}
 
 	//call JNI APIs or system library calls
@@ -216,7 +222,7 @@ int nd_block_end_callback_cond(DECAF_callback_type_t cbType, gva_t curPC, gva_t 
  */
 void nd_block_end_callback(DECAF_Callback_Params* params){
 	CPUState* env = params->be.env;
-	//gva_t cur_pc = params->be.cur_pc & 0xfffffffe;
+	gva_t cur_pc = params->be.cur_pc & 0xfffffffe;
 	gva_t next_pc = params->be.next_pc & 0xfffffffe;
 
 	if(getCurrentPID() != ND_GLOBAL_TRACING_PID){
@@ -226,6 +232,13 @@ void nd_block_end_callback(DECAF_Callback_Params* params){
 	//dvmCallJNIMethod
 	if(next_pc == DVM_START_ADDR + OFFSET_DVM_CALL_JNI_METHOD){
 		dvmCallJNIMethodCallback(env);
+		return;
+	}
+
+	//end of dvm hooks (e.g. dvmGetVirtulizedMethod, ...)
+	if(isEndOfDvmHooks(cur_pc, DVM_START_ADDR)){
+		dvmHooksEnd(env, cur_pc, DVM_START_ADDR);
+		return;
 	}
 
 }
@@ -261,6 +274,11 @@ int nd_block_begin_callback_cond(DECAF_callback_type_t cbType, gva_t curPC, gva_
 		return (1);
 	}
 
+	//start of dvm hooks (e.g. dvmGetVirtulizedMethod, )
+	if(isStartOfDvmHooks(tmpCurPC, DVM_START_ADDR)){
+		return (1);
+	}
+
 	return (0);
 }
 
@@ -277,6 +295,11 @@ void nd_block_begin_callback(DECAF_Callback_Params* params){
 		return;
 	}
 
+	//start of dvm hooks (e.g. dvmGetVirtulizedMethod, )
+	if(isStartOfDvmHooks(cur_pc, DVM_START_ADDR)){
+		dvmHooksBegin(env, cur_pc, DVM_START_ADDR);
+		return;
+	}
 
 	//get back into 3rd party native code
 	if(nd_in_blacklist(cur_pc) && EXECUTION_STATE != 0){
