@@ -84,12 +84,6 @@ int nd_instruction_begin_callback_cond(DECAF_callback_type_t cbType, gva_t curPC
 			return (1);
 		}
 
-		//return from JNI
-		int tmpCurPC = curPC & 0xfffffffe;
-		if((tmpCurPC == JNI_CALL_METHOD_RETURN + 2)
-				|| (tmpCurPC == JNI_CALL_METHOD_RETURN + 4)){
-			return (1);
-		}
 	}
 	
 	return (0);
@@ -107,14 +101,6 @@ void nd_instruction_begin_callback(DECAF_Callback_Params* params){
 	//since for thumb instruction, the last bit is '1'	
 	gva_t cur_pc_even = cur_pc & 0xfffffffe;
 
-	//if this is the return of JNI
-	if((EXECUTION_STATE == 1) && 
-			((cur_pc_even == JNI_CALL_METHOD_RETURN + 2)
-			   || (cur_pc_even == JNI_CALL_METHOD_RETURN + 4))){
-		EXECUTION_STATE = -1;
-		DECAF_printf("Return to Java\n");
-		return;
-	}
 
 	if(!nd_in_blacklist(cur_pc_even)){
 		return;
@@ -258,6 +244,12 @@ int nd_block_begin_callback_cond(DECAF_callback_type_t cbType, gva_t curPC, gva_
 		return (1);
 	}
 
+	//return from JNI
+	if((tmpCurPC == JNI_CALL_METHOD_RETURN + 2)
+			|| (tmpCurPC == JNI_CALL_METHOD_RETURN + 4)){
+		return (1);
+	}
+
 	//if start addresses of JNI APIs	
 	if(startOfJniApis(tmpCurPC, DVM_START_ADDR)){
 		return (1);
@@ -284,6 +276,7 @@ void nd_block_begin_callback(DECAF_Callback_Params* params){
 		return;
 	}
 
+
 	//get back into 3rd party native code
 	if(nd_in_blacklist(cur_pc) && EXECUTION_STATE != 0){
 		DECAF_printf("Jump in\n");
@@ -303,6 +296,16 @@ void nd_block_begin_callback(DECAF_Callback_Params* params){
 		return;
 	}
 
+	//if this is the return of JNI
+	if((EXECUTION_STATE == 1) && 
+			((cur_pc == JNI_CALL_METHOD_RETURN + 2)
+			   || (cur_pc == JNI_CALL_METHOD_RETURN + 4))){
+		EXECUTION_STATE = -1;
+		DECAF_printf("Return to Java\n");
+		return;
+	}
+
+	//JNI API and system library calls
 	if(EXECUTION_STATE == 0 && !nd_in_blacklist(cur_pc)){
 		//in native libraries or JNI APIs
 
