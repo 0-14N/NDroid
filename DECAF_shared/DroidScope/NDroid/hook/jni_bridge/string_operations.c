@@ -5,6 +5,7 @@
 
 #include "DECAF_shared/utils/OutputWrapper.h"
 #include "string_operations.h"
+#include "jni_api_hook.h"
 
 /**
  * NewString, GetStringLength, GetStringChars, ReleaseStringChars
@@ -40,84 +41,87 @@ int isStringOperations(int curPC, int dvmStartAddr){
 jniHookHandler hookStringOperations(int curPC, int dvmStartAddr, CPUState* env){
 	switch(curPC - dvmStartAddr){
 		case NewString_OFFSET:
-			jniNewString(env, 1);
-			return jniNewString;
+			hookJniNewString(env, 1);
+			return hookJniNewString;
 		case GetStringLength_OFFSET:
-			jniGetStringLength(env, 1);
-			return jniGetStringLength;
+			hookJniGetStringLength(env, 1);
+			return hookJniGetStringLength;
 		case GetStringChars_OFFSET:
-			jniGetStringChars(env, 1);
-			return jniGetStringChars;
+			hookJniGetStringChars(env, 1);
+			return hookJniGetStringChars;
 		case ReleaseStringChars_OFFSET:
-			jniReleaseStringChars(env, 1);
-			return jniReleaseStringChars;
+			hookJniReleaseStringChars(env, 1);
+			return hookJniReleaseStringChars;
 		case NewStringUTF_OFFSET:
-			jniNewStringUTF(env, 1);
-			return jniNewStringUTF;
+			hookJniNewStringUTF(env, 1);
+			return hookJniNewStringUTF;
 		case GetStringUTFLength_OFFSET:
-			jniGetStringUTFLength(env, 1);
-			return jniGetStringUTFLength;
+			hookJniGetStringUTFLength(env, 1);
+			return hookJniGetStringUTFLength;
 		case GetStringUTFChars_OFFSET:
-			jniGetStringUTFChars(env, 1);
-			return jniGetStringUTFChars;
+			hookJniGetStringUTFChars(env, 1);
+			return hookJniGetStringUTFChars;
 		case ReleaseStringUTFChars_OFFSET:
-			jniReleaseStringUTFChars(env, 1);
-			return jniReleaseStringUTFChars;
+			hookJniReleaseStringUTFChars(env, 1);
+			return hookJniReleaseStringUTFChars;
 		case GetStringRegion_OFFSET:
-			jniGetStringRegion(env, 1);
-			return jniGetStringRegion;
+			hookJniGetStringRegion(env, 1);
+			return hookJniGetStringRegion;
 		case GetStringUTFRegion_OFFSET:
-			jniGetStringUTFRegion(env, 1);
-			return jniGetStringUTFRegion;
+			hookJniGetStringUTFRegion(env, 1);
+			return hookJniGetStringUTFRegion;
 		case GetStringCritical_OFFSET:
-			jniGetStringCritical(env, 1);
-			return jniGetStringCritical;
+			hookJniGetStringCritical(env, 1);
+			return hookJniGetStringCritical;
 		case ReleaseStringCritical_OFFSET:
-			jniReleaseStringCritical(env, 1);
-			return jniReleaseStringCritical;
+			hookJniReleaseStringCritical(env, 1);
+			return hookJniReleaseStringCritical;
 	}
 	return NULL;
 }
 
 
-void jniNewString(CPUState* env, int isBefore){
-	DECAF_printf("NewString[%d]\n", isBefore);
+void hookJniNewString(CPUState* env, int isStart){
+	DECAF_printf("NewString[%d]\n", isStart);
 }
 
-void jniGetStringLength(CPUState* env, int isBefore){
-	DECAF_printf("GetStringLength[%d]\n", isBefore);
+void hookJniGetStringLength(CPUState* env, int isStart){
+	DECAF_printf("GetStringLength[%d]\n", isStart);
 }
 
-void jniGetStringChars(CPUState* env, int isBefore){
-	DECAF_printf("GetStringChars[%d]\n", isBefore);
+void hookJniGetStringChars(CPUState* env, int isStart){
+	DECAF_printf("GetStringChars[%d]\n", isStart);
 }
 
-void jniReleaseStringChars(CPUState* env, int isBefore){
-	DECAF_printf("ReleaseStringChars[%d]\n", isBefore);
+void hookJniReleaseStringChars(CPUState* env, int isStart){
+	DECAF_printf("ReleaseStringChars[%d]\n", isStart);
 }
 
 /**
  * jstring NewStringUTF(JNIEnv *env, const char *bytes)
  */
 int taintNewStringUTF = 0;
-void jniNewStringUTF(CPUState* env, int isBefore){
-	DECAF_printf("NewStringUTF[%d]\n", isBefore);
-	if(isBefore){
+int addressNewStringUTF = -1;
+void hookJniNewStringUTF(CPUState* env, int isStart){
+	DECAF_printf("NewStringUTF[%d]\n", isStart);
+	if(isStart){
 		taintNewStringUTF = getTaint(env->regs[1]);
 		if(taintNewStringUTF > 0){
 			DECAF_printf("gTaint[%x]: %x\n", env->regs[1], taintNewStringUTF);
 		}
+		addressNewStringUTF = env->regs[1];
 	}else{
 		if(taintNewStringUTF > 0){
 			addTaint(env->regs[0], taintNewStringUTF);
 			DECAF_printf("sTaint[%x]: %x\n", env->regs[0], taintNewStringUTF);
 			taintNewStringUTF = 0;
 		}
+		addressNewStringUTF = -1;
 	}
 }
 
-void jniGetStringUTFLength(CPUState* env, int isBefore){
-	DECAF_printf("GetStringUTFLength[%d]\n", isBefore);
+void hookJniGetStringUTFLength(CPUState* env, int isStart){
+	DECAF_printf("GetStringUTFLength[%d]\n", isStart);
 }
 
 /**
@@ -125,9 +129,9 @@ void jniGetStringUTFLength(CPUState* env, int isBefore){
  * jboolean *isCopy);
  */
 int taintGetStringUTFChars = 0;
-void jniGetStringUTFChars(CPUState* env, int isBefore){
-	DECAF_printf("GetStringUTFChars[%d]\n", isBefore);
-	if(isBefore){
+void hookJniGetStringUTFChars(CPUState* env, int isStart){
+	DECAF_printf("GetStringUTFChars[%d]\n", isStart);
+	if(isStart){
 		taintGetStringUTFChars = getTaint(env->regs[1]);
 		if(taintGetStringUTFChars > 0){
 			DECAF_printf("gTaint[%x]: %x\n", env->regs[1], taintGetStringUTFChars);
@@ -141,22 +145,66 @@ void jniGetStringUTFChars(CPUState* env, int isBefore){
 	}
 }
 
-void jniReleaseStringUTFChars(CPUState* env, int isBefore){
-	DECAF_printf("ReleaseStringUTFChars[%d]\n", isBefore);
+void hookJniReleaseStringUTFChars(CPUState* env, int isStart){
+	DECAF_printf("ReleaseStringUTFChars[%d]\n", isStart);
 }
 
-void jniGetStringRegion(CPUState* env, int isBefore){
-	DECAF_printf("GetStringRegion[%d]\n", isBefore);
+void hookJniGetStringRegion(CPUState* env, int isStart){
+	DECAF_printf("GetStringRegion[%d]\n", isStart);
 }
 
-void jniGetStringUTFRegion(CPUState* env, int isBefore){
-	DECAF_printf("GetStringUTFRegion[%d]\n", isBefore);
+void hookJniGetStringUTFRegion(CPUState* env, int isStart){
+	DECAF_printf("GetStringUTFRegion[%d]\n", isStart);
 }
 
-void jniGetStringCritical(CPUState* env, int isBefore){
-	DECAF_printf("GetStringCritical[%d]\n", isBefore);
+void hookJniGetStringCritical(CPUState* env, int isStart){
+	DECAF_printf("GetStringCritical[%d]\n", isStart);
 }
 
-void jniReleaseStringCritical(CPUState* env, int isBefore){
-	DECAF_printf("ReleaseStringCritical[%d]\n", isBefore);
+void hookJniReleaseStringCritical(CPUState* env, int isStart){
+	DECAF_printf("ReleaseStringCritical[%d]\n", isStart);
 }
+
+/**
+ * StringObject* dvmCreateStringFromCstr(const char* utf8Str)
+ */
+int addressDvmCreateStringFromCstr = -1;
+void hookDvmCreateStringFromCstr(CPUState* env, int isStart){
+	if(isStart){
+		if((addressNewStringUTF != -1) && (addressNewStringUTF == env->regs[0])){
+			addressDvmCreateStringFromCstr = addressNewStringUTF;
+		}
+	}else{
+		if((addressDvmCreateStringFromCstr != -1) &&
+				(taintNewStringUTF > 0)){
+			//add taintNewStringUTF to string@env->regs[0]
+			int charArrayAddr = -1;
+			//if(DECAF_read_mem(env, env->regs[0] + STRING_INSTANCE_DATA_OFFSET
+			if(DECAF_read_mem(env, env->regs[0] + 8
+						, &charArrayAddr, 4) != -1){
+				DECAF_printf("dvmCreateStringFromCstr: add taint %x to %x\n", 
+						//taintNewStringUTF, charArrayAddr + STRING_TAINT_OFFSET);
+						taintNewStringUTF, charArrayAddr + 12);
+				//assert(DECAF_write_mem(env, charArrayAddr + STRING_TAINT_OFFSET, 
+				assert(DECAF_write_mem(env, charArrayAddr + 12, &taintNewStringUTF, 4) != -1);
+			}
+
+			addressDvmCreateStringFromCstr = -1;
+		}
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

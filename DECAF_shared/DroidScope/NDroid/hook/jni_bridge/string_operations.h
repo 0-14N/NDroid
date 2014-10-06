@@ -24,18 +24,20 @@ extern "C"
    * NewStringUTF, GetStringUTFLength, GetStringUTFChars, ReleaseStringUTFChars
    * GetStringRegion, GetStringUTFRegion, GetStringCritical, ReleaseStringCritical
    */
-	void jniNewString(CPUState* env, int isBefore);
-	void jniGetStringLength(CPUState* env, int isBefore);
-	void jniGetStringChars(CPUState* env, int isBefore);
-	void jniReleaseStringChars(CPUState* env, int isBefore);
-	void jniNewStringUTF(CPUState* env, int isBefore);
-	void jniGetStringUTFLength(CPUState* env, int isBefore);
-	void jniGetStringUTFChars(CPUState* env, int isBefore);
-	void jniReleaseStringUTFChars(CPUState* env, int isBefore);
-	void jniGetStringRegion(CPUState* env, int isBefore);
-	void jniGetStringUTFRegion(CPUState* env, int isBefore);
-	void jniGetStringCritical(CPUState* env, int isBefore);
-	void jniReleaseStringCritical(CPUState* env, int isBefore);
+	void hookJniNewString(CPUState* env, int isStart);
+	void hookJniGetStringLength(CPUState* env, int isStart);
+	void hookJniGetStringChars(CPUState* env, int isStart);
+	void hookJniReleaseStringChars(CPUState* env, int isStart);
+	void hookJniNewStringUTF(CPUState* env, int isStart);
+	void hookJniGetStringUTFLength(CPUState* env, int isStart);
+	void hookJniGetStringUTFChars(CPUState* env, int isStart);
+	void hookJniReleaseStringUTFChars(CPUState* env, int isStart);
+	void hookJniGetStringRegion(CPUState* env, int isStart);
+	void hookJniGetStringUTFRegion(CPUState* env, int isStart);
+	void hookJniGetStringCritical(CPUState* env, int isStart);
+	void hookJniReleaseStringCritical(CPUState* env, int isStart);
+
+	void hookDvmCreateStringFromCstr(CPUState* env, int isStart);
 
 #ifdef __cplusplus
 }

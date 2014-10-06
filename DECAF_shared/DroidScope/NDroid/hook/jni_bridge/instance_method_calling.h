@@ -18,11 +18,11 @@ extern "C"
 
 	jniHookHandler hookInstanceMethodCalling(int curPC, int dvmStartAddr, CPUState* env);
 
-	void callVoidMethod(CPUState* env, int isStart);
+	void hookCallVoidMethod(CPUState* env, int isStart);
 
-	void dvmGetVirtulizedMethod(CPUState* env, int isStart);
+	void hookDvmGetVirtulizedMethod(CPUState* env, int isStart);
 
-	void dvmInterpret(CPUState* env, int isStart);
+	void hookDvmInterpret(CPUState* env, int isStart);
 
 #ifdef __cplusplus
 }

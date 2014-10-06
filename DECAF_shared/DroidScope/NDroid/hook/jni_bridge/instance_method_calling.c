@@ -17,8 +17,8 @@ int isInstanceMethodCalling(int curPC, int dvmStartAddr){
 jniHookHandler hookInstanceMethodCalling(int curPC, int dvmStartAddr, CPUState* env){
 	switch(curPC - dvmStartAddr){
 		case CallVoidMethod_OFFSET:
-			callVoidMethod(env, 1);
-			return callVoidMethod;
+			hookCallVoidMethod(env, 1);
+			return hookCallVoidMethod;
 	}
 	return NULL;
 }
@@ -28,7 +28,7 @@ jniHookHandler hookInstanceMethodCalling(int curPC, int dvmStartAddr, CPUState* 
  * jmethodID methodID, ...)
  */
 int addressCallVoidMethod = -1;
-void callVoidMethod(CPUState* env, int isStart){
+void hookCallVoidMethod(CPUState* env, int isStart){
 	DECAF_printf("CallVoidMethod[%d]\n", isStart);
 	if(isStart){
 		addressCallVoidMethod = env->regs[2];
@@ -42,7 +42,7 @@ void callVoidMethod(CPUState* env, int isStart){
  * const Method* dvmGetVirtualizedMethod(const ClassObject* clazz, const Method* meth)
  */
 int addressGetVirtulizedMethod = -1;
-void dvmGetVirtulizedMethod(CPUState* env, int isStart){
+void hookDvmGetVirtulizedMethod(CPUState* env, int isStart){
 	if(isStart){
 		if((addressCallVoidMethod != -1) && (env->regs[1] == addressCallVoidMethod)){
 			addressGetVirtulizedMethod = env->regs[1];
@@ -58,8 +58,9 @@ void dvmGetVirtulizedMethod(CPUState* env, int isStart){
 
 /**
  * void dvmInterpret(Thread* self, const Method* method, JValue* pResult, u4* rtaint)
+ * TODO
  */
-void dvmInterpret(CPUState* env, int isStart){
+void hookDvmInterpret(CPUState* env, int isStart){
 	if(isStart){
 		if(env->regs[1] == addressCallVoidMethod){
 			DECAF_printf("dvmInterpret: @%x\n", env->regs[1]);

@@ -8,6 +8,7 @@
 #include "dvm_hook.h"
 #include "SourcePolicy.h"
 #include "instance_method_calling.h"
+#include "string_operations.h"
 
 /**
  * mem[addr] stores an object reference, get its type
@@ -952,11 +953,14 @@ void dvmCallJNIMethodCallback(CPUState* env){
 	}
 }
 
+/**
+ * dvmGetVirtulizedMethod, dvmInterpret
+ */
 int isStartOfDvmHooks(int curPC, int dvmStartAddr){
 	switch(curPC - dvmStartAddr){
 		case OFFSET_DVM_GET_VIRTULIZED_METHOD_BEGIN:
-			return (1);
 		case OFFSET_DVM_INTERPRET_BEGIN:
+		case OFFSET_DVM_CREATE_STRING_FROM_CSTR_BEGIN:
 			return (1);
 	}
 	return (0);
@@ -965,15 +969,21 @@ int isStartOfDvmHooks(int curPC, int dvmStartAddr){
 void dvmHooksBegin(CPUState* env, int curPC, int dvmStartAddr){
 	switch(curPC - dvmStartAddr){
 		case OFFSET_DVM_GET_VIRTULIZED_METHOD_BEGIN:
-			dvmGetVirtulizedMethod(env, 1);
+			hookDvmGetVirtulizedMethod(env, 1);
 		case OFFSET_DVM_INTERPRET_BEGIN:
-			dvmInterpret(env, 1);
+			hookDvmInterpret(env, 1);
+		case OFFSET_DVM_CREATE_STRING_FROM_CSTR_BEGIN:
+			hookDvmCreateStringFromCstr(env, 1);
 	}
 }
 
+/**
+ * dvmGetVirtulizedMethod, dvmCreateStringFromCstr
+ */
 int isEndOfDvmHooks(int curPC, int dvmStartAddr){
 	switch(curPC - dvmStartAddr){
 		case OFFSET_DVM_GET_VIRTULIZED_METHOD_END:
+		case OFFSET_DVM_CREATE_STRING_FROM_CSTR_END:
 			return (1);
 	}
 	return (0);
@@ -982,6 +992,8 @@ int isEndOfDvmHooks(int curPC, int dvmStartAddr){
 void dvmHooksEnd(CPUState* env, int curPC, int dvmStartAddr){
 	switch(curPC - dvmStartAddr){
 		case OFFSET_DVM_GET_VIRTULIZED_METHOD_END:
-			dvmGetVirtulizedMethod(env, 0);
+			hookDvmGetVirtulizedMethod(env, 0);
+		case OFFSET_DVM_CREATE_STRING_FROM_CSTR_END:
+			hookDvmCreateStringFromCstr(env, 0);
 	}
 }

@@ -12,6 +12,8 @@ extern "C"
 #endif
 	#include "cpu.h"
 	#include "TaintEngine.h"
+  #include "dvm_hook.h"
+  #include "DECAF_main.h"
 
 	typedef void (*jniHookHandler)(CPUState*, int);
 
