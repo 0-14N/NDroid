@@ -23,6 +23,17 @@ jniHookHandler hookInstanceMethodCalling(int curPC, int dvmStartAddr, CPUState* 
 	return NULL;
 }
 
+/**
+ * void CallVoidMethod(JNIEnv *env, jobject obj,
+ * jmethodID methodID, ...)
+ */
+int addressCallVoidMethod = -1;
 void callVoidMethod(CPUState* env, int isBefore){
 	DECAF_printf("CallVoidMethod[%d]\n", isBefore);
+	if(isBefore){
+		addressCallVoidMethod = env->regs[2];
+		DECAF_printf("CallVoidMethod@%x\n", addressCallVoidMethod);
+	}else{
+		addressCallVoidMethod = -1;
+	}
 }

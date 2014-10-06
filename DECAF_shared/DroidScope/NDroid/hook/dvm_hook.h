@@ -90,8 +90,6 @@ extern "C"
 
 	void dvmCallJNIMethodCallback(CPUState* env);
 
-	void dvmPlatformInvokeCallback(CPUState* env);
-
 #ifdef __cplusplus
 }
 #endif

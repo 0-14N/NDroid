@@ -951,6 +951,3 @@ void dvmCallJNIMethodCallback(CPUState* env){
 	}
 }
 
-void dvmPlatformInvokeCallback(CPUState* env){
-	DECAF_printf("dvmPlatformInvoke\n");
-}

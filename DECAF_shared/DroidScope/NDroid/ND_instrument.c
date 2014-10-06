@@ -227,6 +227,7 @@ void nd_block_end_callback(DECAF_Callback_Params* params){
 	if(next_pc == DVM_START_ADDR + OFFSET_DVM_CALL_JNI_METHOD){
 		dvmCallJNIMethodCallback(env);
 	}
+
 }
 
 /**
