@@ -179,14 +179,12 @@ void hookDvmCreateStringFromCstr(CPUState* env, int isStart){
 				(taintNewStringUTF > 0)){
 			//add taintNewStringUTF to string@env->regs[0]
 			int charArrayAddr = -1;
-			//if(DECAF_read_mem(env, env->regs[0] + STRING_INSTANCE_DATA_OFFSET
-			if(DECAF_read_mem(env, env->regs[0] + 8
+			if(DECAF_read_mem(env, env->regs[0] + STRING_INSTANCE_DATA_OFFSET
 						, &charArrayAddr, 4) != -1){
 				DECAF_printf("dvmCreateStringFromCstr: add taint %x to %x\n", 
-						//taintNewStringUTF, charArrayAddr + STRING_TAINT_OFFSET);
-						taintNewStringUTF, charArrayAddr + 12);
-				//assert(DECAF_write_mem(env, charArrayAddr + STRING_TAINT_OFFSET, 
-				assert(DECAF_write_mem(env, charArrayAddr + 12, &taintNewStringUTF, 4) != -1);
+						taintNewStringUTF, charArrayAddr + STRING_TAINT_OFFSET);
+				assert(DECAF_write_mem(env, charArrayAddr + STRING_TAINT_OFFSET, 
+							&taintNewStringUTF, 4) != -1);
 			}
 
 			addressDvmCreateStringFromCstr = -1;

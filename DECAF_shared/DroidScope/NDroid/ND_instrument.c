@@ -151,17 +151,17 @@ void nd_instruction_begin_callback(DECAF_Callback_Params* params){
 				if(DECAF_read_mem(env, cur_pc_even, tmpThumb2Insn.chars, 4) != -1){
 					if(darm_thumb2_disasm(&d, tmpThumb2Insn.insn >> 16, 
 								tmpThumb2Insn.insn & 0x0000ffff, env) == 0){
-						if(darm_str(&d, &str, env) == 0){
-							DECAF_printf("T2  %x: %s\n", cur_pc, str.total);
-						}
+						//if(darm_str(&d, &str, env) == 0){
+							//DECAF_printf("T2  %x: %s\n", cur_pc, str.total);
+						//}
 					}
 				}
 			}else{
 				//Thumb instruction
 				if(darm_thumb_disasm(&d, tmpThumbInsn.insn, env) == 0){
-					if(darm_str(&d, &str, env) == 0){
-						DECAF_printf("T   %x: %s\n", cur_pc, str.total);
-					}
+					//if(darm_str(&d, &str, env) == 0){
+						//DECAF_printf("T   %x: %s\n", cur_pc, str.total);
+					//}
 				}
 			}
 		}
@@ -171,9 +171,9 @@ void nd_instruction_begin_callback(DECAF_Callback_Params* params){
 			darm_t d;
 			darm_str_t str;
 			if(darm_armv7_disasm(&d, tmpARMInsn.insn, env) == 0){
-				if(darm_str(&d, &str, env) == 0){
-					DECAF_printf("A   %x: %s\n", cur_pc_even, str.total);
-				}
+				//if(darm_str(&d, &str, env) == 0){
+					//DECAF_printf("A   %x: %s\n", cur_pc_even, str.total);
+				//}
 			}
 		}
 	}
@@ -303,7 +303,7 @@ void nd_block_begin_callback(DECAF_Callback_Params* params){
 
 	//get back into 3rd party native code
 	if(nd_in_blacklist(cur_pc) && EXECUTION_STATE != 0){
-		DECAF_printf("Jump in\n");
+		//DECAF_printf("Jump in\n");
 		EXECUTION_STATE = 0;
 
 		//hook after JNI invocation
@@ -325,7 +325,7 @@ void nd_block_begin_callback(DECAF_Callback_Params* params){
 			((cur_pc == JNI_CALL_METHOD_RETURN + 2)
 			   || (cur_pc == JNI_CALL_METHOD_RETURN + 4))){
 		EXECUTION_STATE = -1;
-		DECAF_printf("Return to Java\n");
+		//DECAF_printf("Return to Java\n");
 		return;
 	}
 
@@ -333,7 +333,7 @@ void nd_block_begin_callback(DECAF_Callback_Params* params){
 	if(EXECUTION_STATE == 0 && !nd_in_blacklist(cur_pc)){
 		//in native libraries or JNI APIs
 
-		DECAF_printf("Jump out --> %x\n", cur_pc);
+		//DECAF_printf("Jump out --> %x\n", cur_pc);
 		if(startOfJniApis(cur_pc, DVM_START_ADDR)){
 			//hook JNI APIs
 			currJniHandler = hookJniApis(cur_pc, DVM_START_ADDR, env);
