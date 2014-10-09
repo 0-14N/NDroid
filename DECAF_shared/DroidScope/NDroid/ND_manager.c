@@ -41,6 +41,7 @@ void nd_reset(){
 }
 
 void nd_manager_trace_pid(Monitor* mon, gpid_t pid){
+	DECAF_set_output_file("NDroid.log");
 	if(pid <= 0 || ND_TRACING_STATE != ND_STOP){
 		DECAF_printf("A process with pid <%d> uid <%d> is being traced, please stop tracing it first:-)\n", 
 				ND_GLOBAL_TRACING_PID, ND_GLOBAL_TRACING_UID);
@@ -88,6 +89,7 @@ void nd_manager_trace_uid(Monitor* mon, target_ulong uid){
 
 void nd_manager_wait_and_trace_uid(Monitor* mon, target_ulong uid, 
 		gva_t libStartAddr, gva_t libEndAddr){
+	DECAF_set_output_file("NDroid.log");
 	if(uid <= 0 || ND_TRACING_STATE != ND_STOP){
 		if(ND_GLOBAL_TRACING_PID != -1){
 			DECAF_printf("A process with pid <%d> is being traced, please stop tracing it first:-)\n", 

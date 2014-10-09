@@ -36,14 +36,14 @@ gva_t DVM_END_ADDR = -1;
 //	call ...
 //}
 //the modules are not updated immediately, the start/end address of the "libnet.so" 
-//has to be given.
+//has to be given. (0x4a3cd000 0x4a3d0000)
 gva_t GIVEN_LIB_START_ADDR = -1;
 gva_t GIVEN_LIB_END_ADDR = -1;
 
 //last call JNI API address
-gva_t lastCallJNIAddr = -1;
+gva_t lastCallJNIAddrRet = -1;
 //last call system library address
-gva_t lastCallSysLibAddr = -1;
+gva_t lastCallSysLibAddrRet = -1;
 //last JNI call hooking handler
 jniHookHandler lastJniHandler = NULL;
 //last system library call hooking handler
@@ -151,21 +151,19 @@ void nd_instruction_begin_callback(DECAF_Callback_Params* params){
 	}
 
 	//return from JNI API calls/system library calls
-	if((cur_pc_even == lastCallJNIAddr + 2) 
-			|| (cur_pc_even == lastCallJNIAddr + 4)){
+	if(cur_pc_even == lastCallJNIAddrRet){
 		if(lastJniHandler != NULL){
 			lastJniHandler(env, 0);
 			lastJniHandler = NULL;
-			lastCallJNIAddr = -1;
+			lastCallJNIAddrRet = -1;
 		}
 	}
 	
-	if((cur_pc_even == lastCallSysLibAddr + 2)
-			|| (cur_pc_even == lastCallSysLibAddr + 4)){
+	if(cur_pc_even == lastCallSysLibAddrRet){
 		if(lastSysLibHandler != NULL){
 			lastSysLibHandler(env, 0);
 			lastSysLibHandler = NULL;
-			lastCallSysLibAddr = -1;
+			lastCallSysLibAddrRet = -1;
 		}
 	}
 	
@@ -227,7 +225,6 @@ int nd_block_end_callback_cond(DECAF_callback_type_t cbType, gva_t curPC, gva_t 
 	gva_t tmpNextPC = nextPC & 0xfffffffe;
 	gva_t tmpCurPC = curPC & 0xfffffffe;
 
-	//DECAF_printf("=================JUMP FROM %x TO %x\n", tmpCurPC, tmpNextPC);
 	//JNI API call/system library call
 	if(nd_in_blacklist(tmpCurPC) && !nd_in_blacklist(tmpNextPC)){
 		return (1);
@@ -255,15 +252,15 @@ void nd_block_end_callback(DECAF_Callback_Params* params){
 
 	//JNI API/system library call
 	if(nd_in_blacklist(cur_pc) && !nd_in_blacklist(next_pc)){
-		DECAF_printf("=================JUMP FROM %x TO %x\n", cur_pc, next_pc);
+		//DECAF_printf("=================JUMP FROM %x TO %x\n", cur_pc, next_pc);
 		lastJniHandler = hookJniApis(next_pc, DVM_START_ADDR, env);
 		if(lastJniHandler != NULL){
-			lastCallJNIAddr = cur_pc;
+			lastCallJNIAddrRet = env->regs[14];
 			return;
 		}
 		lastSysLibHandler = hookSysLibCalls(next_pc, env);
 		if(lastSysLibHandler != NULL){
-			lastCallSysLibAddr = cur_pc;
+			lastCallSysLibAddrRet = env->regs[14];
 			return;
 		}
 	}

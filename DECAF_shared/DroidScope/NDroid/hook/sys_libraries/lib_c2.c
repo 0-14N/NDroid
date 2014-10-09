@@ -2116,9 +2116,11 @@ sysLibHookHandler hookLibCCalls(int curPC, int libCStartAddr, CPUState* env){
 		case FGETWS_OFFSET_C:
 			sysLibCFgetwsHookHandler(env, 1);
 			return sysLibCFgetwsHookHandler;
+		*/
 		case STRNCMP_OFFSET_C:
 			sysLibCStrncmpHookHandler(env, 1);
 			return sysLibCStrncmpHookHandler;
+		/*
 		case MKDTEMP_OFFSET_C:
 			sysLibCMkdtempHookHandler(env, 1);
 			return sysLibCMkdtempHookHandler;
