@@ -20,6 +20,9 @@ int ND_TRACING_STATE = ND_STOP;
 //the tracing process
 ProcessInfo* ND_GLOBAL_TRACING_PROCESS = NULL;
 
+extern gva_t GIVEN_LIB_START_ADDR;
+extern gva_t GIVEN_LIB_END_ADDR;
+
 /**
  * The start point of tracing process
  */
@@ -83,7 +86,8 @@ void nd_manager_trace_uid(Monitor* mon, target_ulong uid){
 	}
 }
 
-void nd_manager_wait_and_trace_uid(Monitor* mon, target_ulong uid){
+void nd_manager_wait_and_trace_uid(Monitor* mon, target_ulong uid, 
+		gva_t libStartAddr, gva_t libEndAddr){
 	if(uid <= 0 || ND_TRACING_STATE != ND_STOP){
 		if(ND_GLOBAL_TRACING_PID != -1){
 			DECAF_printf("A process with pid <%d> is being traced, please stop tracing it first:-)\n", 
@@ -99,6 +103,8 @@ void nd_manager_wait_and_trace_uid(Monitor* mon, target_ulong uid){
 
 	ND_GLOBAL_TRACING_UID = uid;
 	ND_TRACING_STATE = ND_WAITING;
+	GIVEN_LIB_START_ADDR = libStartAddr;
+	GIVEN_LIB_END_ADDR = libEndAddr;
 }
 
 void nd_manager_stop_trace_pid(Monitor* mon, gpid_t pid){

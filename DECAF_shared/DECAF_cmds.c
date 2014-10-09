@@ -56,9 +56,12 @@ void nd_trace_uid(Monitor* mon, target_ulong uid)
 	nd_manager_trace_uid(mon, uid);
 }
 
-void nd_wait_and_trace_uid(Monitor* mon, target_ulong uid)
+void nd_wait_and_trace_uid(Monitor* mon, target_ulong uid, 
+		const char* libStartAddr, const char* libEndAddr)
 {
-	nd_manager_wait_and_trace_uid(mon, uid);
+	gva_t startAddr = strtoul(libStartAddr, NULL, 16);
+	gva_t endAddr = strtoul(libEndAddr,NULL, 16);
+	nd_manager_wait_and_trace_uid(mon, uid, startAddr, endAddr);
 }
 
 void nd_stop_trace_pid(Monitor* mon, gpid_t pid)

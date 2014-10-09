@@ -86,9 +86,9 @@
 
 {
   .name         = "nd_wait_and_trace_uid",
-  .args_type    = _QEMU_MON_KEY_VALUE("uid","i"),
+  .args_type    = _QEMU_MON_KEY_VALUE("uid","i") _QEMU_MON_KEY_VALUE("libStartAddr", "s") _QEMU_MON_KEY_VALUE("libEndAddr", "s"),
   ._QEMU_MON_HANDLER_CMD = nd_wait_and_trace_uid,
-  .params       = "uid",
+  .params       = "uid libStartAddr libEndAddr",
   .help         = "NDroid: wait a process with uid = <uid> to start and trace it"
 },
 

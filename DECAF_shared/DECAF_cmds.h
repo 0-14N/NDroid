@@ -47,7 +47,8 @@ void do_sym_to_addr(Monitor* mon, int pid, const char* modName, const char* symN
 /* NDROID START */
 void nd_trace_pid(Monitor* mon, gpid_t pid);
 void nd_trace_uid(Monitor* mon, target_ulong uid);
-void nd_wait_and_trace_uid(Monitor* mon, target_ulong uid);
+void nd_wait_and_trace_uid(Monitor* mon, target_ulong uid, 
+		const char* libStartAddr, const char* libEndAddr);
 void nd_stop_trace_pid(Monitor* mon, gpid_t pid);
 void nd_stop_trace_uid(Monitor* mon, target_ulong uid);
 /* NDROID END */

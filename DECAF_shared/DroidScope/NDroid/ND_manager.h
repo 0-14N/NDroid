@@ -26,7 +26,8 @@ extern ProcessInfo* ND_GLOBAL_TRACING_PROCESS;
 
 void nd_manager_trace_pid(Monitor* mon, gpid_t pid);
 void nd_manager_trace_uid(Monitor* mon, target_ulong uid);
-void nd_manager_wait_and_trace_uid(Monitor* mon, target_ulong uid);
+void nd_manager_wait_and_trace_uid(Monitor* mon, target_ulong uid, 
+		gva_t libStartAddr, gva_t libEndAddr);
 void nd_manager_stop_trace_pid(Monitor* mon, gpid_t pid);
 void nd_manager_stop_trace_uid(Monitor* mon, target_ulong uid);
 

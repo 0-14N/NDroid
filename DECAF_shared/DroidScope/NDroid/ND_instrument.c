@@ -30,6 +30,16 @@ StringHashtable* blacklistLibs = NULL;
 gva_t DVM_START_ADDR = -1;
 gva_t DVM_END_ADDR = -1;
 
+//special case: when an app loads native libraries like:
+//static {
+//	System.loadLibrary("libnet.so");
+//	call ...
+//}
+//the modules are not updated immediately, the start/end address of the "libnet.so" 
+//has to be given.
+gva_t GIVEN_LIB_START_ADDR = -1;
+gva_t GIVEN_LIB_END_ADDR = -1;
+
 //last call JNI API address
 gva_t lastCallJNIAddr = -1;
 //last call system library address
@@ -71,9 +81,9 @@ int nd_in_blacklist(gva_t addr){
 			StringHashtable_add(blacklistLibs, moduleName);
 			return (1);
 		}
-	}else{
-		//4a3cd000-4a3d0000
-		if(addr >= 0x4a3cd000 && addr <= 0x4a3d0000){
+	}
+	else{
+		if(addr != -1 && addr >= GIVEN_LIB_START_ADDR && addr <= GIVEN_LIB_END_ADDR){
 			return (1);
 		}
 	}
