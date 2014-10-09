@@ -587,6 +587,15 @@ void contextBBCallback(DECAF_Callback_Params* params)
     Context_retAddr = env->regs[14];
 #endif
   }
+	/* NDROID START */
+	else if (tb->pc == DO_MMAP2_ADDR) //mmap2
+	{
+		updateMask |= UPDATE_MODULES;
+#ifdef TARGET_ARM
+    Context_retAddr = env->regs[14];
+#endif
+	}
+	/* NDROID END */
 
   if (tb->pc == Context_retAddr)
   {
@@ -637,6 +646,9 @@ int contextCondFunc (DECAF_callback_type_t cbType, gva_t curPC, gva_t nextPC)
        || (curPC == DO_EXECVE_ADDR)
        || (curPC == DO_PRCTL_ADDR)
        || (curPC == DO_CLONE_ADDR)
+			 /* NDROID START */
+			 || (curPC == DO_MMAP2_ADDR)
+			 /* NDORID END */
        || ((Context_retAddr != INV_ADDR) && (curPC == Context_retAddr))
      )
   {
