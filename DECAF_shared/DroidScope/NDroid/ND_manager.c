@@ -9,6 +9,7 @@
 
 gpid_t ND_GLOBAL_TRACING_PID = -1;
 target_ulong ND_GLOBAL_TRACING_UID = -1;
+gva_t ND_GLOBAL_TRACING_TASK_STRUCT = -1;
 /* flag indicate state of tracing
  * 0 	-- waiting (trigger by command 'nd_wait_and_trace_uid')
  * 1 	-- tracing by pid
@@ -29,6 +30,7 @@ void startTracing(){
 void nd_reset(){
 	ND_GLOBAL_TRACING_UID = -1;
 	ND_GLOBAL_TRACING_PID = -1;
+	ND_GLOBAL_TRACING_TASK_STRUCT = -1;
 	ND_TRACING_STATE = ND_STOP;
 	ND_GLOBAL_TRACING_PROCESS = NULL;
 	
@@ -47,6 +49,7 @@ void nd_manager_trace_pid(Monitor* mon, gpid_t pid){
 	if(processInfo != NULL){
 		ND_GLOBAL_TRACING_PID = pid;
 		ND_GLOBAL_TRACING_UID = processInfo->uid;
+		ND_GLOBAL_TRACING_TASK_STRUCT = processInfo->task_struct;
 		ND_TRACING_STATE = ND_TRACING_PID;
 		DECAF_printf("Find process with pid <%d>, start tracing!\n", pid);
 		ND_GLOBAL_TRACING_PROCESS = processInfo;
@@ -71,6 +74,7 @@ void nd_manager_trace_uid(Monitor* mon, target_ulong uid){
 		ND_GLOBAL_TRACING_UID = uid;
 		ND_GLOBAL_TRACING_PID = processInfo->pid;
 		ND_TRACING_STATE = ND_TRACING_UID;
+		ND_GLOBAL_TRACING_TASK_STRUCT = processInfo->task_struct;
 		DECAF_printf("Find process with uid <%d>, start tracing!\n", uid);
 		ND_GLOBAL_TRACING_PROCESS = processInfo;
 		nd_instrument_init();

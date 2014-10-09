@@ -42,16 +42,26 @@ void hookCallVoidMethod(CPUState* env, int isStart){
  * const Method* dvmGetVirtualizedMethod(const ClassObject* clazz, const Method* meth)
  */
 int addressGetVirtulizedMethod = -1;
+int dvmGetVirtulizedMethodHitNum = 0;
 void hookDvmGetVirtulizedMethod(CPUState* env, int isStart){
 	if(isStart){
-		if((addressCallVoidMethod != -1) && (env->regs[1] == addressCallVoidMethod)){
+		if(addressGetVirtulizedMethod != -1){
+			dvmGetVirtulizedMethodHitNum++;
+			return;
+		}else if((addressCallVoidMethod != -1) && (env->regs[1] == addressCallVoidMethod)){
 			addressGetVirtulizedMethod = env->regs[1];
+			DECAF_printf("	getVirtulizedMethod: 1\n");
+			return;
 		}
 	}else{
 		if(addressGetVirtulizedMethod != -1){
-			DECAF_printf("dvmGetVirtulizedMethod: @%x --> @%x\n", addressGetVirtulizedMethod, env->regs[0]);
-			addressCallVoidMethod = env->regs[0];
-			addressGetVirtulizedMethod = -1;
+			if(--dvmGetVirtulizedMethodHitNum == -1){
+				DECAF_printf("		dvmGetVirtulizedMethod: @%x --> @%x\n", addressGetVirtulizedMethod, env->regs[0]);
+				DECAF_printf("	getVirtulizedMethod: 0\n");
+				addressCallVoidMethod = env->regs[0];
+				addressGetVirtulizedMethod = -1;
+				dvmGetVirtulizedMethodHitNum = 0;
+			}
 		}
 	}
 }
@@ -60,10 +70,27 @@ void hookDvmGetVirtulizedMethod(CPUState* env, int isStart){
  * void dvmInterpret(Thread* self, const Method* method, JValue* pResult, u4* rtaint)
  * TODO
  */
+int addressDvmInterpret = -1;
+int dvmInterpretHitNum = 0;
 void hookDvmInterpret(CPUState* env, int isStart){
 	if(isStart){
-		if(env->regs[1] == addressCallVoidMethod){
-			DECAF_printf("dvmInterpret: @%x\n", env->regs[1]);
+		if(addressDvmInterpret != -1){
+			dvmInterpretHitNum++;
+			return;
+		}else if((env->regs[1] == addressCallVoidMethod) && 
+				(addressGetVirtulizedMethod == -1)){
+			DECAF_printf("	dvmInterpret: 1 <-- %x\n", env->regs[14]);
+			DECAF_printf("		dvmInterpret: @%x\n", env->regs[1]);
+			addressDvmInterpret = env->regs[1];
+			return;
+		}
+	}else{
+		if(addressDvmInterpret != -1){
+			if(--dvmInterpretHitNum == -1){
+				DECAF_printf("	dvmInterpret: 0\n");
+				addressDvmInterpret = -1;
+				dvmInterpretHitNum = 0;
+			}
 		}
 	}
 }

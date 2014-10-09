@@ -107,7 +107,23 @@ int getStringLength(CPUState* env, gva_t addr){
  *
  * The APCS reference: Procedure Call Standard for the ARM Architecture
  */
-void dvmCallJNIMethodCallback(CPUState* env){
+int addrNativeMethod = -1; //address of first level native method
+//int	nativeLevel = 0; //total native level except first native method
+int hitNum = 0; //total hit number after first level native method
+void hookDvmCallJNIMethod(CPUState* env, int isStart){
+	if((addrNativeMethod != -1) && (isStart == 0)){
+		if(--hitNum == -1){
+			DECAF_printf("Return from %x to Java\n", addrNativeMethod);
+			addrNativeMethod = -1;
+			hitNum = 0;
+		}
+		return;
+	}else if(isStart == 1){
+		if(addrNativeMethod != -1){
+			hitNum++;
+		}
+	}
+
 	gva_t argsAddr = env->regs[0];
 	gva_t methodAddr = env->regs[2];
 	gva_t taintsAddr = 0;
@@ -120,6 +136,11 @@ void dvmCallJNIMethodCallback(CPUState* env){
 	if(DECAF_read_mem(env, methodAddr + METHOD_INSN_OFFSET, &insnAddr, 4) != -1){
 		//target native method is in third party native library
 		if(nd_in_blacklist(insnAddr)){
+			//record address of first third party native library call
+			if(insnAddr != -1 && addrNativeMethod == -1){
+				addrNativeMethod = insnAddr;
+			}
+			
 			SourcePolicy *sp = (SourcePolicy*) malloc(sizeof(SourcePolicy));
 			sp->addr = insnAddr;
 			sp->handler = source_policy_handler;
@@ -961,6 +982,7 @@ int isStartOfDvmHooks(int curPC, int dvmStartAddr){
 		case OFFSET_DVM_GET_VIRTULIZED_METHOD_BEGIN:
 		case OFFSET_DVM_INTERPRET_BEGIN:
 		case OFFSET_DVM_CREATE_STRING_FROM_CSTR_BEGIN:
+		case OFFSET_DVM_CALL_JNI_METHOD_BEGIN:
 			return (1);
 	}
 	return (0);
@@ -974,6 +996,8 @@ void dvmHooksBegin(CPUState* env, int curPC, int dvmStartAddr){
 			hookDvmInterpret(env, 1);
 		case OFFSET_DVM_CREATE_STRING_FROM_CSTR_BEGIN:
 			hookDvmCreateStringFromCstr(env, 1);
+		case OFFSET_DVM_CALL_JNI_METHOD_BEGIN:
+			hookDvmCallJNIMethod(env, 1);
 	}
 }
 
@@ -984,6 +1008,8 @@ int isEndOfDvmHooks(int curPC, int dvmStartAddr){
 	switch(curPC - dvmStartAddr){
 		case OFFSET_DVM_GET_VIRTULIZED_METHOD_END:
 		case OFFSET_DVM_CREATE_STRING_FROM_CSTR_END:
+		case OFFSET_DVM_CALL_JNI_METHOD_END:
+		case OFFSET_DVM_INTERPRET_END:
 			return (1);
 	}
 	return (0);
@@ -995,5 +1021,9 @@ void dvmHooksEnd(CPUState* env, int curPC, int dvmStartAddr){
 			hookDvmGetVirtulizedMethod(env, 0);
 		case OFFSET_DVM_CREATE_STRING_FROM_CSTR_END:
 			hookDvmCreateStringFromCstr(env, 0);
+		case OFFSET_DVM_CALL_JNI_METHOD_END:
+			hookDvmCallJNIMethod(env, 0);
+		case OFFSET_DVM_INTERPRET_END:
+			hookDvmInterpret(env, 0);
 	}
 }

@@ -88,7 +88,7 @@ extern "C"
 #define STRING_CONTENT_OFFSET 16
 //===========method info end==========
 
-	void dvmCallJNIMethodCallback(CPUState* env);
+	void hookDvmCallJNIMethod(CPUState* env, int isStart);
 
 	int isStartOfDvmHooks(int curPC, int dvmStartAddr);
 

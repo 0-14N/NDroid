@@ -7,11 +7,6 @@ extern "C"
 {
 #endif
 
-/**
- * When Java calls Native methods,
- * "dvmCallJNIMethod" should be called.
- */
-#define OFFSET_DVM_CALL_JNI_METHOD 0x00050f84
 
 
 	/**
@@ -70,6 +65,13 @@ extern "C"
  * 		dvmInterpret(..., method, ...);A
  * }
  */
+
+/**
+ * When Java calls Native methods,
+ * "dvmCallJNIMethod" should be called.
+ */
+#define OFFSET_DVM_CALL_JNI_METHOD_BEGIN 0x00050f84
+#define OFFSET_DVM_CALL_JNI_METHOD_END 0x00051186
 
 #define OFFSET_DVM_GET_VIRTULIZED_METHOD_BEGIN 0x0006f054
 #define OFFSET_DVM_GET_VIRTULIZED_METHOD_END 0x0006f0b6
