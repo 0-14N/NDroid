@@ -144,6 +144,7 @@ void nd_instruction_begin_callback(DECAF_Callback_Params* params){
 			lastCallJNIAddr = -1;
 		}
 	}
+	
 	if((cur_pc_even == lastCallSysLibAddr + 2)
 			|| (cur_pc_even == lastCallSysLibAddr + 4)){
 		if(lastSysLibHandler != NULL){
@@ -238,7 +239,7 @@ void nd_block_end_callback(DECAF_Callback_Params* params){
 
 	//JNI API/system library call
 	if(nd_in_blacklist(cur_pc) && !nd_in_blacklist(next_pc)){
-		DECAF_printf("=================JUMP FROM %x TO %x\n", cur_pc, next_pc);
+		//DECAF_printf("=================JUMP FROM %x TO %x\n", cur_pc, next_pc);
 		lastJniHandler = hookJniApis(next_pc, DVM_START_ADDR, env);
 		if(lastJniHandler != NULL){
 			lastCallJNIAddr = cur_pc;

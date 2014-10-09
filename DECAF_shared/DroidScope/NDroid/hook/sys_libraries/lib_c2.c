@@ -777,15 +777,18 @@ int startOfLibCCalls(int curPC, int libCStartAddr){
 
 sysLibHookHandler hookLibCCalls(int curPC, int libCStartAddr, CPUState* env){
 	switch(curPC - libCStartAddr){
+		/*
 		case WCSFTIME_OFFSET_C:
 			sysLibCWcsftimeHookHandler(env, 1);
 			return sysLibCWcsftimeHookHandler;
 		case FREEDTOA_OFFSET_C:
 			sysLibCFreedtoaHookHandler(env, 1);
 			return sysLibCFreedtoaHookHandler;
+			*/
 		case FCLOSE_OFFSET_C:
 			sysLibCFcloseHookHandler(env, 1);
 			return sysLibCFcloseHookHandler;
+			/*
 		case GETADDRINFO_OFFSET_C:
 			sysLibCGetaddrinfoHookHandler(env, 1);
 			return sysLibCGetaddrinfoHookHandler;
@@ -1236,9 +1239,11 @@ sysLibHookHandler hookLibCCalls(int curPC, int libCStartAddr, CPUState* env){
 		case ABORT_OFFSET_C:
 			sysLibCAbortHookHandler(env, 1);
 			return sysLibCAbortHookHandler;
+			*/
 		case FPRINTF_OFFSET_C:
 			sysLibCFprintfHookHandler(env, 1);
 			return sysLibCFprintfHookHandler;
+			/*
 		case STRTOLL_OFFSET_C:
 			sysLibCStrtollHookHandler(env, 1);
 			return sysLibCStrtollHookHandler;
@@ -2799,9 +2804,11 @@ sysLibHookHandler hookLibCCalls(int curPC, int libCStartAddr, CPUState* env){
 		case DLVALLOC_OFFSET_C:
 			sysLibCDlvallocHookHandler(env, 1);
 			return sysLibCDlvallocHookHandler;
+		*/
 		case FOPEN_OFFSET_C:
 			sysLibCFopenHookHandler(env, 1);
 			return sysLibCFopenHookHandler;
+		/*
 		case MEMCCPY_OFFSET_C:
 			sysLibCMemccpyHookHandler(env, 1);
 			return sysLibCMemccpyHookHandler;
@@ -3075,6 +3082,7 @@ sysLibHookHandler hookLibCCalls(int curPC, int libCStartAddr, CPUState* env){
 		case PTHREAD_SELF_OFFSET_C:
 			sysLibCPthread_SelfHookHandler(env, 1);
 			return sysLibCPthread_SelfHookHandler;
+			*/
 		default:
 			break;
 	}
