@@ -71,6 +71,11 @@ int nd_in_blacklist(gva_t addr){
 			StringHashtable_add(blacklistLibs, moduleName);
 			return (1);
 		}
+	}else{
+		//4a3cd000-4a3d0000
+		if(addr >= 0x4a3cd000 && addr <= 0x4a3d0000){
+			return (1);
+		}
 	}
 
 	return (0);
@@ -212,6 +217,7 @@ int nd_block_end_callback_cond(DECAF_callback_type_t cbType, gva_t curPC, gva_t 
 	gva_t tmpNextPC = nextPC & 0xfffffffe;
 	gva_t tmpCurPC = curPC & 0xfffffffe;
 
+	//DECAF_printf("=================JUMP FROM %x TO %x\n", tmpCurPC, tmpNextPC);
 	//JNI API call/system library call
 	if(nd_in_blacklist(tmpCurPC) && !nd_in_blacklist(tmpNextPC)){
 		return (1);
@@ -239,7 +245,7 @@ void nd_block_end_callback(DECAF_Callback_Params* params){
 
 	//JNI API/system library call
 	if(nd_in_blacklist(cur_pc) && !nd_in_blacklist(next_pc)){
-		//DECAF_printf("=================JUMP FROM %x TO %x\n", cur_pc, next_pc);
+		DECAF_printf("=================JUMP FROM %x TO %x\n", cur_pc, next_pc);
 		lastJniHandler = hookJniApis(next_pc, DVM_START_ADDR, env);
 		if(lastJniHandler != NULL){
 			lastCallJNIAddr = cur_pc;
@@ -354,7 +360,8 @@ void nd_instrument_init(){
 	getModuleBoundry("/lib/libc.so", &LIBC_START_ADDR, &LIBC_END_ADDR);
 
 	getModuleBoundry("/lib/libm.so", &LIBM_START_ADDR, &LIBM_END_ADDR);
-
+	
+	DECAF_printf("GLOBAL_TRACING_PID: %d == %d\n", ND_GLOBAL_TRACING_PID, getCurrentPID());
 }
 
 

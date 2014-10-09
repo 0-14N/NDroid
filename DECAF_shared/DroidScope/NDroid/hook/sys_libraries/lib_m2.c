@@ -164,6 +164,7 @@ int startOfLibMCalls(int curPC, int libMStartAddr){
 
 sysLibHookHandler hookLibMCalls(int curPC, int libMStartAddr, CPUState* env){
 	switch(curPC - libMStartAddr){
+		/*
 		case COSHF_OFFSET_M:
 			sysLibMCoshfHookHandler(env, 1);
 			return sysLibMCoshfHookHandler;
@@ -623,6 +624,7 @@ sysLibHookHandler hookLibMCalls(int curPC, int libMStartAddr, CPUState* env){
 		case SINCOSF_OFFSET_M:
 			sysLibMSincosfHookHandler(env, 1);
 			return sysLibMSincosfHookHandler;
+			*/
 		default:
 			break;
 	}
