@@ -99,7 +99,6 @@ int nd_instruction_begin_callback_cond(DECAF_callback_type_t cbType, gva_t curPC
 		if(nd_in_blacklist(curPC)){
 			return (1);
 		}
-
 	}
 	
 	return (0);
@@ -149,6 +148,8 @@ void nd_instruction_begin_callback(DECAF_Callback_Params* params){
 		DECAF_printf("Step into Native\n");
 		sourcePolicy->handler(sourcePolicy, env);
 	}
+
+	//DECAF_printf("%x  %x\n", cur_pc_even, lastCallSysLibAddrRet);
 
 	//return from JNI API calls/system library calls
 	if(cur_pc_even == lastCallJNIAddrRet){
@@ -255,12 +256,13 @@ void nd_block_end_callback(DECAF_Callback_Params* params){
 		//DECAF_printf("=================JUMP FROM %x TO %x\n", cur_pc, next_pc);
 		lastJniHandler = hookJniApis(next_pc, DVM_START_ADDR, env);
 		if(lastJniHandler != NULL){
-			lastCallJNIAddrRet = env->regs[14];
+			lastCallJNIAddrRet = env->regs[14] & 0xfffffffe;
 			return;
 		}
+
 		lastSysLibHandler = hookSysLibCalls(next_pc, env);
 		if(lastSysLibHandler != NULL){
-			lastCallSysLibAddrRet = env->regs[14];
+			lastCallSysLibAddrRet = env->regs[14] & 0xfffffffe;
 			return;
 		}
 	}
@@ -368,7 +370,6 @@ void nd_instrument_init(){
 
 	getModuleBoundry("/lib/libm.so", &LIBM_START_ADDR, &LIBM_END_ADDR);
 	
-	DECAF_printf("GLOBAL_TRACING_PID: %d == %d\n", ND_GLOBAL_TRACING_PID, getCurrentPID());
 }
 
 
