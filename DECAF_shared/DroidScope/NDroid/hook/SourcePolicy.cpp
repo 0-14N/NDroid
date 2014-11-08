@@ -138,8 +138,13 @@ void source_policy_handler(SourcePolicy* sourcePolicy, CPUState* env){
 }
 
 int addSourcePolicy(gva_t addr, SourcePolicy* policy){
-	source_policy_pair new_policy (addr, policy);
-	sourcePolicyMap.insert(new_policy);
+	source_policy_iterator it = sourcePolicyMap.find(addr);
+	if(it != sourcePolicyMap.end()){
+		it->second = policy;
+	}else{
+		source_policy_pair new_policy (addr, policy);
+		sourcePolicyMap.insert(new_policy);
+	}
 	return 0;
 }
 
