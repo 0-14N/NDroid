@@ -31,6 +31,10 @@ void nd_manager_wait_and_trace_uid(Monitor* mon, target_ulong uid,
 void nd_manager_stop_trace_pid(Monitor* mon, gpid_t pid);
 void nd_manager_stop_trace_uid(Monitor* mon, target_ulong uid);
 
+#ifdef WITH_MEM_PROTECT
+void nd_refresh_stack_heap_ranges();
+#endif
+
 #ifdef __cplusplus
 }
 #endif

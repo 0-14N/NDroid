@@ -125,3 +125,11 @@ void nd_manager_stop_trace_uid(Monitor* mon, target_ulong uid){
 	}
 }
 
+#ifdef WITH_MEM_PROTECT
+void nd_refresh_stack_heap_ranges(){
+	if(ND_GLOBAL_TRACING_PID != -1){
+		refresh_stack_heap_ranges();
+	}	
+}
+#endif
+

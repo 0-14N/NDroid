@@ -410,3 +410,10 @@ void nd_instrument_stop(){
 		nd_be_handle = DECAF_NULL_HANDLE;
 	}
 }
+
+#ifdef WITH_MEM_PROTECT
+	void refresh_stack_heap_ranges(){
+		refreshDVMStackRanges(ND_GLOBAL_TRACING_PID);
+		refreshDVMHeapRanges(ND_GLOBAL_TRACING_PID);
+	}
+#endif

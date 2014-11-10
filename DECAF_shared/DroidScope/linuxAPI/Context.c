@@ -110,6 +110,14 @@ void updateProcessModuleList(CPUState* env, gpid_t pid)
   {
     return;
   }
+	
+	/* NDROID START */
+#ifdef WITH_MEM_PROTECT
+	if (pid == ND_GLOBAL_TRACING_PID){
+		nd_refresh_stack_heap_ranges();
+	}
+#endif
+	/* NDROID END */
 
 	/* NDROID START */
 	/**

@@ -52,11 +52,11 @@ void initDVMStackRanges(gpid_t tracingPID){
 }
 
 void refreshDVMHeapRanges(gpid_t tracingPID){
-	//TODO
+	initDVMHeapRanges(tracingPID);
 }
 
 void refreshDVMStackRanges(gpid_t tracingPID){
-	//TODO
+	initDVMStackRanges(tracingPID);
 }
 
 int isWithinDVMStack(gva_t addr){

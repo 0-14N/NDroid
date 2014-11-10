@@ -19,6 +19,11 @@ extern "C"
 	int nd_in_blacklist(gva_t addr);
 	void nd_instrument_init();
 	void nd_instrument_stop();
+
+#ifdef WITH_MEM_PROTECT
+	void refresh_stack_heap_ranges();
+#endif
+
 #ifdef __cplusplus
 }
 #endif
