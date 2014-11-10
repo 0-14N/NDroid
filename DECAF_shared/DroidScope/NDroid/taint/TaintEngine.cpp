@@ -6,6 +6,8 @@
 #include "TaintEngine.h"
 #include <tr1/unordered_map>
 #include <assert.h>
+#include "DECAF_shared/utils/OutputWrapper.h"
+#include "memProtect/mem_protection.h"
 
 using namespace std::tr1;
 
@@ -23,7 +25,21 @@ static int taintRegs[16];
 #define DEFENSIVE_CHECK_TAINT_NO_RET(_tValue) \
 	if (_tValue <= 0) return;
 
+#define CHECK_ON_DVM_STACK(_addr) \
+	if(isWithinDVMStack(_addr)) { \
+		DECAF_printf("Write mem@%x on DVM stack!\n", _addr); \
+	}
+
+#define CHECK_ON_DVM_HEAP(_addr) \
+	if(isWithinDVMHeap(_addr)) { \
+		DECAF_printf("Write mem@%x on DVM heap!\n", _addr); \
+	}
+
 int addTaint(int addr, int tValue){
+#ifdef WITH_MEM_PROTECT
+	CHECK_ON_DVM_STACK(addr);
+	CHECK_ON_DVM_HEAP(addr);
+#endif
 	DEFENSIVE_CHECK_TAINT(tValue);
 	taint_iterator it = taintMap.find(addr);
 	if(it != taintMap.end()){
@@ -46,6 +62,10 @@ void addBlockTaint(int startAddr, int endAddr, int tValue){
 }
 
 int setTaint(int addr, int tValue){
+#ifdef WITH_MEM_PROTECT
+	CHECK_ON_DVM_STACK(addr);
+	CHECK_ON_DVM_HEAP(addr);
+#endif
 	DEFENSIVE_CHECK_TAINT(tValue);
 	taint_iterator it = taintMap.find(addr);	
 	if(it != taintMap.end()){
@@ -59,6 +79,10 @@ int setTaint(int addr, int tValue){
 }
 
 int clearTaint(int addr){
+#ifdef WITH_MEM_PROTECT
+	CHECK_ON_DVM_STACK(addr);
+	CHECK_ON_DVM_HEAP(addr);
+#endif
 	taint_iterator it = taintMap.find(addr);
 	if(it != taintMap.end()){
 		taintMap.erase(it);

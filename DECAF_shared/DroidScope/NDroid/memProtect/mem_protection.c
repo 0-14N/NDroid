@@ -60,9 +60,17 @@ void refreshDVMStackRanges(gpid_t tracingPID){
 }
 
 int isWithinDVMStack(gva_t addr){
+	if((addr >= DVM_STACK_START) 
+			&& (addr <= DVM_STACK_END)){
+		return (1);
+	}
 	return (0);
 }
 
 int isWithinDVMHeap(gva_t addr){
+	if((addr >= DVM_HEAP_START)
+			&& (addr <= DVM_HEAP_END)){
+		return (1);
+	}
 	return (0);
 }

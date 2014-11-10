@@ -346,11 +346,12 @@ void getModuleBoundry(const char* moduleName, gva_t* startAddr, gva_t* endAddr){
 }
 
 void nd_instrument_init(){
-	if(WITH_MEM_PROTECT){
+#ifdef WITH_MEM_PROTECT
 		DECAF_printf("Memory protection open!\n");
-	}else{
+#else
 		DECAF_printf("Memory protection close!\n");
-	}
+#endif
+
 	//register instruction begin
 	nd_ib_handle = DECAF_register_callback(DECAF_INSN_BEGIN_CB, 
 																				&nd_instruction_begin_callback, 
@@ -378,10 +379,10 @@ void nd_instrument_init(){
 
 	//if memory protection mode is open, monitor memory operations 
 	//relevant to DVM stack and heap
-	if(WITH_MEM_PROTECT){
-		initDVMStackRanges(ND_GLOBAL_TRACING_PID);
-		initDVMHeapRanges(ND_GLOBAL_TRACING_PID);
-	}
+#ifdef WITH_MEM_PROTECT
+	initDVMStackRanges(ND_GLOBAL_TRACING_PID);
+	initDVMHeapRanges(ND_GLOBAL_TRACING_PID);
+#endif
 }
 
 
