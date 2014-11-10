@@ -17,7 +17,7 @@ extern "C"
 
 	typedef void (*jniHookHandler)(CPUState*, int);
 
-	int startOfJniApis(int curPC, int dvmStartAddr);
+	//int startOfJniApis(int curPC, int dvmStartAddr);
 
 	jniHookHandler hookJniApis(int curPC, int dvmStartAddr, CPUState* env);
 

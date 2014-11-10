@@ -1,5 +1,6 @@
 #include "lib_c.h"
 
+/*
 int startOfLibCCalls(int curPC, int libCStartAddr){
 	switch(curPC - libCStartAddr){
 		case WCSFTIME_OFFSET_C:
@@ -774,6 +775,7 @@ int startOfLibCCalls(int curPC, int libCStartAddr){
 	}
 	return (0);
 }
+*/
 
 sysLibHookHandler hookLibCCalls(int curPC, int libCStartAddr, CPUState* env){
 	switch(curPC - libCStartAddr){

@@ -1543,7 +1543,7 @@ void sysLibCH_NerrHookHandler(CPUState* env, int isStart);
 void sysLibCReaddir_RHookHandler(CPUState* env, int isStart);
 void sysLibCPthread_SelfHookHandler(CPUState* env, int isStart);
 
-int startOfLibCCalls(int curPC, int libCStartAddr);
+//int startOfLibCCalls(int curPC, int libCStartAddr);
 
 sysLibHookHandler hookLibCCalls(int curPC, int libCStartAddr, CPUState* env);
 

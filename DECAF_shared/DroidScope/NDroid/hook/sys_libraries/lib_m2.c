@@ -1,5 +1,6 @@
 #include "lib_m.h"
 
+/*
 int startOfLibMCalls(int curPC, int libMStartAddr){
 	switch(curPC - libMStartAddr){
 		case COSHF_OFFSET_M:
@@ -161,6 +162,7 @@ int startOfLibMCalls(int curPC, int libMStartAddr){
 	}
 	return (0);
 }
+*/
 
 sysLibHookHandler hookLibMCalls(int curPC, int libMStartAddr, CPUState* env){
 	switch(curPC - libMStartAddr){

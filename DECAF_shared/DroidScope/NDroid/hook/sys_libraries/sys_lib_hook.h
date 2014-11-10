@@ -25,7 +25,7 @@ extern "C"
 
 	typedef void (*sysLibHookHandler)(CPUState*, int);
 	
-	int startOfSysLibCalls(int curPC);
+	//int startOfSysLibCalls(int curPC);
 
 	sysLibHookHandler hookSysLibCalls(int curPC, CPUState* env);
 

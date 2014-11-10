@@ -317,7 +317,7 @@ void sysLibMExpHookHandler(CPUState* env, int isBefore);
 void sysLibMRemquoHookHandler(CPUState* env, int isBefore);
 void sysLibMSincosfHookHandler(CPUState* env, int isBefore);
 
-int startOfLibMCalls(int curPC, int libMStartAddr);
+//int startOfLibMCalls(int curPC, int libMStartAddr);
 
 sysLibHookHandler hookLibMCalls(int curPC, int libMStartAddr, CPUState* env);
 

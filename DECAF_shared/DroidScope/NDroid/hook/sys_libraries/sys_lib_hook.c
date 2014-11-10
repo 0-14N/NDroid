@@ -12,6 +12,7 @@ gva_t LIBC_END_ADDR = -1;
 gva_t LIBM_START_ADDR = -1;
 gva_t LIBM_END_ADDR = -1;
 
+/*
 int startOfSysLibCalls(int curPC){
 	//libc.so calls
 	if(startOfLibCCalls(curPC, LIBC_START_ADDR)){
@@ -25,6 +26,7 @@ int startOfSysLibCalls(int curPC){
 
 	return (0);
 }
+*/
 
 sysLibHookHandler hookSysLibCalls(int curPC, CPUState* env){
 	//libc.so calls
