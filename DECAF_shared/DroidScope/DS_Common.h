@@ -55,12 +55,12 @@ typedef enum {
 
 /* NDROID START */
 //get this address from "/proc/kallsyms"
-#define SET_TASK_COMM_ADDR 0xc0091d5c
-#define DO_FORK_ADDR 0xc003a184
-#define DO_EXECVE_ADDR 0xc0092a14
-#define DO_MMAP2_ADDR 0xc0027030
-#define DO_PRCTL_ADDR 0xc0047bf4
-#define DO_CLONE_ADDR 0xc0026ea8
+#define SET_TASK_COMM_ADDR 0xc0091d5c //symbol of set_task_common
+#define DO_FORK_ADDR 0xc003a184   //symbol of do_fork
+#define DO_EXECVE_ADDR 0xc0092a14 //symbol of do_execve
+#define DO_MMAP2_ADDR 0xc0027030  //symbol of do_mmap2
+#define DO_PRCTL_ADDR 0xc0047bf4  //symbol of sys_prctl
+#define DO_CLONE_ADDR 0xc0026ea8  //symbol of sys_clone
 /* NDROID END */
 
 #define DVM_JIT_GET_CODE_ADDR (0x800742d8) //(0xACA6D794)

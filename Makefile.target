@@ -168,6 +168,7 @@ DECAF_SRC_FILES += \
 
 # START NDROID SRC FILES
 # armv7.c  armv7-tbl.c  darm.c  darm-tbl.c  thumb2.c  thumb2-decoder.c  thumb2-tbl.c  thumb.c  thumb-tbl.c
+MEM_PROTEC_MODE_OPEN := true
 DECAF_SRC_FILES += \
 		DroidScope/NDroid/ND_manager.c\
 		DroidScope/NDroid/ND_instrument.c\
@@ -192,6 +193,7 @@ DECAF_SRC_FILES += \
 		DroidScope/NDroid/hook/sys_libraries/lib_c2.c\
 		DroidScope/NDroid/hook/sys_libraries/lib_m.c\
 		DroidScope/NDroid/hook/sys_libraries/lib_m2.c\
+		DroidScope/NDroid/memProtect/mem_protection.c\
 # END NDROID SRC FILES
 
 DECAF_CFLAGS := -I$(LOCAL_PATH)/DECAF_shared
@@ -204,6 +206,7 @@ DECAF_CFLAGS += -I$(LOCAL_PATH)/DECAF_shared/DroidScope/NDroid/hook
 DECAF_CFLAGS += -I$(LOCAL_PATH)/DECAF_shared/DroidScope/NDroid/taint
 DECAF_CFLAGS += -I$(LOCAL_PATH)/DECAF_shared/DroidScope/NDroid/hook/jni_bridge
 DECAF_CFLAGS += -I$(LOCAL_PATH)/DECAF_shared/DroidScope/NDroid/hook/sys_libraries
+DECAF_CFLAGS += -I$(LOCAL_PATH)/DECAF_shared/DroidScope/NDroid/memProtect
 DECAF_LDLIBS := -lstdc++
 
 # END DECAF SRC FILES
