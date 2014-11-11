@@ -979,10 +979,16 @@ void hookDvmCallJNIMethod(CPUState* env, int isStart){
  */
 int isStartOfDvmHooks(int curPC, int dvmStartAddr){
 	switch(curPC - dvmStartAddr){
+		case OFFSET_DVM_CALL_JNI_METHOD_BEGIN:
+
 		case OFFSET_DVM_GET_VIRTULIZED_METHOD_BEGIN:
 		case OFFSET_DVM_INTERPRET_BEGIN:
+
 		case OFFSET_DVM_CREATE_STRING_FROM_CSTR_BEGIN:
-		case OFFSET_DVM_CALL_JNI_METHOD_BEGIN:
+		case OFFSET_DVM_CREATE_STRING_FROM_UNICODE_BEGIN:
+		case OFFSET_DVM_STRING_OBJECT_CHARS_BEGIN:
+		case OFFSET_DVM_CREATE_CSTR_FROM_STRING_BEGIN:
+		case OFFSET_DVM_GET_STRING_UTF_REGION_BEGIN:
 			return (1);
 	}
 	return (0);
@@ -990,14 +996,32 @@ int isStartOfDvmHooks(int curPC, int dvmStartAddr){
 
 void dvmHooksBegin(CPUState* env, int curPC, int dvmStartAddr){
 	switch(curPC - dvmStartAddr){
-		case OFFSET_DVM_GET_VIRTULIZED_METHOD_BEGIN:
-			hookDvmGetVirtulizedMethod(env, 1);
-		case OFFSET_DVM_INTERPRET_BEGIN:
-			hookDvmInterpret(env, 1);
-		case OFFSET_DVM_CREATE_STRING_FROM_CSTR_BEGIN:
-			hookDvmCreateStringFromCstr(env, 1);
 		case OFFSET_DVM_CALL_JNI_METHOD_BEGIN:
 			hookDvmCallJNIMethod(env, 1);
+			break;
+
+		case OFFSET_DVM_GET_VIRTULIZED_METHOD_BEGIN:
+			hookDvmGetVirtulizedMethod(env, 1);
+			break;
+		case OFFSET_DVM_INTERPRET_BEGIN:
+			hookDvmInterpret(env, 1);
+			break;
+
+		case OFFSET_DVM_CREATE_STRING_FROM_CSTR_BEGIN:
+			hookDvmCreateStringFromCstr(env, 1);
+			break;
+		case OFFSET_DVM_CREATE_STRING_FROM_UNICODE_BEGIN:
+			hookDvmCreateStringFromUnicode(env, 1);
+			break;
+		case OFFSET_DVM_STRING_OBJECT_CHARS_BEGIN:
+			hookDvmStringObjectChars(env, 1);
+			break;
+		case OFFSET_DVM_CREATE_CSTR_FROM_STRING_BEGIN:
+			hookDvmCreateCstrFromString(env, 1);
+			break;
+		case OFFSET_DVM_GET_STRING_UTF_REGION_BEGIN:
+			hookDvmGetStringUtfRegion(env, 1);
+			break;
 	}
 }
 
@@ -1006,10 +1030,16 @@ void dvmHooksBegin(CPUState* env, int curPC, int dvmStartAddr){
  */
 int isEndOfDvmHooks(int curPC, int dvmStartAddr){
 	switch(curPC - dvmStartAddr){
-		case OFFSET_DVM_GET_VIRTULIZED_METHOD_END:
-		case OFFSET_DVM_CREATE_STRING_FROM_CSTR_END:
 		case OFFSET_DVM_CALL_JNI_METHOD_END:
+
+		case OFFSET_DVM_GET_VIRTULIZED_METHOD_END:
 		case OFFSET_DVM_INTERPRET_END:
+
+		case OFFSET_DVM_CREATE_STRING_FROM_CSTR_END:
+		case OFFSET_DVM_CREATE_STRING_FROM_UNICODE_END:
+		case OFFSET_DVM_STRING_OBJECT_CHARS_END:
+		case OFFSET_DVM_CREATE_CSTR_FROM_STRING_END:
+		case OFFSET_DVM_GET_STRING_UTF_REGION_END:
 			return (1);
 	}
 	return (0);
@@ -1017,13 +1047,31 @@ int isEndOfDvmHooks(int curPC, int dvmStartAddr){
 
 void dvmHooksEnd(CPUState* env, int curPC, int dvmStartAddr){
 	switch(curPC - dvmStartAddr){
-		case OFFSET_DVM_GET_VIRTULIZED_METHOD_END:
-			hookDvmGetVirtulizedMethod(env, 0);
-		case OFFSET_DVM_CREATE_STRING_FROM_CSTR_END:
-			hookDvmCreateStringFromCstr(env, 0);
 		case OFFSET_DVM_CALL_JNI_METHOD_END:
 			hookDvmCallJNIMethod(env, 0);
+			break;
+
+		case OFFSET_DVM_GET_VIRTULIZED_METHOD_END:
+			hookDvmGetVirtulizedMethod(env, 0);
+			break;
 		case OFFSET_DVM_INTERPRET_END:
 			hookDvmInterpret(env, 0);
+			break;
+
+		case OFFSET_DVM_CREATE_STRING_FROM_CSTR_END:
+			hookDvmCreateStringFromCstr(env, 0);
+			break;
+		case OFFSET_DVM_CREATE_STRING_FROM_UNICODE_END:
+			hookDvmCreateStringFromUnicode(env, 0);
+			break;
+		case OFFSET_DVM_STRING_OBJECT_CHARS_END:
+			hookDvmStringObjectChars(env, 0);
+			break;
+		case OFFSET_DVM_CREATE_CSTR_FROM_STRING_END:
+			hookDvmCreateCstrFromString(env, 0);
+			break;
+		case OFFSET_DVM_GET_STRING_UTF_REGION_END:
+			hookDvmGetStringUtfRegion(env, 0);
+			break;
 	}
 }

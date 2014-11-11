@@ -25,11 +25,11 @@ extern "C"
    * GetStringRegion, GetStringUTFRegion, GetStringCritical, ReleaseStringCritical
    */
 	void hookJniNewString(CPUState* env, int isStart);
-	void hookJniGetStringLength(CPUState* env, int isStart);
+	//void hookJniGetStringLength(CPUState* env, int isStart);
 	void hookJniGetStringChars(CPUState* env, int isStart);
 	void hookJniReleaseStringChars(CPUState* env, int isStart);
 	void hookJniNewStringUTF(CPUState* env, int isStart);
-	void hookJniGetStringUTFLength(CPUState* env, int isStart);
+	//void hookJniGetStringUTFLength(CPUState* env, int isStart);
 	void hookJniGetStringUTFChars(CPUState* env, int isStart);
 	void hookJniReleaseStringUTFChars(CPUState* env, int isStart);
 	void hookJniGetStringRegion(CPUState* env, int isStart);
@@ -37,7 +37,12 @@ extern "C"
 	void hookJniGetStringCritical(CPUState* env, int isStart);
 	void hookJniReleaseStringCritical(CPUState* env, int isStart);
 
+	//methods called by JNI interfaces relevant to string operations
 	void hookDvmCreateStringFromCstr(CPUState* env, int isStart);
+	void hookDvmCreateStringFromUnicode(CPUState* env, int isStart);
+	void hookDvmStringObjectChars(CPUState* env, int isStart);
+	void hookDvmCreateCstrFromString(CPUState* env, int isStart);
+	void hookDvmGetStringUtfRegion(CPUState* env, int isStart);
 
 #ifdef __cplusplus
 }

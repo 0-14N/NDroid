@@ -15,11 +15,11 @@
 int isStringOperations(int curPC, int dvmStartAddr){
 	switch(curPC - dvmStartAddr){
 		case NewString_OFFSET:
-		case GetStringLength_OFFSET:
+		//case GetStringLength_OFFSET:
 		case GetStringChars_OFFSET:
 		case ReleaseStringChars_OFFSET:
 		case NewStringUTF_OFFSET:
-		case GetStringUTFLength_OFFSET:
+		//case GetStringUTFLength_OFFSET:
 		case GetStringUTFChars_OFFSET:
 		case ReleaseStringUTFChars_OFFSET:
 		case GetStringRegion_OFFSET:
@@ -43,9 +43,11 @@ jniHookHandler hookStringOperations(int curPC, int dvmStartAddr, CPUState* env){
 		case NewString_OFFSET:
 			hookJniNewString(env, 1);
 			return hookJniNewString;
+			/*
 		case GetStringLength_OFFSET:
 			hookJniGetStringLength(env, 1);
 			return hookJniGetStringLength;
+			*/
 		case GetStringChars_OFFSET:
 			hookJniGetStringChars(env, 1);
 			return hookJniGetStringChars;
@@ -55,9 +57,11 @@ jniHookHandler hookStringOperations(int curPC, int dvmStartAddr, CPUState* env){
 		case NewStringUTF_OFFSET:
 			hookJniNewStringUTF(env, 1);
 			return hookJniNewStringUTF;
+			/*
 		case GetStringUTFLength_OFFSET:
 			hookJniGetStringUTFLength(env, 1);
 			return hookJniGetStringUTFLength;
+			*/
 		case GetStringUTFChars_OFFSET:
 			hookJniGetStringUTFChars(env, 1);
 			return hookJniGetStringUTFChars;
@@ -80,25 +84,39 @@ jniHookHandler hookStringOperations(int curPC, int dvmStartAddr, CPUState* env){
 	return NULL;
 }
 
-
+/*
+ * jstring NewString(JNIEnv *env, const jchar *unicodeChars, jsize len)
+ * -- dvmCreateStringFromUnicode
+ */
 void hookJniNewString(CPUState* env, int isStart){
 	DECAF_printf("NewString[%d]\n", isStart);
 }
 
+/*
 void hookJniGetStringLength(CPUState* env, int isStart){
 	DECAF_printf("GetStringLength[%d]\n", isStart);
 }
+*/
 
+/*
+ * jchar* GetStringChars(JNIEnv* env, jstring jstr, jboolean* isCopy)
+ * -- StringObject::chars()
+ */
 void hookJniGetStringChars(CPUState* env, int isStart){
 	DECAF_printf("GetStringChars[%d]\n", isStart);
 }
 
+/*
+ * void ReleaseStringChars(JNIEnv* env, jstring jstr, const jchar* chars)
+ * -- None
+ */
 void hookJniReleaseStringChars(CPUState* env, int isStart){
 	DECAF_printf("ReleaseStringChars[%d]\n", isStart);
 }
 
 /**
  * jstring NewStringUTF(JNIEnv *env, const char *bytes)
+ * -- dvmCreateStringFromCstr
  */
 int taintNewStringUTF = 0;
 int addressNewStringUTF = -1;
@@ -120,13 +138,15 @@ void hookJniNewStringUTF(CPUState* env, int isStart){
 	}
 }
 
+/*
 void hookJniGetStringUTFLength(CPUState* env, int isStart){
 	DECAF_printf("GetStringUTFLength[%d]\n", isStart);
 }
+*/
 
 /**
- * const char * GetStringUTFChars(JNIEnv *env, jstring string,
- * jboolean *isCopy);
+ * const char * GetStringUTFChars(JNIEnv *env, jstring string, jboolean *isCopy);
+ * -- dvmCreateCstrFromString
  */
 int taintGetStringUTFChars = 0;
 void hookJniGetStringUTFChars(CPUState* env, int isStart){
@@ -145,27 +165,48 @@ void hookJniGetStringUTFChars(CPUState* env, int isStart){
 	}
 }
 
+/*
+ * void ReleaseStringUTFChars(JNIEnv* env, jstring jstr, const char* utf)
+ * -- None
+ */
 void hookJniReleaseStringUTFChars(CPUState* env, int isStart){
 	DECAF_printf("ReleaseStringUTFChars[%d]\n", isStart);
 }
 
+/*
+ * void GetStringRegion(JNIEnv* env, jstring jstr, jsize start, jsize len, jchar* buf)
+ * -- StringObject::chars()
+ */
 void hookJniGetStringRegion(CPUState* env, int isStart){
 	DECAF_printf("GetStringRegion[%d]\n", isStart);
 }
 
+/*
+ * void GetStringUTFRegion(JNIEnv* env, jstring jstr, jsize start, jsize len, char* buf)
+ * -- dvmGetStringUtfRegion
+ *  -- StringObject::chars()
+ */
 void hookJniGetStringUTFRegion(CPUState* env, int isStart){
 	DECAF_printf("GetStringUTFRegion[%d]\n", isStart);
 }
 
+/*
+ * jchar* GetStringCritical(JNIEnv* env, jstring jstr, jboolean* isCopy)
+ * -- StringObject::chars()
+ */
 void hookJniGetStringCritical(CPUState* env, int isStart){
 	DECAF_printf("GetStringCritical[%d]\n", isStart);
 }
 
+/*
+ * void ReleaseStringCritical(JNIEnv* env, jstring jstr, const jchar* carray)
+ * -- None
+ */
 void hookJniReleaseStringCritical(CPUState* env, int isStart){
 	DECAF_printf("ReleaseStringCritical[%d]\n", isStart);
 }
 
-/**
+/*
  * StringObject* dvmCreateStringFromCstr(const char* utf8Str)
  */
 int addressDvmCreateStringFromCstr = -1;
@@ -192,17 +233,26 @@ void hookDvmCreateStringFromCstr(CPUState* env, int isStart){
 	}
 }
 
+/*
+ * StringObject* dvmCreateStringFromUnicode(const u2* unichars, int len)
+ */
+void hookDvmCreateStringFromUnicode(CPUState* env, int isStart){
+}
 
+/*
+ * const u2* StringObject::chars()
+ */
+void hookDvmStringObjectChars(CPUState* env, int isStart){
+}
 
+/*
+ * char* dvmCreateCstrFromString(const StringObject* jstr)
+ */
+void hookDvmCreateCstrFromString(CPUState* env, int isStart){
+}
 
-
-
-
-
-
-
-
-
-
-
-
+/*
+ * void dvmGetStringUtfRegion(const StringObject* jstr, int start, int len, char* buf)
+ */
+void hookDvmGetStringUtfRegion(CPUState* env, int isStart){
+}
