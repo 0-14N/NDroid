@@ -96,6 +96,12 @@ void hookJniNewString(CPUState* env, int isStart){
 }
 
 /*
+ * StringObject* dvmCreateStringFromUnicode(const u2* unichars, int len)
+ */
+void hookDvmCreateStringFromUnicode(CPUState* env, int isStart){
+}
+
+/*
  * jchar* GetStringChars(JNIEnv* env, jstring jstr, jboolean* isCopy)
  * -- StringObject::chars()
  */
@@ -145,18 +151,18 @@ void hookDvmCreateStringFromCstr(CPUState* env, int isStart){
 			addressDvmCreateStringFromCstr = addressNewStringUTF;
 		}
 	}else{
-		if((addressDvmCreateStringFromCstr != -1) &&
-				(taintNewStringUTF > 0)){
-			//add taintNewStringUTF to string@env->regs[0]
-			int charArrayAddr = -1;
-			if(DECAF_read_mem(env, env->regs[0] + STRING_INSTANCE_DATA_OFFSET
-						, &charArrayAddr, 4) != -1){
-				DECAF_printf("dvmCreateStringFromCstr: add taint %x to %x\n", 
-						taintNewStringUTF, charArrayAddr + STRING_TAINT_OFFSET);
-				assert(DECAF_write_mem(env, charArrayAddr + STRING_TAINT_OFFSET, 
-							&taintNewStringUTF, 4) != -1);
+		if(addressDvmCreateStringFromCstr != -1){
+			if (taintNewStringUTF > 0) {
+				//add taintNewStringUTF to string@env->regs[0]
+				int charArrayAddr = -1;
+				if(DECAF_read_mem(env, env->regs[0] + STRING_INSTANCE_DATA_OFFSET
+							, &charArrayAddr, 4) != -1){
+					DECAF_printf("dvmCreateStringFromCstr: add taint %x to %x\n", 
+							taintNewStringUTF, charArrayAddr + STRING_TAINT_OFFSET);
+					assert(DECAF_write_mem(env, charArrayAddr + STRING_TAINT_OFFSET, 
+								&taintNewStringUTF, 4) != -1);
+				}
 			}
-
 			addressDvmCreateStringFromCstr = -1;
 		}
 	}
@@ -164,6 +170,7 @@ void hookDvmCreateStringFromCstr(CPUState* env, int isStart){
 
 /**
  * const char * GetStringUTFChars(JNIEnv *env, jstring string, jboolean *isCopy);
+ * -- dvmDecodeIndirectRef
  * -- dvmCreateCstrFromString
  */
 int taintGetStringUTFChars = 0;
@@ -176,20 +183,49 @@ void hookJniGetStringUTFChars(CPUState* env, int isStart){
 			DECAF_printf("gTaint[%x]: %x\n", env->regs[1], taintGetStringUTFChars);
 		}
 		addressGetStringUTFChars = env->regs[1];
+		addrJObjDvmDecodeIndirectRef = env->regs[1];
 	}else{
-		if(taintGetStringUTFChars > 0){
-			addTaint(env->regs[0], taintGetStringUTFChars);
-			DECAF_printf("sTaint[%x]: %x\n", env->regs[0], taintGetStringUTFChars);
-			taintGetStringUTFChars = 0;
+		if (addressGetStringUTFChars != -1){
+			if(taintGetStringUTFChars > 0){
+				addTaint(env->regs[0], taintGetStringUTFChars);
+				DECAF_printf("sTaint[%x]: %x\n", env->regs[0], taintGetStringUTFChars);
+				taintGetStringUTFChars = 0;
+
+				//if jstring is not tainted, but the StringObject is tainted
+				if (getTaint(addressGetStringUTFChars) <= 0){
+					addTaint(addressGetStringUTFChars, taintGetStringUTFChars);
+				}
+			}
+			addressGetStringUTFChars = -1;
+			addrObjectDvmDecodeIndirectRef = -1;
 		}
-		addressGetStringUTFChars = -1;
 	}
 }
 
 /*
  * char* dvmCreateCstrFromString(const StringObject* jstr)
  */
+int addressDvmCreateCstrFromString = -1;
 void hookDvmCreateCstrFromString(CPUState* env, int isStart){
+	if (isStart) {
+		if ((addressGetStringUTFChars != -1) &&
+				(addrObjectDvmDecodeIndirectRef == env->regs[0])){
+			addressDvmCreateCstrFromString = env->regs[0];
+			//get taint of StringObject, set it to taintGetStringUTFChars
+			int charArrayAddr = 0;
+			int tmpTaint = 0;
+			assert(DECAF_read_mem(env, env->regs[0] + STRING_INSTANCE_DATA_OFFSET, 
+						&charArrayAddr, 4) != -1);
+			assert(DECAF_read_mem(env, charArrayAddr + STRING_TAINT_OFFSET, &tmpTaint, 4) != -1);
+			if (tmpTaint > 0){
+				taintGetStringUTFChars = tmpTaint;
+			}
+		}
+	}else {
+		if (addressDvmCreateCstrFromString != -1){
+			addressDvmCreateCstrFromString = -1;
+		}
+	}
 }
 
 /*
@@ -234,11 +270,6 @@ void hookJniReleaseStringCritical(CPUState* env, int isStart){
 }
 
 
-/*
- * StringObject* dvmCreateStringFromUnicode(const u2* unichars, int len)
- */
-void hookDvmCreateStringFromUnicode(CPUState* env, int isStart){
-}
 
 /*
  * const u2* StringObject::chars()

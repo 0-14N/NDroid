@@ -1084,8 +1084,8 @@ void dvmHooksEnd(CPUState* env, int curPC, int dvmStartAddr){
 /*
  * Object* dvmDecodeIndirectRef(Thread* self, jobject jobj)
  */ 
-static int addrJObjDvmDecodeIndirectRef = -1;   //global static variables to be
-static int addrObjectDvmDecodeIndirectRef = -1; //set by other modules
+int addrJObjDvmDecodeIndirectRef = -1;   //global static variables to be
+int addrObjectDvmDecodeIndirectRef = -1; //set by other modules
 int flagDvmDecodeIndirectRef = 0;
 void hookDvmDecodeIndirectRef(CPUState* env, int isStart){
 	if (isStart){
