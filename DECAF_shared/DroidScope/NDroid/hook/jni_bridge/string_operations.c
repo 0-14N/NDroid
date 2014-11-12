@@ -91,14 +91,54 @@ jniHookHandler hookStringOperations(int curPC, int dvmStartAddr, CPUState* env){
  * jstring NewString(JNIEnv *env, const jchar *unicodeChars, jsize len)
  * -- dvmCreateStringFromUnicode
  */
+int addrNewString = -1;
+int taintNewString = 0;
 void hookJniNewString(CPUState* env, int isStart){
 	DECAF_printf("NewString[%d]\n", isStart);
+	if (isStart && addrNewString == -1){
+		addrNewString = env->regs[1];
+		//jchar --> u2
+		int i = 0;
+		for(; i < env->regs[2] * 2; i++){
+			taintNewString |= getTaint(addrNewString + i);
+		}
+	}else{
+		if (addrNewString != -1){
+			if (taintNewString > 0){
+				addTaint(env->regs[0], taintNewString);
+				taintNewString = 0;
+			}
+			addrNewString = -1;
+		}
+	}
 }
 
 /*
  * StringObject* dvmCreateStringFromUnicode(const u2* unichars, int len)
  */
+int addrDvmCreateStringFromUnicode = -1;
 void hookDvmCreateStringFromUnicode(CPUState* env, int isStart){
+	if (isStart){
+		if ((addrDvmCreateStringFromUnicode == -1) &&
+				(env->regs[0] == addrNewString)){
+			addrDvmCreateStringFromUnicode = env->regs[0];
+		}
+	}else{
+		if (addrDvmCreateStringFromUnicode != -1){
+			if (taintNewString > 0) {
+				//add taintNewString to StringObject@env->regs[0]
+				int charArrayAddr = -1;
+				if(DECAF_read_mem(env, env->regs[0] + STRING_INSTANCE_DATA_OFFSET
+							, &charArrayAddr, 4) != -1){
+					DECAF_printf("dvmCreateStringFromUnicode: add taint %x to %x\n", 
+							taintNewString, charArrayAddr + STRING_TAINT_OFFSET);
+					assert(DECAF_write_mem(env, charArrayAddr + STRING_TAINT_OFFSET, 
+								&taintNewString, 4) != -1);
+				}
+			}
+			addrDvmCreateStringFromUnicode = -1;
+		}
+	}
 }
 
 /*
@@ -122,36 +162,38 @@ void hookJniReleaseStringChars(CPUState* env, int isStart){
  * -- dvmCreateStringFromCstr
  */
 int taintNewStringUTF = 0;
-int addressNewStringUTF = -1;
+int addrNewStringUTF = -1;
 void hookJniNewStringUTF(CPUState* env, int isStart){
 	DECAF_printf("NewStringUTF[%d]\n", isStart);
-	if(isStart){
+	if(isStart && addrNewStringUTF == -1){
 		taintNewStringUTF = getTaint(env->regs[1]);
 		if(taintNewStringUTF > 0){
 			DECAF_printf("gTaint[%x]: %x\n", env->regs[1], taintNewStringUTF);
 		}
-		addressNewStringUTF = env->regs[1];
+		addrNewStringUTF = env->regs[1];
 	}else{
-		if(taintNewStringUTF > 0){
-			addTaint(env->regs[0], taintNewStringUTF);
-			DECAF_printf("sTaint[%x]: %x\n", env->regs[0], taintNewStringUTF);
-			taintNewStringUTF = 0;
+		if (addrNewStringUTF != -1){
+			if(taintNewStringUTF > 0){
+				addTaint(env->regs[0], taintNewStringUTF);
+				DECAF_printf("sTaint[%x]: %x\n", env->regs[0], taintNewStringUTF);
+				taintNewStringUTF = 0;
+			}
+			addrNewStringUTF = -1;
 		}
-		addressNewStringUTF = -1;
 	}
 }
 
 /*
  * StringObject* dvmCreateStringFromCstr(const char* utf8Str)
  */
-int addressDvmCreateStringFromCstr = -1;
+int addrDvmCreateStringFromCstr = -1;
 void hookDvmCreateStringFromCstr(CPUState* env, int isStart){
 	if(isStart){
-		if((addressNewStringUTF != -1) && (addressNewStringUTF == env->regs[0])){
-			addressDvmCreateStringFromCstr = addressNewStringUTF;
+		if((addrNewStringUTF != -1) && (addrNewStringUTF == env->regs[0])){
+			addrDvmCreateStringFromCstr = addrNewStringUTF;
 		}
 	}else{
-		if(addressDvmCreateStringFromCstr != -1){
+		if(addrDvmCreateStringFromCstr != -1){
 			if (taintNewStringUTF > 0) {
 				//add taintNewStringUTF to string@env->regs[0]
 				int charArrayAddr = -1;
@@ -163,7 +205,7 @@ void hookDvmCreateStringFromCstr(CPUState* env, int isStart){
 								&taintNewStringUTF, 4) != -1);
 				}
 			}
-			addressDvmCreateStringFromCstr = -1;
+			addrDvmCreateStringFromCstr = -1;
 		}
 	}
 }
@@ -174,29 +216,29 @@ void hookDvmCreateStringFromCstr(CPUState* env, int isStart){
  * -- dvmCreateCstrFromString
  */
 int taintGetStringUTFChars = 0;
-int addressGetStringUTFChars = -1;
+int addrGetStringUTFChars = -1;
 void hookJniGetStringUTFChars(CPUState* env, int isStart){
 	DECAF_printf("GetStringUTFChars[%d]\n", isStart);
-	if(isStart){
+	if(isStart && addrGetStringUTFChars == -1){
 		taintGetStringUTFChars = getTaint(env->regs[1]);
 		if(taintGetStringUTFChars > 0){
 			DECAF_printf("gTaint[%x]: %x\n", env->regs[1], taintGetStringUTFChars);
 		}
-		addressGetStringUTFChars = env->regs[1];
+		addrGetStringUTFChars = env->regs[1];
 		addrJObjDvmDecodeIndirectRef = env->regs[1];
 	}else{
-		if (addressGetStringUTFChars != -1){
+		if (addrGetStringUTFChars != -1){
 			if(taintGetStringUTFChars > 0){
 				addTaint(env->regs[0], taintGetStringUTFChars);
 				DECAF_printf("sTaint[%x]: %x\n", env->regs[0], taintGetStringUTFChars);
 				taintGetStringUTFChars = 0;
 
 				//if jstring is not tainted, but the StringObject is tainted
-				if (getTaint(addressGetStringUTFChars) <= 0){
-					addTaint(addressGetStringUTFChars, taintGetStringUTFChars);
+				if (getTaint(addrGetStringUTFChars) <= 0){
+					addTaint(addrGetStringUTFChars, taintGetStringUTFChars);
 				}
 			}
-			addressGetStringUTFChars = -1;
+			addrGetStringUTFChars = -1;
 			addrObjectDvmDecodeIndirectRef = -1;
 		}
 	}
@@ -205,12 +247,12 @@ void hookJniGetStringUTFChars(CPUState* env, int isStart){
 /*
  * char* dvmCreateCstrFromString(const StringObject* jstr)
  */
-int addressDvmCreateCstrFromString = -1;
+int addrDvmCreateCstrFromString = -1;
 void hookDvmCreateCstrFromString(CPUState* env, int isStart){
 	if (isStart) {
-		if ((addressGetStringUTFChars != -1) &&
+		if ((addrGetStringUTFChars != -1) &&
 				(addrObjectDvmDecodeIndirectRef == env->regs[0])){
-			addressDvmCreateCstrFromString = env->regs[0];
+			addrDvmCreateCstrFromString = env->regs[0];
 			//get taint of StringObject, set it to taintGetStringUTFChars
 			int charArrayAddr = 0;
 			int tmpTaint = 0;
@@ -222,8 +264,8 @@ void hookDvmCreateCstrFromString(CPUState* env, int isStart){
 			}
 		}
 	}else {
-		if (addressDvmCreateCstrFromString != -1){
-			addressDvmCreateCstrFromString = -1;
+		if (addrDvmCreateCstrFromString != -1){
+			addrDvmCreateCstrFromString = -1;
 		}
 	}
 }
