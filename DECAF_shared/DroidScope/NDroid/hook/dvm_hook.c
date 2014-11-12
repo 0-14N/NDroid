@@ -983,7 +983,6 @@ int isStartOfDvmHooks(int curPC, int dvmStartAddr){
 
 		case OFFSET_DVM_CREATE_STRING_FROM_CSTR_BEGIN:
 		case OFFSET_DVM_CREATE_STRING_FROM_UNICODE_BEGIN:
-		case OFFSET_DVM_STRING_OBJECT_CHARS_BEGIN:
 		case OFFSET_DVM_CREATE_CSTR_FROM_STRING_BEGIN:
 		case OFFSET_DVM_GET_STRING_UTF_REGION_BEGIN:
 
@@ -1012,9 +1011,6 @@ void dvmHooksBegin(CPUState* env, int curPC, int dvmStartAddr){
 		case OFFSET_DVM_CREATE_STRING_FROM_UNICODE_BEGIN:
 			hookDvmCreateStringFromUnicode(env, 1);
 			break;
-		case OFFSET_DVM_STRING_OBJECT_CHARS_BEGIN:
-			hookDvmStringObjectChars(env, 1);
-			break;
 		case OFFSET_DVM_CREATE_CSTR_FROM_STRING_BEGIN:
 			hookDvmCreateCstrFromString(env, 1);
 			break;
@@ -1037,7 +1033,6 @@ int isEndOfDvmHooks(int curPC, int dvmStartAddr){
 
 		case OFFSET_DVM_CREATE_STRING_FROM_CSTR_END:
 		case OFFSET_DVM_CREATE_STRING_FROM_UNICODE_END:
-		case OFFSET_DVM_STRING_OBJECT_CHARS_END:
 		case OFFSET_DVM_CREATE_CSTR_FROM_STRING_END:
 		case OFFSET_DVM_GET_STRING_UTF_REGION_END:
 
@@ -1065,9 +1060,6 @@ void dvmHooksEnd(CPUState* env, int curPC, int dvmStartAddr){
 			break;
 		case OFFSET_DVM_CREATE_STRING_FROM_UNICODE_END:
 			hookDvmCreateStringFromUnicode(env, 0);
-			break;
-		case OFFSET_DVM_STRING_OBJECT_CHARS_END:
-			hookDvmStringObjectChars(env, 0);
 			break;
 		case OFFSET_DVM_CREATE_CSTR_FROM_STRING_END:
 			hookDvmCreateCstrFromString(env, 0);

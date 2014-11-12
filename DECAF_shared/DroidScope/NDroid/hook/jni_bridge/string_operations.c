@@ -143,10 +143,13 @@ void hookDvmCreateStringFromUnicode(CPUState* env, int isStart){
 
 /*
  * jchar* GetStringChars(JNIEnv* env, jstring jstr, jboolean* isCopy)
- * -- StringObject::chars()
+ * -- dvmDecodeIndirectRef
  */
 void hookJniGetStringChars(CPUState* env, int isStart){
 	DECAF_printf("GetStringChars[%d]\n", isStart);
+	if (isStart){
+	}else{
+	}
 }
 
 /*
@@ -310,15 +313,6 @@ void hookJniGetStringCritical(CPUState* env, int isStart){
 void hookJniReleaseStringCritical(CPUState* env, int isStart){
 	DECAF_printf("ReleaseStringCritical[%d]\n", isStart);
 }
-
-
-
-/*
- * const u2* StringObject::chars()
- */
-void hookDvmStringObjectChars(CPUState* env, int isStart){
-}
-
 
 /*
  * void dvmGetStringUtfRegion(const StringObject* jstr, int start, int len, char* buf)

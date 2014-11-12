@@ -40,7 +40,6 @@ extern "C"
 	//methods called by JNI interfaces relevant to string operations
 	void hookDvmCreateStringFromCstr(CPUState* env, int isStart);
 	void hookDvmCreateStringFromUnicode(CPUState* env, int isStart);
-	void hookDvmStringObjectChars(CPUState* env, int isStart);
 	void hookDvmCreateCstrFromString(CPUState* env, int isStart);
 	void hookDvmGetStringUtfRegion(CPUState* env, int isStart);
 
