@@ -974,9 +974,6 @@ void hookDvmCallJNIMethod(CPUState* env, int isStart){
 	}
 }
 
-/**
- * dvmGetVirtulizedMethod, dvmInterpret
- */
 int isStartOfDvmHooks(int curPC, int dvmStartAddr){
 	switch(curPC - dvmStartAddr){
 		case OFFSET_DVM_CALL_JNI_METHOD_BEGIN:
@@ -989,6 +986,8 @@ int isStartOfDvmHooks(int curPC, int dvmStartAddr){
 		case OFFSET_DVM_STRING_OBJECT_CHARS_BEGIN:
 		case OFFSET_DVM_CREATE_CSTR_FROM_STRING_BEGIN:
 		case OFFSET_DVM_GET_STRING_UTF_REGION_BEGIN:
+
+		case OFFSET_DVM_DECODE_INDIRECT_REF_BEGIN:
 			return (1);
 	}
 	return (0);
@@ -1022,12 +1021,13 @@ void dvmHooksBegin(CPUState* env, int curPC, int dvmStartAddr){
 		case OFFSET_DVM_GET_STRING_UTF_REGION_BEGIN:
 			hookDvmGetStringUtfRegion(env, 1);
 			break;
+
+		case OFFSET_DVM_DECODE_INDIRECT_REF_BEGIN:
+			hookDvmDecodeIndirectRef(env, 1);
+			break;
 	}
 }
 
-/**
- * dvmGetVirtulizedMethod, dvmCreateStringFromCstr
- */
 int isEndOfDvmHooks(int curPC, int dvmStartAddr){
 	switch(curPC - dvmStartAddr){
 		case OFFSET_DVM_CALL_JNI_METHOD_END:
@@ -1040,6 +1040,8 @@ int isEndOfDvmHooks(int curPC, int dvmStartAddr){
 		case OFFSET_DVM_STRING_OBJECT_CHARS_END:
 		case OFFSET_DVM_CREATE_CSTR_FROM_STRING_END:
 		case OFFSET_DVM_GET_STRING_UTF_REGION_END:
+
+		case OFFSET_DVM_DECODE_INDIRECT_REF_END:
 			return (1);
 	}
 	return (0);
@@ -1073,5 +1075,29 @@ void dvmHooksEnd(CPUState* env, int curPC, int dvmStartAddr){
 		case OFFSET_DVM_GET_STRING_UTF_REGION_END:
 			hookDvmGetStringUtfRegion(env, 0);
 			break;
+
+		case OFFSET_DVM_DECODE_INDIRECT_REF_END:
+			hookDvmDecodeIndirectRef(env, 0);
+	}
+}
+
+/*
+ * Object* dvmDecodeIndirectRef(Thread* self, jobject jobj)
+ */ 
+static int addrJObjDvmDecodeIndirectRef = -1;   //global static variables to be
+static int addrObjectDvmDecodeIndirectRef = -1; //set by other modules
+int flagDvmDecodeIndirectRef = 0;
+void hookDvmDecodeIndirectRef(CPUState* env, int isStart){
+	if (isStart){
+		if((addrJObjDvmDecodeIndirectRef != -1) &&
+				(addrJObjDvmDecodeIndirectRef == env->regs[1])){
+			flagDvmDecodeIndirectRef = 1;
+		}
+	}else {
+		if (flagDvmDecodeIndirectRef == 1){
+			flagDvmDecodeIndirectRef = 0;
+			addrJObjDvmDecodeIndirectRef = -1;
+			addrObjectDvmDecodeIndirectRef = env->regs[0];
+		}
 	}
 }

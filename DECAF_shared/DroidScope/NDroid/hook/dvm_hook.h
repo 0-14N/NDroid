@@ -98,6 +98,8 @@ extern "C"
 
 	void dvmHooksEnd(CPUState* env, int curPC, int dvmStartAddr);
 
+	void hookDvmDecodeIndirectRef(CPUState* env, int isStart);
+
 #ifdef __cplusplus
 }
 #endif

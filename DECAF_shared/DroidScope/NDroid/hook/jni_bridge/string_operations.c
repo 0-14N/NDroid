@@ -7,6 +7,9 @@
 #include "string_operations.h"
 #include "jni_api_hook.h"
 
+extern int addrJObjDvmDecodeIndirectRef;
+extern int addrObjectDvmDecodeIndirectRef;
+
 /**
  * NewString, GetStringLength, GetStringChars, ReleaseStringChars
  * NewStringUTF, GetStringUTFLength, GetStringUTFChars, ReleaseStringUTFChars
@@ -93,12 +96,6 @@ void hookJniNewString(CPUState* env, int isStart){
 }
 
 /*
-void hookJniGetStringLength(CPUState* env, int isStart){
-	DECAF_printf("GetStringLength[%d]\n", isStart);
-}
-*/
-
-/*
  * jchar* GetStringChars(JNIEnv* env, jstring jstr, jboolean* isCopy)
  * -- StringObject::chars()
  */
@@ -139,16 +136,38 @@ void hookJniNewStringUTF(CPUState* env, int isStart){
 }
 
 /*
-void hookJniGetStringUTFLength(CPUState* env, int isStart){
-	DECAF_printf("GetStringUTFLength[%d]\n", isStart);
+ * StringObject* dvmCreateStringFromCstr(const char* utf8Str)
+ */
+int addressDvmCreateStringFromCstr = -1;
+void hookDvmCreateStringFromCstr(CPUState* env, int isStart){
+	if(isStart){
+		if((addressNewStringUTF != -1) && (addressNewStringUTF == env->regs[0])){
+			addressDvmCreateStringFromCstr = addressNewStringUTF;
+		}
+	}else{
+		if((addressDvmCreateStringFromCstr != -1) &&
+				(taintNewStringUTF > 0)){
+			//add taintNewStringUTF to string@env->regs[0]
+			int charArrayAddr = -1;
+			if(DECAF_read_mem(env, env->regs[0] + STRING_INSTANCE_DATA_OFFSET
+						, &charArrayAddr, 4) != -1){
+				DECAF_printf("dvmCreateStringFromCstr: add taint %x to %x\n", 
+						taintNewStringUTF, charArrayAddr + STRING_TAINT_OFFSET);
+				assert(DECAF_write_mem(env, charArrayAddr + STRING_TAINT_OFFSET, 
+							&taintNewStringUTF, 4) != -1);
+			}
+
+			addressDvmCreateStringFromCstr = -1;
+		}
+	}
 }
-*/
 
 /**
  * const char * GetStringUTFChars(JNIEnv *env, jstring string, jboolean *isCopy);
  * -- dvmCreateCstrFromString
  */
 int taintGetStringUTFChars = 0;
+int addressGetStringUTFChars = -1;
 void hookJniGetStringUTFChars(CPUState* env, int isStart){
 	DECAF_printf("GetStringUTFChars[%d]\n", isStart);
 	if(isStart){
@@ -156,13 +175,21 @@ void hookJniGetStringUTFChars(CPUState* env, int isStart){
 		if(taintGetStringUTFChars > 0){
 			DECAF_printf("gTaint[%x]: %x\n", env->regs[1], taintGetStringUTFChars);
 		}
+		addressGetStringUTFChars = env->regs[1];
 	}else{
 		if(taintGetStringUTFChars > 0){
 			addTaint(env->regs[0], taintGetStringUTFChars);
 			DECAF_printf("sTaint[%x]: %x\n", env->regs[0], taintGetStringUTFChars);
 			taintGetStringUTFChars = 0;
 		}
+		addressGetStringUTFChars = -1;
 	}
+}
+
+/*
+ * char* dvmCreateCstrFromString(const StringObject* jstr)
+ */
+void hookDvmCreateCstrFromString(CPUState* env, int isStart){
 }
 
 /*
@@ -206,32 +233,6 @@ void hookJniReleaseStringCritical(CPUState* env, int isStart){
 	DECAF_printf("ReleaseStringCritical[%d]\n", isStart);
 }
 
-/*
- * StringObject* dvmCreateStringFromCstr(const char* utf8Str)
- */
-int addressDvmCreateStringFromCstr = -1;
-void hookDvmCreateStringFromCstr(CPUState* env, int isStart){
-	if(isStart){
-		if((addressNewStringUTF != -1) && (addressNewStringUTF == env->regs[0])){
-			addressDvmCreateStringFromCstr = addressNewStringUTF;
-		}
-	}else{
-		if((addressDvmCreateStringFromCstr != -1) &&
-				(taintNewStringUTF > 0)){
-			//add taintNewStringUTF to string@env->regs[0]
-			int charArrayAddr = -1;
-			if(DECAF_read_mem(env, env->regs[0] + STRING_INSTANCE_DATA_OFFSET
-						, &charArrayAddr, 4) != -1){
-				DECAF_printf("dvmCreateStringFromCstr: add taint %x to %x\n", 
-						taintNewStringUTF, charArrayAddr + STRING_TAINT_OFFSET);
-				assert(DECAF_write_mem(env, charArrayAddr + STRING_TAINT_OFFSET, 
-							&taintNewStringUTF, 4) != -1);
-			}
-
-			addressDvmCreateStringFromCstr = -1;
-		}
-	}
-}
 
 /*
  * StringObject* dvmCreateStringFromUnicode(const u2* unichars, int len)
@@ -245,11 +246,6 @@ void hookDvmCreateStringFromUnicode(CPUState* env, int isStart){
 void hookDvmStringObjectChars(CPUState* env, int isStart){
 }
 
-/*
- * char* dvmCreateCstrFromString(const StringObject* jstr)
- */
-void hookDvmCreateCstrFromString(CPUState* env, int isStart){
-}
 
 /*
  * void dvmGetStringUtfRegion(const StringObject* jstr, int start, int len, char* buf)
