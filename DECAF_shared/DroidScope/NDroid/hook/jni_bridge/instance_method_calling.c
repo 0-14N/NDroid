@@ -30,11 +30,13 @@ jniHookHandler hookInstanceMethodCalling(int curPC, int dvmStartAddr, CPUState* 
 int addressCallVoidMethod = -1;
 void hookCallVoidMethod(CPUState* env, int isStart){
 	DECAF_printf("CallVoidMethod[%d]\n", isStart);
-	if(isStart){
+	if (isStart && addressCallVoidMethod == -1){
 		addressCallVoidMethod = env->regs[2];
 		DECAF_printf("CallVoidMethod@%x\n", addressCallVoidMethod);
 	}else{
-		addressCallVoidMethod = -1;
+		if (addressCallVoidMethod != -1){
+			addressCallVoidMethod = -1;
+		}
 	}
 }
 
@@ -42,9 +44,14 @@ void hookCallVoidMethod(CPUState* env, int isStart){
  * const Method* dvmGetVirtualizedMethod(const ClassObject* clazz, const Method* meth)
  */
 int addressGetVirtulizedMethod = -1;
-int dvmGetVirtulizedMethodHitNum = 0;
+//int dvmGetVirtulizedMethodHitNum = 0;
 void hookDvmGetVirtulizedMethod(CPUState* env, int isStart){
-	if(isStart){
+	if(isStart && addressGetVirtulizedMethod == -1){
+		if (env->regs[1] == addressCallVoidMethod){
+			addressGetVirtulizedMethod = env->regs[1];
+			DECAF_printf("	getVirtulizedMethod: 1\n");
+		}
+		/*
 		if(addressGetVirtulizedMethod != -1){
 			dvmGetVirtulizedMethodHitNum++;
 			return;
@@ -53,8 +60,15 @@ void hookDvmGetVirtulizedMethod(CPUState* env, int isStart){
 			DECAF_printf("	getVirtulizedMethod: 1\n");
 			return;
 		}
+		*/
 	}else{
 		if(addressGetVirtulizedMethod != -1){
+			DECAF_printf("		dvmGetVirtulizedMethod: @%x --> @%x\n", 
+					addressGetVirtulizedMethod, env->regs[0]);
+			DECAF_printf("	getVirtulizedMethod: 0\n");
+			addressGetVirtulizedMethod = -1;
+			addressCallVoidMethod = env->regs[0];
+			/*
 			if(--dvmGetVirtulizedMethodHitNum == -1){
 				DECAF_printf("		dvmGetVirtulizedMethod: @%x --> @%x\n", addressGetVirtulizedMethod, env->regs[0]);
 				DECAF_printf("	getVirtulizedMethod: 0\n");
@@ -62,6 +76,7 @@ void hookDvmGetVirtulizedMethod(CPUState* env, int isStart){
 				addressGetVirtulizedMethod = -1;
 				dvmGetVirtulizedMethodHitNum = 0;
 			}
+			*/
 		}
 	}
 }
@@ -71,9 +86,15 @@ void hookDvmGetVirtulizedMethod(CPUState* env, int isStart){
  * TODO
  */
 int addressDvmInterpret = -1;
-int dvmInterpretHitNum = 0;
+//int dvmInterpretHitNum = 0;
 void hookDvmInterpret(CPUState* env, int isStart){
-	if(isStart){
+	if(isStart && addressDvmInterpret == -1){
+		if (env->regs[1] == addressCallVoidMethod){
+			DECAF_printf("	dvmInterpret: 1\n");
+			DECAF_printf("		dvmInterpret: @%x\n", env->regs[1]);
+			addressDvmInterpret = env->regs[1];
+		}
+		/*
 		if(addressDvmInterpret != -1){
 			dvmInterpretHitNum++;
 			return;
@@ -84,13 +105,18 @@ void hookDvmInterpret(CPUState* env, int isStart){
 			addressDvmInterpret = env->regs[1];
 			return;
 		}
+		*/
 	}else{
 		if(addressDvmInterpret != -1){
+			DECAF_printf("	dvmInterpret: 0\n");
+			addressDvmInterpret = -1;
+			/*
 			if(--dvmInterpretHitNum == -1){
 				DECAF_printf("	dvmInterpret: 0\n");
 				addressDvmInterpret = -1;
 				dvmInterpretHitNum = 0;
 			}
+			*/
 		}
 	}
 }
