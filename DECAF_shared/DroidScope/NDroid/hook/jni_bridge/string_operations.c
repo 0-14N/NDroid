@@ -106,6 +106,7 @@ void hookJniNewString(CPUState* env, int isStart){
 		if (addrNewString != -1){
 			if (taintNewString > 0){
 				addTaint(env->regs[0], taintNewString);
+				DECAF_printf("	add taint %x to %x\n", taintNewString, env->regs[0]);
 				taintNewString = 0;
 			}
 			addrNewString = -1;
@@ -235,7 +236,6 @@ void hookDvmCreateStringFromCstr(CPUState* env, int isStart){
 					assert(DECAF_write_mem(env, charArrayAddr + STRING_TAINT_OFFSET, 
 								&taintNewStringUTF, 4) != -1);
 				}
-				taintNewStringUTF = 0;
 			}
 			addrDvmCreateStringFromCstr = -1;
 		}

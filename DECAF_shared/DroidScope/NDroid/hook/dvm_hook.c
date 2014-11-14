@@ -978,6 +978,9 @@ int isStartOfDvmHooks(int curPC, int dvmStartAddr){
 	switch(curPC - dvmStartAddr){
 		case OFFSET_DVM_CALL_JNI_METHOD_BEGIN:
 
+		case OFFSET_DVM_CALL_METHOD_V_BEGIN:
+		case OFFSET_DVM_CALL_METHOD_A_BEGIN:
+
 		case OFFSET_DVM_GET_VIRTULIZED_METHOD_BEGIN:
 		case OFFSET_DVM_INTERPRET_BEGIN:
 
@@ -996,6 +999,12 @@ void dvmHooksBegin(CPUState* env, int curPC, int dvmStartAddr){
 			hookDvmCallJNIMethod(env, 1);
 			break;
 
+		case OFFSET_DVM_CALL_METHOD_V_BEGIN:
+			hookDvmCallMethodV(env, 1);
+			break;
+		case OFFSET_DVM_CALL_METHOD_A_BEGIN:
+			hookDvmCallMethodA(env, 1);
+			break;
 		case OFFSET_DVM_GET_VIRTULIZED_METHOD_BEGIN:
 			hookDvmGetVirtulizedMethod(env, 1);
 			break;
@@ -1020,6 +1029,8 @@ int isEndOfDvmHooks(int curPC, int dvmStartAddr){
 	switch(curPC - dvmStartAddr){
 		case OFFSET_DVM_CALL_JNI_METHOD_END:
 
+		case OFFSET_DVM_CALL_METHOD_V_END:
+		case OFFSET_DVM_CALL_METHOD_A_END:
 		case OFFSET_DVM_GET_VIRTULIZED_METHOD_END:
 		case OFFSET_DVM_INTERPRET_END:
 
@@ -1038,6 +1049,12 @@ void dvmHooksEnd(CPUState* env, int curPC, int dvmStartAddr){
 			hookDvmCallJNIMethod(env, 0);
 			break;
 
+		case OFFSET_DVM_CALL_METHOD_V_END:
+			hookDvmCallMethodV(env, 0);
+			break;
+		case OFFSET_DVM_CALL_METHOD_A_END:
+			hookDvmCallMethodA(env, 0);
+			break;
 		case OFFSET_DVM_GET_VIRTULIZED_METHOD_END:
 			hookDvmGetVirtulizedMethod(env, 0);
 			break;

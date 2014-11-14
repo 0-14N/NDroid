@@ -20,6 +20,10 @@ extern "C"
 
 	void hookCallVoidMethod(CPUState* env, int isStart);
 
+	void hookDvmCallMethodV(CPUState* env, int isStart);
+
+	void hookDvmCallMethodA(CPUState* env, int isStart);
+
 	void hookDvmGetVirtulizedMethod(CPUState* env, int isStart);
 
 	void hookDvmInterpret(CPUState* env, int isStart);
