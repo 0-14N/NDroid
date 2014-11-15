@@ -15,6 +15,7 @@ extern int addrObjectDvmDecodeIndirectRef;
  * NewStringUTF, GetStringUTFLength, GetStringUTFChars, ReleaseStringUTFChars
  * GetStringRegion, GetStringUTFRegion, GetStringCritical, ReleaseStringCritical
  */
+/*
 int isStringOperations(int curPC, int dvmStartAddr){
 	switch(curPC - dvmStartAddr){
 		case NewString_OFFSET:
@@ -35,6 +36,7 @@ int isStringOperations(int curPC, int dvmStartAddr){
 	}
 	return (0);
 }
+*/
 
 /**
  * NewString, GetStringLength, GetStringChars, ReleaseStringChars

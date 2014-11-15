@@ -14,7 +14,7 @@ extern "C"
 #include "JNI_APIS_OFFSETS.h"
 #include "jni_api_hook.h"
 
-	int isStringOperations(int curPC, int dvmStartAddr);
+	//int isStringOperations(int curPC, int dvmStartAddr);
 
 	jniHookHandler hookStringOperations(int curPC, int dvmStartAddr, CPUState* env);
 
