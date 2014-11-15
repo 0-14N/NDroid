@@ -14,6 +14,22 @@ extern "C"
 #include "JNI_APIS_OFFSETS.h"
 #include "jni_api_hook.h"
 
+	/**
+	 * struct Field {
+	 * 		ClassObject* clazz;
+	 * 		const char*  name;
+	 * 		const char*  signature;
+	 * 		u4 					 accessFlags;
+	 * }
+	 *
+	 * struct InstField : Field {
+	 * 		int 		byteOffset;
+	 * }
+	 *
+	 */
+	
+#define OFFSET_INSTANCE_FIELD_BYTEOFFSET 16
+
 	jniHookHandler hookInstanceFieldAccess(int curPC, int dvmStartAddr, CPUState* env);
 
 	//JNI interfaces
