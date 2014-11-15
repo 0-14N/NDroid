@@ -7,6 +7,9 @@
 #include "instance_method_calling.h"
 #include "../dvm_hook.h"
 
+//taint for new created object
+extern int taintNewObjectGeneral;
+
 jniHookHandler hookInstanceMethodCalling(int curPC, int dvmStartAddr, CPUState* env){
 	switch(curPC - dvmStartAddr){
 		case CallVoidMethod_OFFSET:
@@ -180,13 +183,20 @@ void hookDvmInterpret(CPUState* env, int isStart){
 			//read accessFlag
 			assert(DECAF_read_mem(env, methodAddr + METHOD_ACCESS_FLAG_OFFSET,
 						&accessFlag, 4) != -1);
-
+			
+			int isConstructor = 0;
+			if (strcmp(methodName, "<init>") == 0){
+				isConstructor = 1;
+			}
 			//not native
 			if (!(accessFlag & ACC_NATIVE)){
 				insAddr = curFrameAddr + (registerSize - insSize) * 8;
 				int i = 0;
 				for (; i < insSize; i++){
 					assert(DECAF_write_mem(env, insAddr + 4 + i * 8, &taintsDvmInterpret[i], 4) != -1);
+					if (isConstructor){
+						taintNewObjectGeneral |= taintsDvmInterpret[i];
+					}
 				}
 			}
 		}

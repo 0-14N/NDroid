@@ -7,6 +7,7 @@
 #include "string_operations.h"
 #include "instance_method_calling.h"
 #include "instance_field_access.h"
+#include "object_operations.h"
 
 /*
 int startOfJniApis(int curPC, int dvmStartAddr){
@@ -39,6 +40,12 @@ jniHookHandler hookJniApis(int curPC, int dvmStartAddr, CPUState* env){
 
 	//instance field access
 	handler = hookInstanceFieldAccess(curPC, dvmStartAddr, env);
+	if (handler != NULL){
+		return handler;
+	}	
+
+	//object operations
+	handler = hookObjectOperations(curPC, dvmStartAddr, env);
 	if (handler != NULL){
 		return handler;
 	}	
