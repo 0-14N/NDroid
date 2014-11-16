@@ -6,6 +6,7 @@
 #include "jni_api_hook.h"
 #include "string_operations.h"
 #include "instance_method_calling.h"
+#include "static_method_calling.h"
 #include "instance_field_access.h"
 #include "object_operations.h"
 
@@ -35,6 +36,12 @@ jniHookHandler hookJniApis(int curPC, int dvmStartAddr, CPUState* env){
 	//instance method calling
 	handler = hookInstanceMethodCalling(curPC, dvmStartAddr, env);
 	if(handler != NULL){
+		return handler;
+	}
+
+	//static method calling
+	handler = hookStaticMethodCalling(curPC, dvmStartAddr, env);
+	if (handler != NULL){
 		return handler;
 	}
 

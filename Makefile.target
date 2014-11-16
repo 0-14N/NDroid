@@ -188,6 +188,7 @@ DECAF_SRC_FILES += \
 		DroidScope/NDroid/hook/jni_bridge/jni_api_hook.c\
 		DroidScope/NDroid/hook/jni_bridge/string_operations.c\
 		DroidScope/NDroid/hook/jni_bridge/instance_method_calling.c\
+		DroidScope/NDroid/hook/jni_bridge/static_method_calling.c\
 		DroidScope/NDroid/hook/jni_bridge/instance_field_access.c\
 		DroidScope/NDroid/hook/jni_bridge/object_operations.c\
 		DroidScope/NDroid/hook/sys_libraries/sys_lib_hook.c\
