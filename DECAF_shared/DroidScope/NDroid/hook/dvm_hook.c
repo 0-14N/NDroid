@@ -9,6 +9,13 @@
 #include "SourcePolicy.h"
 #include "instance_method_calling.h"
 #include "string_operations.h"
+#include "memProtect/mem_protection.h"
+
+extern gva_t DVM_STACK_START;
+extern gva_t DVM_STACK_END;
+
+#define DEFAULT_STACK_SIZE (32*1024)
+#define THREAD_STACK_START_OFFSET (218*4)
 
 /**
  * mem[addr] stores an object reference, get its type
@@ -136,6 +143,12 @@ void hookDvmCallJNIMethod(CPUState* env, int isStart){
 	if(DECAF_read_mem(env, methodAddr + METHOD_INSN_OFFSET, &insnAddr, 4) != -1){
 		//target native method is in third party native library
 		if(nd_in_blacklist(insnAddr)){
+#ifdef WITH_MEM_PROTECT
+			assert(DECAF_read_mem(env, env->regs[3] + THREAD_STACK_START_OFFSET, 
+						&DVM_STACK_START, 4) != -1);
+			DVM_STACK_END = DVM_STACK_START - DEFAULT_STACK_SIZE;
+			DECAF_printf("stack[%x, %x]\n", DVM_STACK_END, DVM_STACK_START);
+#endif
 			//record address of first third party native library call
 			if(insnAddr != -1 && addrNativeMethod == -1){
 				addrNativeMethod = insnAddr;
@@ -988,6 +1001,7 @@ int isStartOfDvmHooks(int curPC, int dvmStartAddr){
 		case OFFSET_DVM_CREATE_STRING_FROM_UNICODE_BEGIN:
 
 		case OFFSET_DVM_DECODE_INDIRECT_REF_BEGIN:
+
 			return (1);
 	}
 	return (0);
@@ -1022,6 +1036,7 @@ void dvmHooksBegin(CPUState* env, int curPC, int dvmStartAddr){
 		case OFFSET_DVM_DECODE_INDIRECT_REF_BEGIN:
 			hookDvmDecodeIndirectRef(env, 1);
 			break;
+
 	}
 }
 
@@ -1038,6 +1053,7 @@ int isEndOfDvmHooks(int curPC, int dvmStartAddr){
 		case OFFSET_DVM_CREATE_STRING_FROM_UNICODE_END:
 
 		case OFFSET_DVM_DECODE_INDIRECT_REF_END:
+
 			return (1);
 	}
 	return (0);
@@ -1071,6 +1087,7 @@ void dvmHooksEnd(CPUState* env, int curPC, int dvmStartAddr){
 
 		case OFFSET_DVM_DECODE_INDIRECT_REF_END:
 			hookDvmDecodeIndirectRef(env, 0);
+
 	}
 }
 

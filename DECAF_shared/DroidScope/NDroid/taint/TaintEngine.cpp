@@ -35,10 +35,16 @@ static int taintRegs[16];
 		DECAF_printf("Write mem@%x on DVM heap!\n", _addr); \
 	}
 
+#define CHECK_ON_DVM_LINEAR_ALLOC(_addr) \
+	if(isWithinDVMLinearAlloc(_addr)) { \
+		DECAF_printf("Write mem@%x on DVM linear alloc!\n", _addr); \
+	}
+
 int addTaint(int addr, int tValue){
 #ifdef WITH_MEM_PROTECT
 	CHECK_ON_DVM_STACK(addr);
 	CHECK_ON_DVM_HEAP(addr);
+	CHECK_ON_DVM_LINEAR_ALLOC(addr);
 #endif
 	DEFENSIVE_CHECK_TAINT(tValue);
 	taint_iterator it = taintMap.find(addr);
@@ -65,6 +71,7 @@ int setTaint(int addr, int tValue){
 #ifdef WITH_MEM_PROTECT
 	CHECK_ON_DVM_STACK(addr);
 	CHECK_ON_DVM_HEAP(addr);
+	CHECK_ON_DVM_LINEAR_ALLOC(addr);
 #endif
 	DEFENSIVE_CHECK_TAINT(tValue);
 	taint_iterator it = taintMap.find(addr);	
@@ -82,6 +89,7 @@ int clearTaint(int addr){
 #ifdef WITH_MEM_PROTECT
 	CHECK_ON_DVM_STACK(addr);
 	CHECK_ON_DVM_HEAP(addr);
+	CHECK_ON_DVM_LINEAR_ALLOC(addr);
 #endif
 	taint_iterator it = taintMap.find(addr);
 	if(it != taintMap.end()){

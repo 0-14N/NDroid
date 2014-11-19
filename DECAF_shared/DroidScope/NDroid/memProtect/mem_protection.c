@@ -12,6 +12,7 @@
 
 gva_t DVM_HEAP_START = -1, DVM_HEAP_END = -1;
 gva_t DVM_STACK_START = -1, DVM_STACK_END = -1;
+gva_t DVM_LINEAR_ALLOC_START = -1, DVM_LINEAR_ALLOC_END = -1;
 
 void initDVMHeapRanges(gpid_t tracingPID){
 	ModuleNode* node = getModulesByName(tracingPID, DVM_HEAP_MODULE_NAME);
@@ -32,20 +33,21 @@ void initDVMHeapRanges(gpid_t tracingPID){
 	}
 }
 
-void initDVMStackRanges(gpid_t tracingPID){
+//unused!
+void initDVMLinearAllocRanges(gpid_t tracingPID){
 	ModuleNode* node = getModulesByName(tracingPID, DVM_STACK_MODULE_NAME);
 	if(node != NULL){
 		ModuleNode* i = node;
-		DVM_STACK_START = i->startAddr;
-		DVM_STACK_END = i->endAddr;
-		DECAF_printf("%s's address starts@%x\n", DVM_STACK_MODULE_NAME, DVM_STACK_START);
+		DVM_LINEAR_ALLOC_START = i->startAddr;
+		DVM_LINEAR_ALLOC_END = i->endAddr;
+		DECAF_printf("%s's address starts@%x\n", DVM_STACK_MODULE_NAME, DVM_LINEAR_ALLOC_START);
 		for(; i != NULL; i = i->next){
 			if(strcmp(getModuleNodeName(i), DVM_STACK_MODULE_NAME) != 0){
 				break;
 			}
-			DVM_STACK_END = i->endAddr;
+			DVM_LINEAR_ALLOC_END = i->endAddr;
 		}
-		DECAF_printf("%s's address ends@%x\n", DVM_STACK_MODULE_NAME, DVM_STACK_END);
+		DECAF_printf("%s's address ends@%x\n", DVM_STACK_MODULE_NAME, DVM_LINEAR_ALLOC_END);
 	}else{
 		DECAF_printf("Cannot find module named %s!\n", DVM_STACK_MODULE_NAME);
 	}
@@ -55,13 +57,21 @@ void refreshDVMHeapRanges(gpid_t tracingPID){
 	initDVMHeapRanges(tracingPID);
 }
 
-void refreshDVMStackRanges(gpid_t tracingPID){
-	initDVMStackRanges(tracingPID);
+void refreshDVMLinearAllocRanges(gpid_t tracingPID){
+	initDVMLinearAllocRanges(tracingPID);
+}
+
+int isWithinDVMLinearAlloc(gva_t addr){
+	if ((addr >= DVM_LINEAR_ALLOC_START)
+			&& (addr <= DVM_LINEAR_ALLOC_END)){
+		return (1);
+	}
+	return (0);
 }
 
 int isWithinDVMStack(gva_t addr){
-	if((addr >= DVM_STACK_START) 
-			&& (addr <= DVM_STACK_END)){
+	if((addr <= DVM_STACK_START) 
+			&& (addr >= DVM_STACK_END)){
 		return (1);
 	}
 	return (0);

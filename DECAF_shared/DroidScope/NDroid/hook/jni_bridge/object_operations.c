@@ -94,3 +94,4 @@ void hookNewObjectV(CPUState* env, int isStart){
 		}
 	}
 }
+

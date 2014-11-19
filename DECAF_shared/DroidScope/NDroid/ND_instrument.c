@@ -380,7 +380,7 @@ void nd_instrument_init(){
 	//if memory protection mode is open, monitor memory operations 
 	//relevant to DVM stack and heap
 #ifdef WITH_MEM_PROTECT
-	initDVMStackRanges(ND_GLOBAL_TRACING_PID);
+	initDVMLinearAllocRanges(ND_GLOBAL_TRACING_PID);
 	initDVMHeapRanges(ND_GLOBAL_TRACING_PID);
 #endif
 }
@@ -413,7 +413,7 @@ void nd_instrument_stop(){
 
 #ifdef WITH_MEM_PROTECT
 	void refresh_stack_heap_ranges(){
-		refreshDVMStackRanges(ND_GLOBAL_TRACING_PID);
+		refreshDVMLinearAllocRanges(ND_GLOBAL_TRACING_PID);
 		refreshDVMHeapRanges(ND_GLOBAL_TRACING_PID);
 	}
 #endif

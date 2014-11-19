@@ -24,18 +24,20 @@ extern "C"
 	//To protect DVM heap, we care about "/dev/ashmem/dalvik-heap".
 	void initDVMHeapRanges(gpid_t tracingPID);
 
-	//To protect DVM stack, we care about "/dev/ashmem/dalvik-LinearAlloc".
-	void initDVMStackRanges(gpid_t tracingPID);
+	//To protect DVM's linear allocated, we care about "/dev/ashmem/dalvik-LinearAlloc".
+	void initDVMLinearAllocRanges(gpid_t tracingPID);
 
 	//Refresh the DVM heap
 	void refreshDVMHeapRanges(gpid_t tracingPID);
 
 	//Refresh the DVM stack();
-	void refreshDVMStackRanges(gpid_t tracingPID);
-
-	int isWithinDVMStack(gva_t addr);
+	void refreshDVMLinearAllocRanges(gpid_t tracingPID);
 
 	int isWithinDVMHeap(gva_t addr);
+
+	int isWithinDVMLinearAlloc(gva_t addr);
+
+	int isWithinDVMStack(gva_t addr);
 
 #ifdef __cplusplus
 }
