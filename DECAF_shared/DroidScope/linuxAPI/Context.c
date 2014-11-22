@@ -537,7 +537,6 @@ void Context_PGDWriteCallback(DECAF_Callback_Params* params)
   bSkipNextPGDUpdate = 0;
 }
 
-
 static gva_t Context_retAddr = 0;
 //LOK: My tests have shown that do_fork -> then update on a PGD write is a perfect choice. Should change the logic to do that.
 // it seems to cover many more cases than do_fork and schedule()

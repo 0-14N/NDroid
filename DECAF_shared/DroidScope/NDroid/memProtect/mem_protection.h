@@ -13,7 +13,7 @@ extern "C"
 
 	#include "DECAF_shared/DECAF_types.h"
 
-	#define WITH_MEM_PROTECT
+//	#define WITH_MEM_PROTECT
 
 	/*
 	 * http://stackoverflow.com/questions/22299403/whats-the-data-in-dalvik-linearalloc-dalvik-aux-structure-dalvik-bitmap-1-da

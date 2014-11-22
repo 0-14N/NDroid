@@ -261,11 +261,13 @@ void nd_block_end_callback(DECAF_Callback_Params* params){
 			return;
 		}
 
+		/*
 		lastSysLibHandler = hookSysLibCalls(next_pc, env);
 		if(lastSysLibHandler != NULL){
 			lastCallSysLibAddrRet = env->regs[14] & 0xfffffffe;
 			return;
 		}
+		*/
 	}
 
 	//end of dvm hooks (e.g. dvmGetVirtulizedMethod, ...)
