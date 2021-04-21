@@ -2,6 +2,11 @@ NDroid
 =========
 NDroid is a dynamic taint analysis system on Android, which focus on tracing information flow through JNI with low performance overhead. More details about NDroid can be found in our published paper [here]( http://www4.comp.polyu.edu.hk/~csxluo/NDroid.pdf).
 
+Wow, such many files in root =)  
+I like the description here though!
+
+Dont mind me, im just testing out the github APIs and randomly ended up on this repo
+
 ####NDroid uses following open source projects:
 * [TaintDroid](http://appanalysis.org)
 * [DroidScope](https://code.google.com/p/decaf-platform/wiki/DroidScope)
